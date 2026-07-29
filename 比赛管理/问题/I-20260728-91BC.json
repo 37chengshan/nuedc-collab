@@ -7,7 +7,7 @@
   "severity": "high",
   "owner": "37chengshan",
   "blocking": true,
-  "linkedTaskIds": ["T-20260728-A3F2"],
+  "linkedTaskIds": [],
   "symptoms": ["串口偶发丢帧", "控制延迟抖动"],
   "workaround": "降低采样频率后暂稳",
   "resolution": "",
