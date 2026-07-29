@@ -42,7 +42,7 @@ test.describe("八页面协作看板", () => {
 
     const task = page.getByText("检查电源轨", { exact: true });
     await task.click();
-    await page.getByLabel(/状态/).selectOption("doing");
+    await page.getByRole("combobox", { name: /状态/ }).selectOption("doing");
     await page.getByRole("button", { name: /更新状态|保存/ }).click();
     await expect.poll(() => dashboard.requests.some((item) => item.action === "task.setStatus")).toBe(true);
   });
@@ -99,5 +99,25 @@ test.describe("八页面协作看板", () => {
     await expect(page.getByText("task.create", { exact: true })).toBeVisible();
     await expect(page.getByText("idea.promoteToTask", { exact: true })).toBeVisible();
     await expect(page.getByText(/确认.*Git.*写操作|Git.*确认.*开启/)).toBeVisible();
+  });
+
+  test("桌面侧栏与 Git 状态区可收起并记住状态", async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto("/");
+
+    await page.getByRole("button", { name: "收起侧栏" }).click();
+    await expect(page.getByRole("button", { name: "展开侧栏" })).toBeVisible();
+    await expect.poll(() => page.evaluate(() => localStorage.getItem("nuedc.sidebar.collapsed"))).toBe("true");
+
+    await page.reload();
+    await expect(page.getByRole("button", { name: "展开侧栏" })).toBeVisible();
+    await page.getByRole("button", { name: "展开侧栏" }).click();
+
+    await page.getByRole("button", { name: "展开仓库同步" }).click();
+    await expect(page.getByRole("button", { name: "收起仓库同步" })).toBeVisible();
+    await expect.poll(() => page.evaluate(() => localStorage.getItem("nuedc.git-panel.expanded"))).toBe("true");
+
+    await page.reload();
+    await expect(page.getByRole("button", { name: "收起仓库同步" })).toBeVisible();
   });
 });

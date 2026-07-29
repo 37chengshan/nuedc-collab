@@ -55,6 +55,7 @@ import type {
 } from "@/api/types";
 import { BOARD_COLUMNS, groupTasks } from "@/lib/task-board";
 import {
+  cn,
   formatRelativeTime,
   labelIdeaStatus,
   labelIssueStatus,
@@ -179,7 +180,10 @@ export function WorkbenchPage() {
       </section>
 
       {git.data?.summary ? (
-        <Card className={git.data.severity === "conflict" ? "border-danger/30 bg-danger-soft" : "border-orange/20 bg-orange-soft/35"}>
+        <div className={cn(
+          "border-y px-1 py-3",
+          git.data.severity === "conflict" ? "border-danger/25 text-danger" : "border-orange/20",
+        )}>
           <div className="flex items-start gap-3">
             <GitCommitHorizontal className="mt-0.5 h-5 w-5 shrink-0 text-orange-dark" />
             <div className="min-w-0">
@@ -189,7 +193,7 @@ export function WorkbenchPage() {
               </p>
             </div>
           </div>
-        </Card>
+        </div>
       ) : null}
 
       <div className="grid gap-7 xl:grid-cols-[1.3fr_0.7fr]">
@@ -217,7 +221,7 @@ export function WorkbenchPage() {
           <Section title="阻塞与风险">
             <div className="space-y-3">
               {blockers.map(({ data }) => (
-                <Card key={data.id} className="border-danger/20 bg-danger-soft/35 shadow-none">
+                <div key={data.id} className="border-b border-danger/15 py-3 last:border-b-0">
                   <div className="flex items-start gap-3">
                     <CircleAlert className="mt-0.5 h-4 w-4 shrink-0 text-danger" />
                     <div>
@@ -225,7 +229,7 @@ export function WorkbenchPage() {
                       <p className="mt-1 text-xs text-subtle">{data.id} · {data.owner ?? "未分配"}</p>
                     </div>
                   </div>
-                </Card>
+                </div>
               ))}
               {blockers.length === 0 ? <p className="text-sm text-subtle">没有阻塞主线的问题。</p> : null}
             </div>
@@ -348,14 +352,14 @@ export function TasksPage() {
             <div className="space-y-3">
               {groups[column.id].map((task) => (
                 <button key={task.id} type="button" onClick={() => setSelected(byId.get(task.id) ?? null)}
-                  className="w-full rounded-panel border border-border bg-panel p-4 text-start shadow-sm transition duration-hover hover:-translate-y-0.5 hover:border-border-strong">
+                  className="w-full border-b border-border px-1 py-3 text-start transition-colors duration-hover last:border-b-0 hover:bg-muted/60">
                   <div className="flex flex-wrap gap-2"><TaskStatusPill status={task.status} /><PriorityPill priority={task.priority} /></div>
                   <p className="mt-3 font-medium leading-5 text-ink">{task.title}</p>
                   <p className="mt-2 text-xs text-subtle">{task.module} · {task.owner ?? "未分配"}</p>
                   <p className="mt-3 truncate font-mono text-[11px] text-faint">{task.id}</p>
                 </button>
               ))}
-              {groups[column.id].length === 0 ? <div className="rounded-panel border border-dashed border-border p-4 text-sm text-faint">暂无任务</div> : null}
+              {groups[column.id].length === 0 ? <div className="border-b border-dashed border-border px-1 py-4 text-sm text-faint">暂无任务</div> : null}
             </div>
           </section>
         ))}
@@ -485,17 +489,17 @@ export function IdeasPage() {
     <div className="space-y-7">
       <PageHeader title="想法" description="想法池是低成本探索区；只有明确验证目标后才提升为任务。"
         actions={<Button leftIcon={<Plus className="h-4 w-4" />} onClick={() => setCreating(true)}>新建想法</Button>} />
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid border-y border-border md:grid-cols-2 xl:grid-cols-3">
         {(query.data?.items ?? []).map((item) => (
           <button key={item.data.id} type="button" onClick={() => setSelected(item)}
-            className="rounded-panel border border-border bg-panel p-5 text-start shadow-sm transition duration-hover hover:-translate-y-0.5 hover:border-orange/40">
+            className="border-b border-border p-4 text-start transition-colors duration-hover hover:bg-muted/55 md:border-e xl:[&:nth-child(3n)]:border-e-0">
             <div className="flex items-start justify-between gap-3">
               <Lightbulb className="h-5 w-5 shrink-0 text-orange" />
               <IdeaStatusPill status={item.effectiveState ?? item.data.status} />
             </div>
-            <p className="mt-5 font-title text-xl leading-6 text-ink">{item.data.title}</p>
+            <p className="mt-4 font-title text-lg leading-6 text-ink">{item.data.title}</p>
             <p className="mt-2 line-clamp-3 text-sm leading-6 text-subtle">{item.data.description || "暂无说明。"}</p>
-            <p className="mt-5 text-xs text-faint">{item.data.module} · {item.data.author}</p>
+            <p className="mt-4 text-xs text-faint">{item.data.module} · {item.data.author}</p>
           </button>
         ))}
       </div>
@@ -564,7 +568,7 @@ export function MaterialsPage() {
         <div className="space-y-3">
           {(materials.data?.items ?? []).map((item) => (
             <button key={item.id} type="button" onClick={() => setSelected(item.relativePath)}
-              className="w-full rounded-panel border border-border bg-panel p-4 text-start hover:border-orange/40">
+              className="w-full border-b border-border px-1 py-3 text-start transition-colors hover:bg-muted/55">
               <div className="flex items-start gap-3">
                 <FileCode2 className="mt-0.5 h-5 w-5 shrink-0 text-orange" />
                 <div className="min-w-0">
@@ -604,7 +608,7 @@ export function DesignPage() {
         <div className="space-y-3">
           {(design.data?.entries ?? []).map((entry) => (
             <button key={entry.id} type="button" onClick={() => setSelected(entry)}
-              className="w-full rounded-panel border border-border bg-panel p-4 text-start hover:border-orange/40">
+              className="w-full border-b border-border px-1 py-3 text-start transition-colors hover:bg-muted/55">
               <Badge>{entry.category}</Badge>
               <p className="mt-3 font-medium text-ink">{entry.title}</p>
               <p className="mt-1 break-all font-mono text-xs text-faint">{entry.relativePath}</p>

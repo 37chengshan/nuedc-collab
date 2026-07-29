@@ -1,7 +1,9 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import {
   BookOpen,
   Boxes,
+  ChevronLeft,
+  ChevronRight,
   Clock3,
   GitBranch,
   LayoutDashboard,
@@ -26,11 +28,25 @@ const ICONS = [LayoutDashboard, ListTodo, ShieldAlert, Lightbulb, Clock3, BookOp
 
 export function AppShell({ children }: { children: ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    () => window.localStorage.getItem("nuedc.sidebar.collapsed") === "true",
+  );
+  const [gitPanelExpanded, setGitPanelExpanded] = useState(
+    () => window.localStorage.getItem("nuedc.git-panel.expanded") === "true",
+  );
   const { pathname } = useRouter();
   const { push } = useToast();
   const { openWizard } = useGitWizard();
   const status = useGitStatusQuery();
   const fetchMutation = useGitFetchMutation();
+
+  useEffect(() => {
+    window.localStorage.setItem("nuedc.sidebar.collapsed", String(sidebarCollapsed));
+  }, [sidebarCollapsed]);
+
+  useEffect(() => {
+    window.localStorage.setItem("nuedc.git-panel.expanded", String(gitPanelExpanded));
+  }, [gitPanelExpanded]);
 
   const runFetch = () => {
     fetchMutation.mutate(undefined, {
@@ -39,11 +55,13 @@ export function AppShell({ children }: { children: ReactNode }) {
     });
   };
 
-  const navigation = (
-    <nav aria-label="主导航" className="space-y-6">
+  const renderNavigation = (compact: boolean) => (
+    <nav aria-label="主导航" className={compact ? "space-y-3" : "space-y-5"}>
       {(["协作", "证据", "设置"] as const).map((group) => (
         <div key={group}>
-          <p className="mb-2 px-3 text-[11px] font-semibold tracking-[0.14em] text-faint">{group}</p>
+          <p className={cn("mb-1.5 px-2 text-[10px] font-semibold tracking-[0.12em] text-faint", compact && "sr-only")}>
+            {group}
+          </p>
           <div className="space-y-1">
             {NAV_ITEMS.filter((item) => item.group === group).map((item) => {
               const Icon = ICONS[NAV_ITEMS.indexOf(item)] ?? GitBranch;
@@ -51,16 +69,18 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <RouterLink
                   key={item.path}
                   to={item.path}
+                  title={compact ? item.label : undefined}
                   className={cn(
-                    "group flex min-h-11 items-center gap-3 rounded-control px-3 py-2 text-sm transition-colors duration-hover",
+                    "group flex min-h-10 items-center rounded-control text-sm transition-colors duration-hover",
+                    compact ? "justify-center px-2" : "gap-3 px-2.5 py-2",
                     isNavActive(pathname, item.path)
-                      ? "bg-panel text-ink shadow-sm"
+                      ? "bg-orange-soft/65 text-ink"
                       : "text-subtle hover:bg-muted hover:text-body",
                   )}
                   onClick={() => setSidebarOpen(false)}
                 >
                   <Icon className="h-[18px] w-[18px] shrink-0 text-faint group-hover:text-orange" aria-hidden />
-                  <span className="font-medium">{item.label}</span>
+                  <span className={cn("font-medium", compact && "sr-only")}>{item.label}</span>
                 </RouterLink>
               );
             })}
@@ -76,32 +96,66 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-canvas font-body text-body">
-      <aside className="fixed inset-y-0 start-0 z-40 hidden w-64 border-e border-border bg-sidebar lg:block">
+      <aside
+        className={cn(
+          "fixed inset-y-0 start-0 z-40 hidden border-e border-border bg-sidebar transition-[width] duration-menu lg:block",
+          sidebarCollapsed ? "w-[72px]" : "w-56",
+        )}
+      >
         <div className="flex h-full flex-col">
-          <div className="flex h-[72px] items-center gap-3 border-b border-border px-5">
-            <div className="grid h-9 w-9 place-items-center rounded-[11px] bg-orange text-white shadow-sm">
+          <div className={cn("flex h-16 items-center border-b border-border", sidebarCollapsed ? "justify-center px-2" : "gap-3 px-3")}>
+            <div className="grid h-9 w-9 shrink-0 place-items-center rounded-[11px] bg-orange text-white shadow-sm">
               <GitBranch className="h-5 w-5" aria-hidden />
             </div>
-            <div>
-              <p className="font-title text-lg font-semibold leading-5 text-ink">电赛协作台</p>
-              <p className="mt-1 text-xs text-faint">三台电脑 · 一个事实源</p>
-            </div>
+            {!sidebarCollapsed ? (
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-title text-base font-semibold leading-5 text-ink">电赛协作台</p>
+                <p className="mt-0.5 truncate text-[11px] text-faint">本地协作看板</p>
+              </div>
+            ) : null}
+            {!sidebarCollapsed ? (
+              <button
+                type="button"
+                className="grid h-8 w-8 shrink-0 place-items-center rounded-control text-faint hover:bg-muted hover:text-body"
+                onClick={() => setSidebarCollapsed(true)}
+                aria-label="收起侧栏"
+                title="收起侧栏"
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+            ) : null}
           </div>
-          <div className="min-h-0 flex-1 overflow-auto px-3 py-5">{navigation}</div>
-          <div className="border-t border-border p-3">
+          <div className={cn("min-h-0 flex-1 overflow-auto py-4", sidebarCollapsed ? "px-2" : "px-2.5")}>
+            {renderNavigation(sidebarCollapsed)}
+          </div>
+          <div className={cn("border-t border-border", sidebarCollapsed ? "p-2" : "p-2.5")}>
             <GitStatusBar
               state={status.data}
               fetching={fetchMutation.isPending}
               onFetch={runFetch}
               onOpenWizard={openWizard}
+              sidebarCollapsed={sidebarCollapsed}
+              expanded={gitPanelExpanded}
+              onToggle={() => setGitPanelExpanded((value) => !value)}
             />
           </div>
         </div>
       </aside>
 
-      <div className="min-h-screen lg:ps-64">
-        <header className="sticky top-0 z-30 flex h-[72px] items-center justify-between border-b border-border bg-surface/95 px-4 backdrop-blur sm:px-6">
+      <div className={cn("min-h-screen transition-[padding] duration-menu", sidebarCollapsed ? "lg:ps-[72px]" : "lg:ps-56")}>
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border bg-surface/95 px-4 backdrop-blur sm:px-6">
           <div className="flex min-w-0 items-center gap-3">
+            {sidebarCollapsed ? (
+              <button
+                type="button"
+                className="hidden h-8 w-8 shrink-0 place-items-center rounded-control text-faint hover:bg-muted hover:text-body lg:grid"
+                onClick={() => setSidebarCollapsed(false)}
+                aria-label="展开侧栏"
+                title="展开侧栏"
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            ) : null}
             <button
               type="button"
               className="touch-target grid place-items-center rounded-control text-subtle hover:bg-muted lg:hidden"
@@ -130,13 +184,13 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         ) : null}
 
-        <main className="px-4 py-6 sm:px-6 lg:px-8">
+        <main className="px-4 py-5 sm:px-6 lg:px-7">
           <div className="mx-auto max-w-[1500px]">{children}</div>
         </main>
       </div>
 
       <Drawer open={sidebarOpen} title="导航" description={`电赛协作台 · 当前 ${current.label}`} side="left" onClose={() => setSidebarOpen(false)}>
-        {navigation}
+        {renderNavigation(false)}
       </Drawer>
     </div>
   );

@@ -71,6 +71,7 @@ test.describe("Git 五步确认", () => {
 
     await page.goto("/");
     await expect(page.getByText(/冲突|必须人工处理/).first()).toBeVisible();
+    await page.getByRole("button", { name: "展开仓库同步" }).click();
     await expect(page.getByRole("button", { name: /^拉取$/ })).toBeDisabled();
     await expect(page.getByRole("button", { name: /^推送$/ })).toBeDisabled();
   });
