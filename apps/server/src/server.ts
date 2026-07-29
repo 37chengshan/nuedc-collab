@@ -19,10 +19,11 @@ import {
   type WarningItem,
 } from "./content.js";
 import { createGitApi } from "./git.js";
+import { ensureLocalIdentity } from "./identity.js";
 
 const DEFAULT_HOST = "127.0.0.1";
 const DEFAULT_PORT = 3210;
-const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
+const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../..");
 const VALID_ACTIONS = new Set<string>(DOMAIN_ACTIONS);
 
 interface ErrorBody {
@@ -37,6 +38,7 @@ interface StartServerOptions {
   port?: number;
   repoRoot?: string;
   authToken?: string;
+  githubUsernameDetector?: () => Promise<string | null>;
 }
 
 interface StartedServer {
@@ -173,7 +175,10 @@ function actionFailureBody(action: string, idempotencyKey: string, code: string,
     idempotencyKey,
     code,
     error: {
-      impact: impactByCode[code] ?? "动作执行失败。",
+      impact:
+        code === "OWNER_MISMATCH" || code === "INACTIVE_MEMBER"
+          ? message
+          : impactByCode[code] ?? "动作执行失败。",
       nextStep: nextStepByCode[code] ?? "检查请求后重试。",
       details: message,
     },
@@ -236,6 +241,7 @@ export async function startServer(options: StartServerOptions = {}): Promise<Sta
   const port = options.port ?? DEFAULT_PORT;
   const localAuthToken = options.authToken ?? randomBytes(24).toString("hex");
   const runtime = await createProtocolRuntime(repoRoot);
+  await ensureLocalIdentity(runtime.repository, options.githubUsernameDetector);
   const git = createGitApi(repoRoot);
 
   const server = createServer(async (request, response) => {

@@ -173,12 +173,31 @@ export async function installDashboardApi(page: Page): Promise<DashboardFixture>
           updatedAt: now,
           sizeBytes: 2048,
           previewMode: "text",
+        }, {
+          id: "welding-html",
+          title: "主板焊接教程 HTML",
+          type: "tutorial",
+          relativePath: "参考资料/焊接与调试/主板教程.html",
+          sourceLabel: "团队整理",
+          modules: ["焊接"],
+          verificationStatus: "verified",
+          updatedAt: now,
+          sizeBytes: 4096,
+          previewMode: "sandboxHtml",
         }],
         warnings: [],
       }));
       return;
     }
     if (path === "/api/materials/content") {
+      if (url.searchParams.get("path")?.endsWith(".html")) {
+        await route.fulfill(json({
+          path: url.searchParams.get("path"),
+          contentType: "text/html; charset=utf-8",
+          body: "<!doctype html><html><body><main>受限 HTML 教程</main></body></html>",
+        }));
+        return;
+      }
       await route.fulfill(json({
         path: url.searchParams.get("path"),
         contentType: "text/markdown",

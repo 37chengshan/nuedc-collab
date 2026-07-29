@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import { useEffect } from "react";
 import {
   DesignPage,
   HistoryPage,
@@ -9,19 +9,24 @@ import {
   TasksPage,
   WorkbenchPage,
 } from "@/pages/placeholders";
+import { useRouter } from "@/app/router";
 
 export function AppRoutes() {
-  return (
-    <Routes>
-      <Route path="/" element={<WorkbenchPage />} />
-      <Route path="/tasks" element={<TasksPage />} />
-      <Route path="/issues" element={<IssuesPage />} />
-      <Route path="/ideas" element={<IdeasPage />} />
-      <Route path="/history" element={<HistoryPage />} />
-      <Route path="/materials" element={<MaterialsPage />} />
-      <Route path="/design" element={<DesignPage />} />
-      <Route path="/settings" element={<SettingsPage />} />
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
-  );
+  const { pathname, navigate } = useRouter();
+  const Page = {
+    "/": WorkbenchPage,
+    "/tasks": TasksPage,
+    "/issues": IssuesPage,
+    "/ideas": IdeasPage,
+    "/history": HistoryPage,
+    "/materials": MaterialsPage,
+    "/design": DesignPage,
+    "/settings": SettingsPage,
+  }[pathname];
+
+  useEffect(() => {
+    if (!Page) navigate("/", { replace: true });
+  }, [Page, navigate]);
+
+  return Page ? <Page /> : <WorkbenchPage />;
 }

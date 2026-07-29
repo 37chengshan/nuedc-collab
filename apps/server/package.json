@@ -7,8 +7,10 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "build": "node ../../node_modules/typescript/bin/tsc -p tsconfig.json",
+    "start": "node dist/src/cli.js",
+    "dev": "npm run build && node dist/src/cli.js",
     "typecheck": "node ../../node_modules/typescript/bin/tsc -p tsconfig.json --noEmit",
-    "test": "node ../../node_modules/vitest/vitest.mjs run"
+    "test": "node ../../node_modules/vitest/vitest.mjs run test/identity.test.ts test/server.test.ts"
   },
   "dependencies": {
     "@nuedc/git-core": "file:../../packages/git-core",

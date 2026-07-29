@@ -120,6 +120,49 @@ describe('schemas', () => {
 });
 
 describe('repository facade', () => {
+  it('active 成员可操作他人负责的记录，owner 仅用于分工展示', async () => {
+    const root = await makeRepo();
+    const store = new DomainRecordStore(root);
+    await store.writeMember({
+      recordType: 'member',
+      schemaVersion: 1,
+      githubUsername: 'teammate-a',
+      roles: ['firmware'],
+      responsibilities: [],
+      status: 'active',
+      createdAt: '2026-07-29T10:00:00+08:00',
+      updatedAt: '2026-07-29T10:00:00+08:00',
+    });
+    const runtime = await createProtocolRuntime(root);
+
+    const created = await runtime.actions.execute('web', 'task.create', {
+      idempotencyKey: 'test-any-member-create-0001',
+      payload: {
+        title: '联调他人负责的任务',
+        module: '协作',
+        priority: 'medium',
+        owner: 'teammate-a',
+      },
+    });
+    expect(created.ok).toBe(true);
+
+    const task = (await runtime.repository.listTasks()).items[0]!;
+    expect(task.data.owner).toBe('teammate-a');
+    const updated = await runtime.actions.execute('web', 'task.setStatus', {
+      idempotencyKey: 'test-any-member-status-0001',
+      expectedRevision: task.revision,
+      payload: {
+        id: task.data.id,
+        to: 'doing',
+        message: '37chengshan 协助推进',
+      },
+    });
+
+    expect(updated.ok).toBe(true);
+    expect((await runtime.repository.listTasks()).items[0]?.data.status).toBe('doing');
+    expect((await runtime.repository.listEvents()).items[0]?.data.actor).toBe('37chengshan');
+  });
+
   it('只读门面不暴露写方法，并能隔离坏文件', async () => {
     const root = await makeRepo();
     const store = new DomainRecordStore(root);

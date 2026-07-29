@@ -14,6 +14,7 @@ import { shortHash } from "@/lib/format";
 import { Dialog } from "@/components/Dialog";
 import { Button } from "@/components/Button";
 import { TextArea } from "@/components/TextArea";
+import { TextInput } from "@/components/TextInput";
 import { LoadingState } from "@/components/LoadingState";
 import { ErrorState } from "@/components/ErrorState";
 import { Badge } from "@/components/Badge";
@@ -53,6 +54,7 @@ export function GitConfirmWizard({
   const [files, setFiles] = useState<string[]>([]);
   const [message, setMessage] = useState("");
   const [acknowledged, setAcknowledged] = useState(false);
+  const [confirmationPhrase, setConfirmationPhrase] = useState("");
   const [result, setResult] = useState<{
     ok: boolean;
     code?: string;
@@ -82,6 +84,7 @@ export function GitConfirmWizard({
     setFiles([]);
     setMessage("");
     setAcknowledged(false);
+    setConfirmationPhrase("");
     setResult(null);
     setSnapshot(null);
   }, [open, kind]);
@@ -160,6 +163,18 @@ export function GitConfirmWizard({
   const goNext = () => {
     const idx = STEPS.indexOf(step);
     if (idx < 0 || idx >= STEPS.length - 1) return;
+    if (step === "confirm") {
+      if (!acknowledged) {
+        push({ title: "请先勾选“我已阅读影响”", tone: "warning" });
+        return;
+      }
+      if (confirmationPhrase.trim() !== CONFIRM_LABEL[kind]) {
+        push({ title: `请输入“${CONFIRM_LABEL[kind]}”`, tone: "warning" });
+        return;
+      }
+      writeMutation.mutate();
+      return;
+    }
     const next = STEPS[idx + 1]!;
     if (next === "result") return;
     if (step === "fill" && kind === "commit") {
@@ -171,14 +186,6 @@ export function GitConfirmWizard({
         push({ title: "提交说明需 1—500 字", tone: "warning" });
         return;
       }
-    }
-    if (step === "confirm") {
-      if (!acknowledged) {
-        push({ title: "请先勾选“我已阅读影响”", tone: "warning" });
-        return;
-      }
-      writeMutation.mutate();
-      return;
     }
     setStep(next);
   };
@@ -339,15 +346,24 @@ export function GitConfirmWizard({
           {kind === "commit" ? <p>说明：{message.trim() || "（空）"}</p> : null}
           <p className="text-subtle">可逆性：提交可在本地回退；推送与快进拉取需额外协作处理。失败时不会自动重试。</p>
           {step === "confirm" ? (
-            <label className="flex items-start gap-2 rounded-control border border-border bg-orange-soft/40 p-3">
-              <input
-                type="checkbox"
-                className="mt-1"
-                checked={acknowledged}
-                onChange={(e) => setAcknowledged(e.target.checked)}
+            <>
+              <label className="flex items-start gap-2 rounded-control border border-border bg-orange-soft/40 p-3">
+                <input
+                  type="checkbox"
+                  className="mt-1"
+                  checked={acknowledged}
+                  onChange={(e) => setAcknowledged(e.target.checked)}
+                />
+                <span>我已阅读影响，并理解冲突 / STALE 时需人工处理、不会自动重试。</span>
+              </label>
+              <TextInput
+                label={`输入“${CONFIRM_LABEL[kind]}”继续`}
+                value={confirmationPhrase}
+                onChange={(event) => setConfirmationPhrase(event.target.value)}
+                autoComplete="off"
+                placeholder={CONFIRM_LABEL[kind]}
               />
-              <span>我已阅读影响，并理解冲突 / STALE 时需人工处理、不会自动重试。</span>
-            </label>
+            </>
           ) : null}
         </div>
       ) : null}

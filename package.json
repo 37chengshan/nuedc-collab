@@ -1,7 +1,10 @@
 {
   "name": "nuedc-workspace",
   "private": true,
-  "workspaces": ["packages/*", "apps/*"],
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
@@ -23,12 +26,14 @@
     "test:e2e": "playwright test",
     "archive:frontend": "node -e \"console.log('前端基线仍保留在 归档/前端看板；活动实现位于 apps/dashboard')\""
   },
-  "engines": {"node": ">=20"},
+  "engines": {
+    "node": ">=20"
+  },
   "devDependencies": {
     "@playwright/test": "1.61.1",
     "@types/node": "^22.10.2",
     "playwright": "1.61.1",
     "typescript": "^5.7.2",
-    "vitest": "^2.1.8"
+    "vitest": "^4.1.10"
   }
 }

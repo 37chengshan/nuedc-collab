@@ -295,7 +295,6 @@ async function overview(options: Map<string, string | true>, io: Io): Promise<nu
     '## 想法',
     '',
     ...value.ideas.map((idea) => `- [${idea.effectiveState}] ${idea.id} ${idea.title}（${idea.author}）`),
-    '',
   ].join('\n');
   await writeFile(markdownPath, `${markdown}\n`, 'utf8');
   output(io, { ok: true, json: path.relative(repoRoot, outputPath), markdown: path.relative(repoRoot, markdownPath), summary: value.summary });

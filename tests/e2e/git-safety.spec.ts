@@ -26,18 +26,10 @@ test.describe("Git 五步确认", () => {
 
   test("提交依次经过查看、填写、复核、确认、结果，并在确认后发送 confirmed", async ({ page }) => {
     const bodies: Array<Record<string, unknown>> = [];
-    await page.route("**/api/git/commit", async (route) => {
-      bodies.push(route.request().postDataJSON() as Record<string, unknown>);
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({
-          ok: true,
-          operation: "commit",
-          summary: "提交已完成",
-          state: { worktree: "clean", topology: "ahead", connection: "online", severity: "ahead" },
-        }),
-      });
+    page.on("request", (request) => {
+      if (new URL(request.url()).pathname === "/api/git/commit" && request.method() === "POST") {
+        bodies.push(request.postDataJSON() as Record<string, unknown>);
+      }
     });
 
     await page.goto("/");
@@ -49,8 +41,9 @@ test.describe("Git 五步确认", () => {
     await page.getByRole("button", { name: /下一步|继续/ }).click();
     await expect(page.getByText(/确认|第 4 步/).first()).toBeVisible();
     await page.getByLabel(/我已阅读影响/).check();
+    await page.getByLabel(/输入“确认提交”继续/).fill("确认提交");
     await page.getByRole("button", { name: /确认执行|确认提交/ }).click();
-    await expect(page.getByText(/结果|提交已完成|已完成/)).toBeVisible();
+    await expect(page.getByText("已完成", { exact: true })).toBeVisible();
     await expect.poll(() => bodies.length).toBe(1);
     expect(bodies[0]).toMatchObject({ confirmed: true });
     expect(bodies[0].expectedHead).toBeTruthy();

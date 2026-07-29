@@ -167,14 +167,6 @@ export function createDomainActionService(
     return member;
   }
 
-  function assertOwner(owner: string | undefined, actor: string, label: string): void {
-    if (owner && owner !== actor) {
-      const err = new Error(`${label} 仅负责人可修改，当前负责人: ${owner}`);
-      (err as any).code = 'OWNER_MISMATCH';
-      throw err;
-    }
-  }
-
   function assertRevision<T>(
     env: RecordEnvelope<T> | null,
     expected: string | undefined,
@@ -294,9 +286,7 @@ export function createDomainActionService(
 
       switch (action) {
         case 'task.create': {
-          if (payload.owner && payload.owner !== actor) {
-            return fail(action, req.idempotencyKey, 'OWNER_MISMATCH', '创建任务时 owner 只能省略或等于本机成员');
-          }
+          if (payload.owner) await requireActiveMember(payload.owner);
           const id = (await generateTaskId(repoRoot)) as TaskId;
           const task: Task = {
             recordType: 'task',
@@ -327,13 +317,7 @@ export function createDomainActionService(
           const stale = assertRevision(current, req.expectedRevision, action, req.idempotencyKey, 'task');
           if (stale) return stale;
           const task = { ...current!.data };
-          if (!task.owner) {
-            if (payload.owner && payload.owner !== actor) {
-              return fail(action, req.idempotencyKey, 'OWNER_MISMATCH', '未认领任务只能认领给本机成员');
-            }
-          } else {
-            assertOwner(task.owner, actor, '任务');
-          }
+          if (payload.owner !== undefined) await requireActiveMember(payload.owner);
           if (payload.title !== undefined) task.title = payload.title;
           if (payload.module !== undefined) task.module = payload.module;
           if (payload.priority !== undefined) task.priority = payload.priority;
@@ -358,10 +342,6 @@ export function createDomainActionService(
           const stale = assertRevision(current, req.expectedRevision, action, req.idempotencyKey, 'task');
           if (stale) return stale;
           const task = { ...current!.data };
-          assertOwner(task.owner, actor, '任务');
-          if (!task.owner) {
-            return fail(action, req.idempotencyKey, 'OWNER_MISMATCH', '未认领任务不能改状态');
-          }
           if (payload.to === 'done' && !setsEqual(task.acceptanceCriteria, task.completedAcceptanceCriteria)) {
             return fail(
               action,
@@ -392,12 +372,8 @@ export function createDomainActionService(
           const stale = assertRevision(current, req.expectedRevision, action, req.idempotencyKey, 'task');
           if (stale) return stale;
           const task = { ...current!.data };
-          assertOwner(task.owner, actor, '任务');
-          if (!task.owner) {
-            return fail(action, req.idempotencyKey, 'OWNER_MISMATCH', '未认领任务不能交接');
-          }
           await requireActiveMember(payload.toOwner);
-          const fromOwner = task.owner;
+          const fromOwner = task.owner ?? '未分配';
           task.owner = payload.toOwner;
           task.updatedAt = ts;
           const env = await store.writeTask(task);
@@ -415,9 +391,7 @@ export function createDomainActionService(
           break;
         }
         case 'issue.create': {
-          if (payload.owner && payload.owner !== actor) {
-            return fail(action, req.idempotencyKey, 'OWNER_MISMATCH', '创建问题时 owner 只能省略或等于本机成员');
-          }
+          if (payload.owner) await requireActiveMember(payload.owner);
           const id = (await generateIssueId(repoRoot)) as IssueId;
           const issue: Issue = {
             recordType: 'issue',
@@ -446,13 +420,7 @@ export function createDomainActionService(
           const stale = assertRevision(current, req.expectedRevision, action, req.idempotencyKey, 'issue');
           if (stale) return stale;
           const issue = { ...current!.data };
-          if (!issue.owner) {
-            if (payload.owner && payload.owner !== actor) {
-              return fail(action, req.idempotencyKey, 'OWNER_MISMATCH', '未认领问题只能认领给本机成员');
-            }
-          } else {
-            assertOwner(issue.owner, actor, '问题');
-          }
+          if (payload.owner !== undefined) await requireActiveMember(payload.owner);
           if (payload.title !== undefined) issue.title = payload.title;
           if (payload.status !== undefined) issue.status = payload.status;
           if (payload.severity !== undefined) issue.severity = payload.severity;
@@ -474,12 +442,8 @@ export function createDomainActionService(
           const stale = assertRevision(current, req.expectedRevision, action, req.idempotencyKey, 'issue');
           if (stale) return stale;
           const issue = { ...current!.data };
-          assertOwner(issue.owner, actor, '问题');
-          if (!issue.owner) {
-            return fail(action, req.idempotencyKey, 'OWNER_MISMATCH', '未认领问题不能交接');
-          }
           await requireActiveMember(payload.toOwner);
-          const fromOwner = issue.owner;
+          const fromOwner = issue.owner ?? '未分配';
           issue.owner = payload.toOwner;
           issue.updatedAt = ts;
           const env = await store.writeIssue(issue);
@@ -523,9 +487,7 @@ export function createDomainActionService(
           break;
         }
         case 'idea.create': {
-          if (payload.owner && payload.owner !== actor) {
-            return fail(action, req.idempotencyKey, 'OWNER_MISMATCH', '创建想法时 owner 只能省略或等于本机成员');
-          }
+          if (payload.owner) await requireActiveMember(payload.owner);
           const id = (await generateIdeaId(repoRoot)) as IdeaId;
           const idea: Idea = {
             recordType: 'idea',
@@ -549,19 +511,12 @@ export function createDomainActionService(
           const stale = assertRevision(current, req.expectedRevision, action, req.idempotencyKey, 'idea');
           if (stale) return stale;
           const idea = { ...current!.data };
-          if (idea.owner) {
-            assertOwner(idea.owner, actor, '想法');
-          } else if (idea.author !== actor) {
-            return fail(action, req.idempotencyKey, 'OWNER_MISMATCH', '未认领想法仅作者可修改');
-          }
           if (payload.title !== undefined) idea.title = payload.title;
           if (payload.status !== undefined) idea.status = payload.status;
           if (payload.module !== undefined) idea.module = payload.module;
           if (payload.description !== undefined) idea.description = payload.description;
           if (payload.owner !== undefined) {
-            if (payload.owner !== actor && !idea.owner) {
-              return fail(action, req.idempotencyKey, 'OWNER_MISMATCH', '未认领想法只能认领给本机成员');
-            }
+            await requireActiveMember(payload.owner);
             idea.owner = payload.owner;
           }
           idea.updatedAt = ts;
@@ -574,10 +529,6 @@ export function createDomainActionService(
           const stale = assertRevision(current, req.expectedRevision, action, req.idempotencyKey, 'idea');
           if (stale) return stale;
           const idea = current!.data;
-          const canPromote = idea.owner ? idea.owner === actor : idea.author === actor;
-          if (!canPromote) {
-            return fail(action, req.idempotencyKey, 'OWNER_MISMATCH', '仅想法作者或负责人可提升为任务');
-          }
           const { snapshot } = await store.buildSnapshot();
           const existingTask = [...snapshot.tasks.values()].find((t) => t.sourceIdeaId === idea.id);
           if (existingTask) {
@@ -600,9 +551,7 @@ export function createDomainActionService(
             // Treat as recoverable success per plan; still cache receipt.
             break;
           }
-          if (payload.owner && payload.owner !== actor) {
-            return fail(action, req.idempotencyKey, 'OWNER_MISMATCH', '提升任务时 owner 只能省略或等于本机成员');
-          }
+          if (payload.owner) await requireActiveMember(payload.owner);
           const id = (await generateTaskId(repoRoot)) as TaskId;
           const task: Task = {
             recordType: 'task',
@@ -675,7 +624,13 @@ export function createDomainActionService(
 
   return {
     async capabilities(channel: Channel): Promise<CapabilityDocument> {
-      const { actor } = await loadActor();
+      let actor = "未配置";
+      try {
+        ({ actor } = await loadActor());
+      } catch {
+        // 新克隆仓库尚未创建 .本机配置/settings.json 时也必须能读取能力清单。
+        // 实际写动作仍会通过 executeInner 调用 loadActor 并拒绝未配置身份。
+      }
       return {
         schemaVersion: 1,
         actor,

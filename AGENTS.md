@@ -58,10 +58,12 @@
 - `packages/protocol/`：领域校验、原子写入和动作实现。
 - `packages/agent-cli/`：成员与 Agent 的统一命令入口。
 - `packages/git-core/`、`scripts/git-safe.mjs`：安全 Git 状态机。
+- `apps/server/`：仅监听本机回环地址的 API、GitHub 身份识别和安全 Git 接口。
+- `apps/dashboard/`：活动中的 Claude 橙色八页面协作台。
 - `scripts/agent/`：可重复调用的 Agent 动作包装。
 - `.claude/skills/`、`.codex/skills/`：项目本地 Skill；同名副本必须同步。
 - `生成内容/`：可重新生成的总览，不是人工维护的事实源。
-- `归档/前端看板/`：历史前端基线；未经授权不得恢复为默认构建。
+- `归档/前端看板/`：旧版前端基线；保留但不参与当前默认构建。
 
 ## JSON 通讯协议
 
@@ -70,12 +72,13 @@
 1. 每项任务、问题、想法、事件和成员各占一个 `.json`。禁止合并成共享大文件。
 2. 文件名等于记录 ID；成员文件名等于 GitHub username。
 3. `owner`、`author`、`actor`、`participants` 只填写 GitHub username。
-4. ID 格式固定：任务 `T-YYYYMMDD-XXXX`，问题 `I-YYYYMMDD-XXXX`，想法 `A-YYYYMMDD-XXXX`，事件 `E-YYYYMMDD-HHMMSS-XXXX`。
-5. 时间使用带时区的 ISO 8601。字段、状态和优先级以 `比赛管理/Schema/` 为准。
-6. 进度、测试、决策和交接追加为独立事件，不覆盖历史。
-7. 通过 `npm run agent -- ...` 或 `scripts/agent/*.mjs` 写业务 JSON，不直接绕过协议改文件。
-8. 更新时携带最新 `revision`。同一请求重试时复用 idempotency key；新请求使用新 key。
-9. 模板和生成内容不得冒充活动记录。
+4. `owner` 只表示主要负责人，不是权限锁；任意 active 成员均可操作记录，所有改动仍受 revision、幂等键和事件审计保护。
+5. ID 格式固定：任务 `T-YYYYMMDD-XXXX`，问题 `I-YYYYMMDD-XXXX`，想法 `A-YYYYMMDD-XXXX`，事件 `E-YYYYMMDD-HHMMSS-XXXX`。
+6. 时间使用带时区的 ISO 8601。字段、状态和优先级以 `比赛管理/Schema/` 为准。
+7. 进度、测试、决策和交接追加为独立事件，不覆盖历史。
+8. 通过 `npm run agent -- ...` 或 `scripts/agent/*.mjs` 写业务 JSON，不直接绕过协议改文件。
+9. 更新时携带最新 `revision`。同一请求重试时复用 idempotency key；新请求使用新 key。
+10. 模板和生成内容不得冒充活动记录。
 
 ## Agent 动作
 
@@ -98,6 +101,31 @@ npm run agent -- action task.create \
 ```
 
 更新、完成、关闭和交接使用对应动作：`task.update`、`task.setStatus`、`task.handoff`、`issue.update`、`issue.handoff`、`idea.update`、`event.append`。优先复用 `scripts/agent/` 中已有包装，不重复造入口。
+
+## 本地协作台
+
+每台电脑先安装依赖并完成一次构建：
+
+```bash
+npm install
+npm run build
+```
+
+启动本地 API：
+
+```bash
+npm start
+```
+
+服务只监听 `http://127.0.0.1:3210`。首次启动优先通过 `gh api user` 自动识别当前 GitHub CLI 登录用户，并把 username 写入不会提交的 `.本机配置/settings.json`。无法可靠识别时，使用 `npm run agent -- init-member ... --local` 手动初始化。
+
+另开终端启动网页：
+
+```bash
+npm run dev
+```
+
+浏览器打开 `http://127.0.0.1:5173`。网页中的任务、问题、想法写操作必须调用 Agent-native 动作；Git 拉取、提交和推送必须走五步确认向导并输入对应中文确认短语。
 
 ## MSPM0 任务路由
 
@@ -138,6 +166,8 @@ npm run schemas
 npm run typecheck
 npm run test
 npm run test:integration
+npm run test:smoke
+npm run test:e2e -- --project=chromium
 npm run validate
 npm run overview
 npm run git:status

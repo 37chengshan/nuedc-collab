@@ -1,5 +1,4 @@
 import { useState, type ReactNode } from "react";
-import { NavLink, useLocation } from "react-router-dom";
 import {
   BookOpen,
   Boxes,
@@ -20,12 +19,14 @@ import { Drawer } from "@/components/Drawer";
 import { useToast } from "@/components/Toast";
 import { useGitFetchMutation, useGitStatusQuery } from "@/hooks/queries";
 import { useGitWizard } from "@/features/git/GitWizardContext";
+import { RouterLink, useRouter } from "@/app/router";
+import { isNavActive } from "@/app/nav";
 
 const ICONS = [LayoutDashboard, ListTodo, ShieldAlert, Lightbulb, Clock3, BookOpen, Boxes, Settings];
 
 export function AppShell({ children }: { children: ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const location = useLocation();
+  const { pathname } = useRouter();
   const { push } = useToast();
   const { openWizard } = useGitWizard();
   const status = useGitStatusQuery();
@@ -47,21 +48,20 @@ export function AppShell({ children }: { children: ReactNode }) {
             {NAV_ITEMS.filter((item) => item.group === group).map((item) => {
               const Icon = ICONS[NAV_ITEMS.indexOf(item)] ?? GitBranch;
               return (
-                <NavLink
+                <RouterLink
                   key={item.path}
                   to={item.path}
-                  end={item.path === "/"}
-                  className={({ isActive }) =>
-                    cn(
-                      "group flex min-h-11 items-center gap-3 rounded-control px-3 py-2 text-sm transition-colors duration-hover",
-                      isActive ? "bg-panel text-ink shadow-sm" : "text-subtle hover:bg-muted hover:text-body",
-                    )
-                  }
+                  className={cn(
+                    "group flex min-h-11 items-center gap-3 rounded-control px-3 py-2 text-sm transition-colors duration-hover",
+                    isNavActive(pathname, item.path)
+                      ? "bg-panel text-ink shadow-sm"
+                      : "text-subtle hover:bg-muted hover:text-body",
+                  )}
                   onClick={() => setSidebarOpen(false)}
                 >
                   <Icon className="h-[18px] w-[18px] shrink-0 text-faint group-hover:text-orange" aria-hidden />
                   <span className="font-medium">{item.label}</span>
-                </NavLink>
+                </RouterLink>
               );
             })}
           </div>
@@ -71,7 +71,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   );
 
   const current = NAV_ITEMS.find((item) =>
-    item.path === "/" ? location.pathname === "/" : location.pathname.startsWith(item.path),
+    item.path === "/" ? pathname === "/" : pathname.startsWith(item.path),
   ) ?? NAV_ITEMS[0]!;
 
   return (

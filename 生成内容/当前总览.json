@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-29T09:57:42+08:00",
+  "generatedAt": "2026-07-29T10:51:59+08:00",
   "ideas": [
     {
       "author": "37chengshan",
@@ -84,6 +84,50 @@
     }
   ],
   "recentCommits": [
+    {
+      "authorEmail": "37chengshan@users.noreply.github.com",
+      "authorName": "37chengshan",
+      "committedAt": "2026-07-29T10:27:20+08:00",
+      "parents": [
+        "59790038a68ad8d65b53159582d926b539c2192c"
+      ],
+      "sha": "4c96778690fe558b996082645121f3381f920c74",
+      "shortSha": "4c96778",
+      "subject": "docs: 完善AI协作手册并加入MSPM0技能"
+    },
+    {
+      "authorEmail": "37chengshan@users.noreply.github.com",
+      "authorName": "37chengshan",
+      "committedAt": "2026-07-29T10:19:20+08:00",
+      "parents": [
+        "77d4a454b79af3fe512216086563de477cde3198"
+      ],
+      "sha": "59790038a68ad8d65b53159582d926b539c2192c",
+      "shortSha": "5979003",
+      "subject": "总体方案"
+    },
+    {
+      "authorEmail": "37chengshan@users.noreply.github.com",
+      "authorName": "37chengshan",
+      "committedAt": "2026-07-29T10:18:37+08:00",
+      "parents": [
+        "df39ca049a3816045a4fd4c938920655aecd45b3"
+      ],
+      "sha": "77d4a454b79af3fe512216086563de477cde3198",
+      "shortSha": "77d4a45",
+      "subject": "docs: 添加 B 题 MCU 总体方案与官方题目"
+    },
+    {
+      "authorEmail": "37chengshan@users.noreply.github.com",
+      "authorName": "37chengshan",
+      "committedAt": "2026-07-29T09:58:45+08:00",
+      "parents": [
+        "443f6e828710900069599b0fc99383e45bf87350"
+      ],
+      "sha": "df39ca049a3816045a4fd4c938920655aecd45b3",
+      "shortSha": "df39ca0",
+      "subject": "feat: 建立电赛三人文件通讯与安全协作底座"
+    },
     {
       "authorEmail": "37chengshan@users.noreply.github.com",
       "authorName": "37chengshan",

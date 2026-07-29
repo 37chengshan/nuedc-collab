@@ -63,6 +63,7 @@ import {
 } from "@/lib/format";
 import { useToast } from "@/components/Toast";
 import { useGitWizard } from "@/features/git/GitWizardContext";
+import { toErrorView } from "@/lib/query-error";
 
 function actionKey(action: string) {
   const suffix = typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -78,6 +79,31 @@ function QueryFailure({ error, retry }: { error: unknown; retry: () => void }) {
       nextStep="确认本地服务已启动，再重新加载。"
       onRetry={retry}
     />
+  );
+}
+
+function SafeContentPreview({
+  content,
+  className = "",
+}: {
+  content: { contentType: string; body?: string } | null | undefined;
+  className?: string;
+}) {
+  if (!content?.body) return null;
+  if (content.contentType.includes("text/html")) {
+    return (
+      <iframe
+        title="HTML 沙箱预览"
+        sandbox=""
+        srcDoc={content.body}
+        className={`mt-4 h-[620px] w-full rounded-control border border-border bg-white ${className}`}
+      />
+    );
+  }
+  return (
+    <pre className={`mt-4 max-h-[620px] whitespace-pre-wrap break-words overflow-auto font-body text-sm leading-7 text-body ${className}`}>
+      {content.body}
+    </pre>
   );
 }
 
@@ -227,6 +253,7 @@ function TaskCreateDialog({ open, onClose }: { open: boolean; onClose: () => voi
   const [module, setModule] = useState("");
   const [priority, setPriority] = useState<TaskPriority>("medium");
   const [description, setDescription] = useState("");
+  const errorView = mutation.isError ? toErrorView(mutation.error) : null;
   const submit = () => {
     mutation.mutate({
       action: "task.create",
@@ -249,7 +276,7 @@ function TaskCreateDialog({ open, onClose }: { open: boolean; onClose: () => voi
       <Select label="优先级" value={priority} onChange={(event) => setPriority(event.target.value as TaskPriority)}
         options={[{ value: "low", label: "低" }, { value: "medium", label: "中" }, { value: "high", label: "高" }, { value: "critical", label: "紧急" }]} />
       <TextArea label="说明" value={description} onChange={(event) => setDescription(event.target.value)} placeholder="写清产出、边界与验收证据。" />
-      {mutation.isError ? <ErrorState impact={(mutation.error as Error).message} nextStep="修正字段后使用新的幂等键重试。" /> : null}
+      {errorView ? <ErrorState impact={errorView.impact} nextStep={errorView.nextStep} details={errorView.details} /> : null}
     </Dialog>
   );
 }
@@ -260,6 +287,7 @@ function TaskDetailDialog({ envelope, onClose }: { envelope: RecordEnvelope<Task
   const [status, setStatus] = useState<TaskStatus>(envelope?.data.status ?? "todo");
   if (!envelope) return null;
   const task = envelope.data;
+  const errorView = mutation.isError ? toErrorView(mutation.error) : null;
   const update = () => mutation.mutate({
     action: "task.setStatus",
     request: {
@@ -286,7 +314,7 @@ function TaskDetailDialog({ envelope, onClose }: { envelope: RecordEnvelope<Task
           {task.acceptanceCriteria.length ? task.acceptanceCriteria.map((item) => <li key={item}>{item}</li>) : <li>尚未填写</li>}
         </ul>
       </div>
-      {mutation.isError ? <ErrorState impact={(mutation.error as Error).message} nextStep="重新读取最新 revision 后再试。" /> : null}
+      {errorView ? <ErrorState impact={errorView.impact} nextStep={errorView.nextStep} details={errorView.details} /> : null}
     </Dialog>
   );
 }
@@ -552,7 +580,7 @@ export function MaterialsPage() {
           <h2 className="border-b border-border pb-3 text-sm font-semibold text-ink">安全预览</h2>
           {content.isLoading ? <LoadingState className="mt-4" /> : null}
           {content.isError ? <QueryFailure error={content.error} retry={() => void content.refetch()} /> : null}
-          {content.data?.body ? <pre className="mt-4 max-h-[620px] whitespace-pre-wrap break-words font-body text-sm leading-7 text-body">{content.data.body}</pre> : <p className="mt-4 text-sm text-subtle">选择资料查看文本内容；HTML 只允许沙箱预览。</p>}
+          {content.data?.body ? <SafeContentPreview content={content.data} /> : <p className="mt-4 text-sm text-subtle">选择资料查看文本内容；HTML 只允许沙箱预览。</p>}
         </Card>
       </div>
     </div>
@@ -604,7 +632,7 @@ export function DesignPage() {
             <Card className="shadow-none">
               <h2 className="text-sm font-semibold text-ink">{selected.title}</h2>
               {content.isLoading ? <LoadingState className="mt-4" /> : null}
-              {content.data?.body ? <pre className="mt-4 max-h-80 whitespace-pre-wrap overflow-auto font-body text-sm leading-7 text-body">{content.data.body}</pre> : null}
+              {content.data?.body ? <SafeContentPreview content={content.data} className="max-h-80" /> : null}
             </Card>
           ) : null}
         </div>

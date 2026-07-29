@@ -9,7 +9,9 @@
 - Agent 和队员通过同一套 CLI 创建、更新、完成、交接和校验记录。
 - 安全查看、拉取、提交和推送；所有写步骤明确确认，冲突或分叉立即停止。
 - 生成 `生成内容/当前总览.json` 与 Markdown 总览，供人阅读或未来网页解析。
-- 原本的本地看板源码已完整归档到 `归档/前端看板/`，当前默认流程不会构建它。
+- 本地协作台提供工作台、任务、问题、想法、提交历史、参考资料、总体设计和设置八个页面。
+- 首次启动会优先通过 GitHub CLI 自动识别当前登录的 GitHub username，并写入不提交的本机配置。
+- 旧版前端仍完整保留在 `归档/前端看板/`，活动实现位于 `apps/dashboard/`。
 
 ## 五分钟开始
 
@@ -17,7 +19,14 @@
 npm install
 npm run build
 
-# 每台电脑只执行一次，把 username 改成自己的 GitHub 用户名
+# 推荐：已执行 gh auth login 的电脑会在启动服务时自动识别 GitHub username
+npm start
+
+# 另开一个终端启动网页
+npm run dev
+# 浏览器打开 http://127.0.0.1:5173
+
+# 如果没有安装或登录 GitHub CLI，再手动初始化
 npm run agent -- init-member \
   --username 你的GitHub用户名 \
   --roles hardware,firmware \
@@ -51,8 +60,10 @@ npm run git:push
 - `参考资料/`：硬件资料、焊接教程与外部仓库索引。
 - `reference-code/`：允许使用英文目录名的参考代码。
 - `packages/`：协议、Agent CLI 与安全 Git 核心代码。
+- `apps/server/`：只监听本机回环地址的 API、身份识别和 Git 安全接口。
+- `apps/dashboard/`：Claude 橙色本地协作台。
 - `scripts/`：Agent 动作薄包装、安全 Git 与维护脚本。
 - `生成内容/`：可重新生成的总览 JSON/Markdown。
-- `归档/前端看板/`：暂停的前端源码和恢复说明。
+- `归档/前端看板/`：旧版前端源码和恢复说明。
 
 详细规则见 [比赛文档/协作手册/README.md](比赛文档/协作手册/README.md) 和根目录 `CLAUDE.md` / `AGENTS.md`。

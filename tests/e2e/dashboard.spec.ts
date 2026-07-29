@@ -86,6 +86,14 @@ test.describe("八页面协作看板", () => {
     await expect(page.getByText("视觉模块", { exact: true })).toBeVisible();
   });
 
+  test("HTML 资料只在无权限沙箱 iframe 中预览", async ({ page }) => {
+    await page.goto("/materials");
+    await page.getByText("主板焊接教程 HTML", { exact: true }).click();
+    const frame = page.getByTitle("HTML 沙箱预览");
+    await expect(frame).toHaveAttribute("sandbox", "");
+    await expect(page.frameLocator('iframe[title="HTML 沙箱预览"]').getByText("受限 HTML 教程")).toBeVisible();
+  });
+
   test("设置页展示 Agent-native 能力和不可绕过的 Git 确认", async ({ page }) => {
     await page.goto("/settings");
     await expect(page.getByText("task.create", { exact: true })).toBeVisible();
