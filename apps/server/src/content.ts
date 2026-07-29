@@ -8,7 +8,6 @@ const DESIGN_ROOTS = [
   "比赛文档/设计模板",
   "比赛文档/设计规范",
   "比赛文档/方案模板",
-  "比赛文档/实施计划",
 ] as const;
 
 type PreviewMode = "text" | "sandboxHtml" | "image" | "pdf" | "downloadOnly";

@@ -21,3 +21,17 @@ _w.py
 .superpowers/brainstorm/.last-port
 .superpowers/brainstorm/.last-token
 .superpowers/
+
+# AI / 开发过程记录：只保留在本机，不进入协作仓库
+task_plan.md
+progress.md
+findings.md
+process.md
+procss.md
+.planning/
+.process/
+process/
+procss/
+开发过程/
+/比赛文档/实施计划/
+/归档/前端看板/计划/
