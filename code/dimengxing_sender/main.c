@@ -28,15 +28,17 @@ static void uart_send_frame(const uint8_t *frame)
 static bool wait_for_ack(LinkParser *parser, uint8_t sequence)
 {
     uint8_t frame[LINK_FRAME_SIZE];
-    uint32_t timeout;
-    for (timeout = 0U; timeout < 200000U; timeout++) {
-        if (!DL_UART_Main_isRXFIFOEmpty(LINK_INST)) {
+    uint8_t window;
+
+    for (window = 0U; window < 40U; window++) {
+        while (!DL_UART_Main_isRXFIFOEmpty(LINK_INST)) {
             uint8_t byte = (uint8_t)DL_UART_Main_receiveData(LINK_INST);
             if (link_parser_push(parser, byte, frame) &&
                 frame[3] == LINK_TYPE_ACK && frame[4] == sequence) {
                 return true;
             }
         }
+        delay_ms(5);
     }
     return false;
 }
@@ -60,8 +62,12 @@ int main(void)
     uint8_t tx_frame[LINK_FRAME_SIZE];
     uint8_t sequence = 0U;
     uint8_t address;
+    uint8_t display_address = 0U;
+    uint8_t display_sequence = 0U;
     uint16_t adc_raw;
     uint16_t millivolts;
+    uint16_t display_adc_raw = 0U;
+    uint16_t display_millivolts = 0U;
     bool link_ok;
     bool oled_ready;
     LinkParser parser = {{0U}, 0U};
@@ -86,17 +92,27 @@ int main(void)
         uart_send_frame(tx_frame);
         link_ok = wait_for_ack(&parser, sequence);
 
+        /* Only publish a frame after receiver 2 confirms the same sequence. */
+        if (link_ok) {
+            display_address = address;
+            display_sequence = sequence;
+            display_adc_raw = adc_raw;
+            display_millivolts = millivolts;
+        }
+
         if (oled_ready) {
             OLED_ClearBuffer();
-            snprintf(text, sizeof(text), "TX A:%02u %s", address,
+            snprintf(text, sizeof(text), "ADDR:%02u LINK:%s", display_address,
                      link_ok ? "OK" : "--");
             OLED_ShowString(0, 0, (u8 *)text, 16);
-            snprintf(text, sizeof(text), "RAW:%4u", (unsigned int)adc_raw);
+            snprintf(text, sizeof(text), "RAW:%4u",
+                     (unsigned int)display_adc_raw);
             OLED_ShowString(0, 16, (u8 *)text, 16);
-            snprintf(text, sizeof(text), "V:%u.%03uV", millivolts / 1000U,
-                     millivolts % 1000U);
+            snprintf(text, sizeof(text), "V:%u.%03uV",
+                     display_millivolts / 1000U,
+                     display_millivolts % 1000U);
             OLED_ShowString(0, 32, (u8 *)text, 16);
-            snprintf(text, sizeof(text), "SEQ:%3u", sequence);
+            snprintf(text, sizeof(text), "SEQ:%3u", display_sequence);
             OLED_ShowString(0, 48, (u8 *)text, 16);
             oled_ready = (OLED_Refresh() == OLED_STATUS_OK);
         }
