@@ -113,14 +113,24 @@ export async function installDashboardApi(page: Page): Promise<DashboardFixture>
     }
     if (path === "/api/members") {
       await route.fulfill(json({
-        items: [envelope("tester", "member", {
-          githubUsername: "tester",
-          roles: ["硬件"],
-          responsibilities: ["电源"],
-          status: "active",
-          createdAt: now,
-          updatedAt: now,
-        })],
+        items: [
+          envelope("tester", "member", {
+            githubUsername: "tester",
+            roles: ["硬件"],
+            responsibilities: ["电源"],
+            status: "active",
+            createdAt: now,
+            updatedAt: now,
+          }),
+          envelope("teammate", "member", {
+            githubUsername: "teammate",
+            roles: ["固件"],
+            responsibilities: ["串口"],
+            status: "active",
+            createdAt: now,
+            updatedAt: now,
+          }),
+        ],
         warnings: [],
       }));
       return;

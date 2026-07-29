@@ -187,12 +187,13 @@ export interface IssueRecord {
   title: string;
   status: IssueStatus;
   severity: IssueSeverity;
-  owner: string;
+  owner?: string;
   blocking: boolean;
   linkedTaskIds: string[];
   symptoms: string[];
   workaround: string;
   resolution: string;
+  description?: string;
   relatedCommits: string[];
   createdAt: string;
   updatedAt: string;

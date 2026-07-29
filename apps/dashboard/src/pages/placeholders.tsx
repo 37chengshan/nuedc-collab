@@ -48,6 +48,9 @@ import type {
   DesignEntry,
   IdeaRecord,
   IssueRecord,
+  IssueSeverity,
+  IssueStatus,
+  MemberRecord,
   RecordEnvelope,
   TaskPriority,
   TaskRecord,
@@ -398,11 +401,244 @@ function IssueCreateDialog({ open, onClose }: { open: boolean; onClose: () => vo
   );
 }
 
+function IssueDetailDialog({
+  envelope,
+  members,
+  onClose,
+}: {
+  envelope: RecordEnvelope<IssueRecord>;
+  members: Array<RecordEnvelope<MemberRecord>>;
+  onClose: () => void;
+}) {
+  const updateMutation = useDomainAction();
+  const handoffMutation = useDomainAction();
+  const eventMutation = useDomainAction();
+  const { push } = useToast();
+  const issue = envelope.data;
+  const [status, setStatus] = useState<IssueStatus>(issue.status);
+  const [severity, setSeverity] = useState<IssueSeverity>(issue.severity);
+  const [blocking, setBlocking] = useState(issue.blocking);
+  const [symptoms, setSymptoms] = useState(issue.symptoms.join("\n"));
+  const [workaround, setWorkaround] = useState(issue.workaround);
+  const [resolution, setResolution] = useState(issue.resolution);
+  const [description, setDescription] = useState(issue.description ?? "");
+  const [toOwner, setToOwner] = useState(issue.owner ?? members[0]?.data.githubUsername ?? "");
+  const [eventKind, setEventKind] = useState<"comment" | "progress" | "testResult">("progress");
+  const [eventMessage, setEventMessage] = useState("");
+
+  const updateIssue = (payload: Record<string, unknown>, successTitle: string) => {
+    updateMutation.mutate({
+      action: "issue.update",
+      request: {
+        idempotencyKey: actionKey("issue.update"),
+        expectedRevision: envelope.revision,
+        payload: { id: issue.id, ...payload },
+      },
+    }, {
+      onSuccess: () => {
+        push({ title: successTitle, tone: "success" });
+        onClose();
+      },
+    });
+  };
+
+  const save = () => {
+    if (status === "resolved" && !resolution.trim()) {
+      push({ title: "解决问题前请填写解决结论", tone: "warning" });
+      return;
+    }
+    updateIssue({
+      status,
+      severity,
+      blocking,
+      symptoms: symptoms.split("\n").map((item) => item.trim()).filter(Boolean),
+      workaround: workaround.trim(),
+      resolution: resolution.trim(),
+      description: description.trim(),
+    }, "问题已更新");
+  };
+
+  const quickStatus = (nextStatus: IssueStatus) => {
+    if (nextStatus === "resolved" && !resolution.trim()) {
+      push({ title: "先填写解决结论，再标记已解决", tone: "warning" });
+      return;
+    }
+    updateIssue({
+      status: nextStatus,
+      ...(nextStatus === "resolved" ? { resolution: resolution.trim(), blocking: false } : {}),
+    }, nextStatus === "resolved" ? "问题已解决" : nextStatus === "investigating" ? "已开始排查" : "问题已重新打开");
+  };
+
+  const handoff = () => {
+    if (!toOwner || toOwner === issue.owner) return;
+    handoffMutation.mutate({
+      action: "issue.handoff",
+      request: {
+        idempotencyKey: actionKey("issue.handoff"),
+        expectedRevision: envelope.revision,
+        payload: {
+          id: issue.id,
+          toOwner,
+          message: `网页将问题交接给 ${toOwner}`,
+        },
+      },
+    }, {
+      onSuccess: () => {
+        push({ title: `问题已交接给 ${toOwner}`, tone: "success" });
+        onClose();
+      },
+    });
+  };
+
+  const appendEvent = () => {
+    if (!eventMessage.trim()) return;
+    eventMutation.mutate({
+      action: "event.append",
+      request: {
+        idempotencyKey: actionKey("event.append"),
+        payload: {
+          entityType: "issue",
+          entityId: issue.id,
+          kind: eventKind,
+          message: eventMessage.trim(),
+        },
+      },
+    }, {
+      onSuccess: () => {
+        push({ title: "处理记录已追加", tone: "success" });
+        setEventMessage("");
+      },
+    });
+  };
+
+  const activeMembers = members.filter((member) => member.data.status === "active");
+  const mutationError = updateMutation.error ?? handoffMutation.error ?? eventMutation.error;
+  const errorView = mutationError ? toErrorView(mutationError) : null;
+  const busy = updateMutation.isPending || handoffMutation.isPending || eventMutation.isPending;
+
+  return (
+    <Dialog
+      open
+      title={issue.title}
+      description={`${issue.id} · 创建于 ${formatRelativeTime(issue.createdAt)}`}
+      onClose={onClose}
+      size="lg"
+      footer={
+        <>
+          <Button variant="secondary" onClick={onClose}>关闭</Button>
+          {issue.status === "resolved" ? (
+            <Button variant="secondary" loading={updateMutation.isPending} onClick={() => quickStatus("open")}>重新打开</Button>
+          ) : (
+            <>
+              {issue.status !== "investigating" ? (
+                <Button variant="secondary" loading={updateMutation.isPending} onClick={() => quickStatus("investigating")}>开始排查</Button>
+              ) : null}
+              <Button variant="secondary" loading={updateMutation.isPending} onClick={() => quickStatus("resolved")}>标记已解决</Button>
+            </>
+          )}
+          <Button loading={updateMutation.isPending} onClick={save}>保存修改</Button>
+        </>
+      }
+    >
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Select
+          label="状态"
+          value={status}
+          onChange={(event) => setStatus(event.target.value as IssueStatus)}
+          options={[
+            { value: "open", label: "待处理" },
+            { value: "investigating", label: "排查中" },
+            { value: "blocked", label: "受阻" },
+            { value: "resolved", label: "已解决" },
+          ]}
+        />
+        <Select
+          label="严重度"
+          value={severity}
+          onChange={(event) => setSeverity(event.target.value as IssueSeverity)}
+          options={[
+            { value: "low", label: "低" },
+            { value: "medium", label: "中" },
+            { value: "high", label: "高" },
+            { value: "critical", label: "紧急" },
+          ]}
+        />
+      </div>
+
+      <label className="flex items-center justify-between gap-4 border-y border-border py-3 text-sm">
+        <span>
+          <strong className="font-medium text-ink">阻塞比赛主线</strong>
+          <span className="mt-0.5 block text-xs text-subtle">开启后会出现在工作台的阻塞与风险区域。</span>
+        </span>
+        <input type="checkbox" checked={blocking} onChange={(event) => setBlocking(event.target.checked)} />
+      </label>
+
+      <TextArea label="现象与复现条件（每行一条）" value={symptoms} onChange={(event) => setSymptoms(event.target.value)} />
+      <TextArea label="补充说明" value={description} onChange={(event) => setDescription(event.target.value)} />
+      <TextArea label="临时方案" value={workaround} onChange={(event) => setWorkaround(event.target.value)} placeholder="没有可用临时方案时可留空。" />
+      <TextArea label="解决结论" value={resolution} onChange={(event) => setResolution(event.target.value)} placeholder="标记已解决前必须写清修复和复测结果。" />
+
+      <section className="border-t border-border pt-4" aria-labelledby="issue-handoff-title">
+        <h3 id="issue-handoff-title" className="text-sm font-semibold text-ink">负责人交接</h3>
+        <p className="mt-1 text-xs text-subtle">owner 仅用于分工展示，任何 active 成员仍可继续操作。</p>
+        <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+          <Select
+            label="交接给"
+            value={toOwner}
+            onChange={(event) => setToOwner(event.target.value)}
+            options={activeMembers.map((member) => ({
+              value: member.data.githubUsername,
+              label: member.data.githubUsername,
+            }))}
+          />
+          <Button
+            className="sm:mt-[26px]"
+            variant="secondary"
+            disabled={!toOwner || toOwner === issue.owner}
+            loading={handoffMutation.isPending}
+            onClick={handoff}
+          >
+            交接负责人
+          </Button>
+        </div>
+      </section>
+
+      <section className="border-t border-border pt-4" aria-labelledby="issue-event-title">
+        <h3 id="issue-event-title" className="text-sm font-semibold text-ink">追加处理记录</h3>
+        <div className="mt-3 grid gap-3 sm:grid-cols-[180px_1fr]">
+          <Select
+            label="记录类型"
+            value={eventKind}
+            onChange={(event) => setEventKind(event.target.value as typeof eventKind)}
+            options={[
+              { value: "progress", label: "排查进展" },
+              { value: "comment", label: "补充说明" },
+              { value: "testResult", label: "复测结果" },
+            ]}
+          />
+          <TextArea label="记录内容" value={eventMessage} onChange={(event) => setEventMessage(event.target.value)} />
+        </div>
+        <div className="mt-3 flex justify-end">
+          <Button variant="secondary" disabled={!eventMessage.trim()} loading={eventMutation.isPending} onClick={appendEvent}>
+            追加记录
+          </Button>
+        </div>
+      </section>
+
+      {errorView ? <ErrorState impact={errorView.impact} nextStep={errorView.nextStep} details={errorView.details} /> : null}
+      {busy ? <p className="sr-only" role="status">正在保存问题操作</p> : null}
+    </Dialog>
+  );
+}
+
 export function IssuesPage() {
   const query = useIssuesQuery();
+  const members = useMembersQuery();
   const [creating, setCreating] = useState(false);
-  if (query.isLoading) return <LoadingState label="正在读取问题记录…" />;
+  const [selected, setSelected] = useState<RecordEnvelope<IssueRecord> | null>(null);
+  if (query.isLoading || members.isLoading) return <LoadingState label="正在读取问题记录…" />;
   if (query.isError) return <QueryFailure error={query.error} retry={() => void query.refetch()} />;
+  if (members.isError) return <QueryFailure error={members.error} retry={() => void members.refetch()} />;
   const items = query.data?.items ?? [];
   return (
     <div className="space-y-7">
@@ -410,27 +646,45 @@ export function IssuesPage() {
         actions={<Button leftIcon={<Plus className="h-4 w-4" />} onClick={() => setCreating(true)}>报告问题</Button>}
         meta={<><Badge tone="danger">{items.filter((item) => item.data.blocking && item.data.status !== "resolved").length} 个 blocker</Badge><Badge>{items.length} 条记录</Badge></>} />
       <div className="overflow-hidden rounded-panel border border-border bg-panel">
-        <div className="hidden grid-cols-[auto_1fr_110px_130px_120px] gap-4 border-b border-border bg-muted px-4 py-3 text-xs font-semibold text-subtle md:grid">
-          <span>状态</span><span>问题</span><span>严重度</span><span>负责人</span><span>更新时间</span>
+        <div className="hidden grid-cols-[auto_1fr_110px_130px_120px_44px] gap-4 border-b border-border bg-muted px-4 py-3 text-xs font-semibold text-subtle md:grid">
+          <span>状态</span><span>问题</span><span>严重度</span><span>负责人</span><span>更新时间</span><span className="sr-only">操作</span>
         </div>
         <div className="divide-y divide-border">
-          {items.map(({ data }) => (
-            <article key={data.id} className="grid gap-3 px-4 py-4 md:grid-cols-[auto_1fr_110px_130px_120px] md:items-center">
-              <IssueStatusPill status={data.status} />
-              <div className="min-w-0">
-                <p className="font-medium text-ink">{data.title}</p>
-                <p className="mt-1 text-xs text-subtle">{data.id}{data.blocking ? " · 阻塞主线" : ""}</p>
-                {data.symptoms[0] ? <p className="mt-2 text-sm text-subtle md:hidden">{data.symptoms[0]}</p> : null}
-              </div>
-              <Badge tone={data.severity === "critical" ? "danger" : data.severity === "high" ? "warning" : "neutral"}>{data.severity}</Badge>
-              <span className="text-sm text-subtle">{data.owner ?? "未分配"}</span>
-              <span className="text-xs text-faint">{formatRelativeTime(data.updatedAt)}</span>
-            </article>
-          ))}
+          {items.map((item) => {
+            const data = item.data;
+            return (
+              <button
+                key={data.id}
+                type="button"
+                className="grid w-full gap-3 px-4 py-4 text-start transition-colors hover:bg-muted/55 md:grid-cols-[auto_1fr_110px_130px_120px_44px] md:items-center"
+                onClick={() => setSelected(item)}
+                aria-label={`查看问题：${data.title}`}
+              >
+                <IssueStatusPill status={data.status} />
+                <div className="min-w-0">
+                  <p className="font-medium text-ink">{data.title}</p>
+                  <p className="mt-1 text-xs text-subtle">{data.id}{data.blocking ? " · 阻塞主线" : ""}</p>
+                  {data.symptoms[0] ? <p className="mt-2 text-sm text-subtle md:hidden">{data.symptoms[0]}</p> : null}
+                </div>
+                <Badge tone={data.severity === "critical" ? "danger" : data.severity === "high" ? "warning" : "neutral"}>{data.severity}</Badge>
+                <span className="text-sm text-subtle">{data.owner ?? "未分配"}</span>
+                <span className="text-xs text-faint">{formatRelativeTime(data.updatedAt)}</span>
+                <ArrowUpRight className="h-4 w-4 text-faint" aria-hidden />
+              </button>
+            );
+          })}
           {items.length === 0 ? <EmptyState title="暂无问题" description="赛前自检与比赛调试中发现异常时立即记录。" /> : null}
         </div>
       </div>
       <IssueCreateDialog open={creating} onClose={() => setCreating(false)} />
+      {selected ? (
+        <IssueDetailDialog
+          key={selected.data.id}
+          envelope={selected}
+          members={members.data?.items ?? []}
+          onClose={() => setSelected(null)}
+        />
+      ) : null}
     </div>
   );
 }

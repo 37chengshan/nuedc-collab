@@ -56,6 +56,48 @@ test.describe("八页面协作看板", () => {
     await expect.poll(() => dashboard.requests.some((item) => item.action === "issue.create")).toBe(true);
   });
 
+  test("可更新、解决、交接问题并追加处理记录", async ({ page, dashboard }) => {
+    const openIssue = () => page.getByRole("button", { name: "查看问题：串口偶发丢帧" }).click();
+    await page.goto("/issues");
+
+    await openIssue();
+    await page.getByRole("combobox", { name: "状态" }).selectOption("investigating");
+    await page.getByRole("combobox", { name: "严重度" }).selectOption("critical");
+    await page.getByLabel("临时方案").fill("切换到有校验的帧协议");
+    await page.getByRole("button", { name: "保存修改" }).click();
+    await expect.poll(() => dashboard.requests.some((item) =>
+      item.action === "issue.update" &&
+      item.payload.status === "investigating" &&
+      item.payload.severity === "critical",
+    )).toBe(true);
+
+    await openIssue();
+    await page.getByLabel("解决结论").fill("连续传输 30 分钟未再丢帧");
+    await page.getByRole("button", { name: "标记已解决" }).click();
+    await expect.poll(() => dashboard.requests.some((item) =>
+      item.action === "issue.update" &&
+      item.payload.status === "resolved" &&
+      item.payload.blocking === false,
+    )).toBe(true);
+
+    await openIssue();
+    await page.getByRole("combobox", { name: "交接给" }).selectOption("teammate");
+    await page.getByRole("button", { name: "交接负责人" }).click();
+    await expect.poll(() => dashboard.requests.some((item) =>
+      item.action === "issue.handoff" && item.payload.toOwner === "teammate",
+    )).toBe(true);
+
+    await openIssue();
+    await page.getByRole("combobox", { name: "记录类型" }).selectOption("testResult");
+    await page.getByLabel("记录内容").fill("复测串口链路通过");
+    await page.getByRole("button", { name: "追加记录" }).click();
+    await expect.poll(() => dashboard.requests.some((item) =>
+      item.action === "event.append" &&
+      item.payload.entityType === "issue" &&
+      item.payload.kind === "testResult",
+    )).toBe(true);
+  });
+
   test("可创建想法并提升为任务", async ({ page, dashboard }) => {
     await page.goto("/ideas");
     await openCreateDialog(page, /新建想法|创建想法/);

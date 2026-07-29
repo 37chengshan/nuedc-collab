@@ -45,7 +45,7 @@ export function Dialog({
         aria-modal="true"
         aria-labelledby="dialog-title"
         className={cn(
-          "relative z-10 w-full rounded-dialog border border-border bg-panel p-5 shadow-soft",
+          "relative z-10 flex max-h-[calc(100dvh-2rem)] w-full flex-col overflow-hidden rounded-dialog border border-border bg-panel shadow-soft",
           width,
         )}
         style={{
@@ -53,7 +53,7 @@ export function Dialog({
           animation: `dialog-in ${duration("menu")}ms ease`,
         }}
       >
-        <div className="mb-4 flex items-start justify-between gap-3">
+        <div className="flex shrink-0 items-start justify-between gap-3 border-b border-border px-5 py-4">
           <div>
             <h2 id="dialog-title" className="font-title text-xl text-ink">{title}</h2>
             {description ? <p className="mt-1 text-sm text-subtle">{description}</p> : null}
@@ -62,8 +62,12 @@ export function Dialog({
             <X className="h-4 w-4" />
           </Button>
         </div>
-        <div className="space-y-4">{children}</div>
-        {footer ? <div className="mt-5 flex flex-wrap justify-end gap-2">{footer}</div> : null}
+        <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-4">{children}</div>
+        {footer ? (
+          <div className="flex shrink-0 flex-wrap justify-end gap-2 border-t border-border bg-panel px-5 py-4">
+            {footer}
+          </div>
+        ) : null}
       </div>
       <style>{`@keyframes dialog-in { from { opacity: 0; transform: translateY(8px) scale(0.98);} to { opacity: 1; transform: none; } }`}</style>
     </div>
