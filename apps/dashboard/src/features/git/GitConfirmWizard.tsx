@@ -14,7 +14,6 @@ import { shortHash } from "@/lib/format";
 import { Dialog } from "@/components/Dialog";
 import { Button } from "@/components/Button";
 import { TextArea } from "@/components/TextArea";
-import { TextInput } from "@/components/TextInput";
 import { LoadingState } from "@/components/LoadingState";
 import { ErrorState } from "@/components/ErrorState";
 import { Badge } from "@/components/Badge";
@@ -53,8 +52,7 @@ export function GitConfirmWizard({
   const [snapshot, setSnapshot] = useState<GitState | null>(null);
   const [files, setFiles] = useState<string[]>([]);
   const [message, setMessage] = useState("");
-  const [acknowledged, setAcknowledged] = useState(false);
-  const [confirmationPhrase, setConfirmationPhrase] = useState("");
+  const [refreshing, setRefreshing] = useState(false);
   const [result, setResult] = useState<{
     ok: boolean;
     code?: string;
@@ -83,8 +81,7 @@ export function GitConfirmWizard({
     setStep("view");
     setFiles([]);
     setMessage("");
-    setAcknowledged(false);
-    setConfirmationPhrase("");
+    setRefreshing(false);
     setResult(null);
     setSnapshot(null);
   }, [open, kind]);
@@ -113,13 +110,18 @@ export function GitConfirmWizard({
   }, [kind, snapshot]);
 
   const writeMutation = useMutation({
-    mutationFn: async () => {
-      if (!snapshot) throw new Error("缺少 Git 快照");
+    mutationFn: async ({
+      latestSnapshot,
+      changesHash,
+    }: {
+      latestSnapshot: GitState;
+      changesHash?: string;
+    }) => {
       const body = {
         confirmed: true as const,
-        expectedHead: snapshot.head,
-        expectedRemoteHead: snapshot.remoteHead,
-        expectedChangesHash: diffQuery.data?.changesHash,
+        expectedHead: latestSnapshot.head,
+        expectedRemoteHead: latestSnapshot.remoteHead,
+        expectedChangesHash: changesHash,
         files: kind === "commit" ? files : undefined,
         message: kind === "commit" ? message.trim() : undefined,
       };
@@ -145,11 +147,13 @@ export function GitConfirmWizard({
     },
     onError: (err: unknown) => {
       const api = err instanceof ApiError ? err : null;
+      const payload = api?.payload as GitWriteResult | undefined;
       setResult({
         ok: false,
         code: api?.code || "GIT_WRITE_FAILED",
         impact: api?.impact || (err as Error)?.message || "Git 写操作失败",
         nextStep: api?.nextStep || "关闭向导并重新查看摘要，不要自动重试",
+        state: payload?.state,
       });
       setStep("result");
       push({
@@ -160,19 +164,92 @@ export function GitConfirmWizard({
     },
   });
 
+  const confirmWrite = async () => {
+    setRefreshing(true);
+    try {
+      const [latestSnapshot, latestDiff] = await Promise.all([
+        getGitStatus(),
+        kind === "commit" ? getGitDiff({ files }) : Promise.resolve(null),
+      ]);
+      if (kind === "commit") {
+        const currentPaths = new Set((latestDiff?.files ?? []).map((file) => file.path));
+        const missingFiles = files.filter((file) => !currentPaths.has(file));
+        if (missingFiles.length > 0) {
+          setSnapshot(latestSnapshot);
+          setResult({
+            ok: false,
+            code: "STALE_GIT_STATE",
+            impact: `有 ${missingFiles.length} 个选中文件已不在当前改动中，本次提交没有执行。`,
+            nextStep: "返回文件选择，确认最新改动后再次提交。",
+            state: latestSnapshot,
+          });
+          setStep("result");
+          return;
+        }
+        if (!latestDiff?.changesHash) {
+          throw new Error("无法生成选中文件的最新摘要");
+        }
+      }
+      setSnapshot(latestSnapshot);
+      writeMutation.mutate({
+        latestSnapshot,
+        ...(latestDiff?.changesHash ? { changesHash: latestDiff.changesHash } : {}),
+      });
+    } catch (err) {
+      const api = err instanceof ApiError ? err : null;
+      setResult({
+        ok: false,
+        code: api?.code || "GIT_REFRESH_FAILED",
+        impact: api?.impact || (err as Error)?.message || "无法刷新 Git 状态",
+        nextStep: api?.nextStep || "检查本地服务和仓库状态后，点击刷新重试。",
+      });
+      setStep("result");
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  const refreshAndReturn = async () => {
+    setRefreshing(true);
+    try {
+      const [latestSnapshot, latestDiff] = await Promise.all([
+        getGitStatus(),
+        kind === "commit" ? getGitDiff() : Promise.resolve(null),
+      ]);
+      setSnapshot(latestSnapshot);
+      if (kind === "commit") {
+        const currentPaths = new Set((latestDiff?.files ?? []).map((file) => file.path));
+        const validFiles = files.filter((file) => currentPaths.has(file));
+        setFiles(validFiles);
+        setStep(validFiles.length === files.length && validFiles.length > 0 ? "confirm" : "fill");
+      } else {
+        setStep("confirm");
+      }
+      setResult(null);
+      push({
+        title: "Git 状态已刷新",
+        description: kind === "commit" ? "提交说明和仍有效的文件选择已保留。" : "请再次确认最新状态。",
+        tone: "success",
+      });
+      void queryClient.invalidateQueries({ queryKey: ["git-status"] });
+    } catch (err) {
+      const api = err instanceof ApiError ? err : null;
+      setResult({
+        ok: false,
+        code: api?.code || "GIT_REFRESH_FAILED",
+        impact: api?.impact || (err as Error)?.message || "无法刷新 Git 状态",
+        nextStep: api?.nextStep || "检查本地服务和仓库状态后再次刷新。",
+      });
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   const goNext = () => {
     const idx = STEPS.indexOf(step);
     if (idx < 0 || idx >= STEPS.length - 1) return;
     if (step === "confirm") {
-      if (!acknowledged) {
-        push({ title: "请先勾选“我已阅读影响”", tone: "warning" });
-        return;
-      }
-      if (confirmationPhrase.trim() !== CONFIRM_LABEL[kind]) {
-        push({ title: `请输入“${CONFIRM_LABEL[kind]}”`, tone: "warning" });
-        return;
-      }
-      writeMutation.mutate();
+      void confirmWrite();
       return;
     }
     const next = STEPS[idx + 1]!;
@@ -199,32 +276,44 @@ export function GitConfirmWizard({
   const toggleFile = (path: string) => {
     setFiles((prev) => (prev.includes(path) ? prev.filter((p) => p !== path) : prev.length >= 200 ? prev : [...prev, path]));
   };
+  const busy = refreshing || writeMutation.isPending;
+  const canRefreshResult =
+    step === "result" &&
+    result?.ok === false &&
+    (result.code === "STALE_GIT_STATE" || result.code === "GIT_REFRESH_FAILED");
 
   return (
     <Dialog
       open={open}
       title={TITLES[kind]}
-      description="写操作只会在最后确认后发送，并携带 confirmed 与期望状态快照。"
+      description="填写并复核后，最后一步直接点击确认；执行前会刷新最新 Git 状态。"
       onClose={onClose}
       size="lg"
       footer={
         step === "result" ? (
-          <Button variant="primary" onClick={onClose}>
-            关闭向导
-          </Button>
+          <>
+            <Button variant="secondary" onClick={onClose}>
+              关闭向导
+            </Button>
+            {canRefreshResult ? (
+              <Button variant="primary" loading={refreshing} onClick={() => void refreshAndReturn()}>
+                刷新状态并重新确认
+              </Button>
+            ) : null}
+          </>
         ) : (
           <>
             <Button variant="secondary" onClick={onClose}>
               取消
             </Button>
             {step !== "view" ? (
-              <Button variant="ghost" onClick={goBack} disabled={writeMutation.isPending}>
+              <Button variant="ghost" onClick={goBack} disabled={busy}>
                 上一步
               </Button>
             ) : null}
             <Button
               variant="primary"
-              loading={writeMutation.isPending}
+              loading={busy}
               disabled={step === "view" && !policy.allowed}
               onClick={goNext}
             >
@@ -346,24 +435,12 @@ export function GitConfirmWizard({
           {kind === "commit" ? <p>说明：{message.trim() || "（空）"}</p> : null}
           <p className="text-subtle">可逆性：提交可在本地回退；推送与快进拉取需额外协作处理。失败时不会自动重试。</p>
           {step === "confirm" ? (
-            <>
-              <label className="flex items-start gap-2 rounded-control border border-border bg-orange-soft/40 p-3">
-                <input
-                  type="checkbox"
-                  className="mt-1"
-                  checked={acknowledged}
-                  onChange={(e) => setAcknowledged(e.target.checked)}
-                />
-                <span>我已阅读影响，并理解冲突 / STALE 时需人工处理、不会自动重试。</span>
-              </label>
-              <TextInput
-                label={`输入“${CONFIRM_LABEL[kind]}”继续`}
-                value={confirmationPhrase}
-                onChange={(event) => setConfirmationPhrase(event.target.value)}
-                autoComplete="off"
-                placeholder={CONFIRM_LABEL[kind]}
-              />
-            </>
+            <div className="rounded-control border border-orange/30 bg-orange-soft/40 p-3">
+              <p className="font-medium text-ink">点击“{CONFIRM_LABEL[kind]}”后执行</p>
+              <p className="mt-1 text-xs leading-5 text-subtle">
+                系统会先刷新 HEAD 和文件摘要。若期间状态变化，本次操作停止，并可保留当前填写内容重新确认。
+              </p>
+            </div>
           ) : null}
         </div>
       ) : null}
@@ -388,7 +465,9 @@ export function GitConfirmWizard({
               nextStep={result.nextStep || "关闭向导并重新查看摘要"}
             />
           )}
-          <p className="text-sm text-subtle">本向导不会提供“自动重试”。</p>
+          <p className="text-sm text-subtle">
+            写操作不会自动重试；状态过期时可刷新最新状态，并由你再次点击确认。
+          </p>
         </div>
       ) : null}
     </Dialog>

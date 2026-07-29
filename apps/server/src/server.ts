@@ -453,7 +453,13 @@ export async function startServer(options: StartServerOptions = {}): Promise<Sta
         return;
       }
       if (pathname === "/api/git/diff" && request.method === "GET") {
-        sendJson(response, 200, await git.diff(url.searchParams.get("commit") ?? undefined), responseOptions(origin));
+        const files = url.searchParams.getAll("file");
+        sendJson(
+          response,
+          200,
+          await git.diff(url.searchParams.get("commit") ?? undefined, files.length > 0 ? files : undefined),
+          responseOptions(origin),
+        );
         return;
       }
       if (pathname === "/api/git/fetch" && request.method === "POST") {

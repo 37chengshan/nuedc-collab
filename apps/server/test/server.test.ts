@@ -187,6 +187,45 @@ describe("NUEDC 本地 API 服务", () => {
       state: { topology: "synced" },
     });
   });
+
+  test("Git diff 可按选中文件生成提交摘要", async () => {
+    const token = await getToken();
+    await writeFile(path.join(ctx.repoRoot, "selected-a.txt"), "A\n");
+    await writeFile(path.join(ctx.repoRoot, "selected-b.txt"), "B\n");
+
+    const all = await fetchJson<{ files: Array<{ path: string }>; changesHash: string }>(
+      `${ctx.baseUrl}/api/git/diff`,
+      token,
+    );
+    const selected = await fetchJson<{ files: Array<{ path: string }>; changesHash: string }>(
+      `${ctx.baseUrl}/api/git/diff?file=${encodeURIComponent("selected-a.txt")}`,
+      token,
+    );
+
+    expect(all.files.map((file) => file.path)).toEqual(expect.arrayContaining(["selected-a.txt", "selected-b.txt"]));
+    expect(selected.files).toEqual([{ path: "selected-a.txt", status: "A" }]);
+    expect(selected.changesHash).toMatch(/^[0-9a-f]{64}$/);
+    expect(selected.changesHash).not.toBe(all.changesHash);
+
+    const status = await fetchJson<{ head: string }>(`${ctx.baseUrl}/api/git/status`, token);
+    const commit = await fetch(`${ctx.baseUrl}/api/git/commit`, {
+      method: "POST",
+      headers: jsonHeaders(token),
+      body: JSON.stringify({
+        confirmed: true,
+        expectedHead: status.head,
+        expectedChangesHash: selected.changesHash,
+        files: ["selected-a.txt"],
+        message: "test: 提交选中文件",
+      }),
+    });
+    expect(commit.status).toBe(200);
+    await expect(commit.json()).resolves.toMatchObject({
+      ok: true,
+      operation: "commit",
+      state: { worktree: "dirty", dirtyFiles: ["selected-b.txt"] },
+    });
+  });
 });
 
 async function getToken(): Promise<string> {

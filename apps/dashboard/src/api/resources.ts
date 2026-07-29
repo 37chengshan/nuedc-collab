@@ -77,9 +77,10 @@ export function getGitStatus() {
 export function getGitLog() {
   return apiFetch<GitLogResponse>("/api/git/log");
 }
-export function getGitDiff(params?: { commit?: string }) {
+export function getGitDiff(params?: { commit?: string; files?: string[] }) {
   const q = new URLSearchParams();
   if (params?.commit) q.set("commit", params.commit);
+  for (const file of params?.files ?? []) q.append("file", file);
   const qs = q.toString();
   return apiFetch<GitDiffResponse>(`/api/git/diff${qs ? `?${qs}` : ""}`);
 }

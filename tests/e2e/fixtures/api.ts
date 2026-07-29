@@ -293,10 +293,16 @@ export async function installDashboardApi(page: Page): Promise<DashboardFixture>
       return;
     }
     if (path === "/api/git/diff") {
+      const commit = url.searchParams.get("commit");
       await route.fulfill(json({
-        files: [{ path: "README.md", status: "M", additions: 2, deletions: 1 }],
+        files: [{
+          path: commit ? "README.md" : "比赛管理/任务/T-20260729-TEST.json",
+          status: "M",
+          additions: 2,
+          deletions: 1,
+        }],
         patch: "@@ -1 +1 @@\n-旧内容\n+新内容",
-        changesHash: "b".repeat(64),
+        ...(commit ? {} : { changesHash: "b".repeat(64) }),
       }));
       return;
     }

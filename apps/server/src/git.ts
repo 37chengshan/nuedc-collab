@@ -78,7 +78,11 @@ export function mapGitState(state: CoreGitState): ApiGitState {
 function gitErrorMeta(code: GitError["code"]): { status: number; impact: string; nextStep: string } {
   switch (code) {
     case "STALE_GIT_STATE":
-      return { status: 409, impact: "你确认时看到的 Git 状态已经过期。", nextStep: "重新读取状态并再次人工确认后重试。" };
+      return {
+        status: 409,
+        impact: "确认后文件或 Git 状态发生了变化，本次操作没有执行。",
+        nextStep: "点击“刷新状态并重新确认”。提交说明和文件选择会保留，刷新后再次点击确认即可。",
+      };
     case "PREEXISTING_STAGED_CHANGES":
       return { status: 409, impact: "索引区已有暂存内容，当前操作被拒绝。", nextStep: "先处理已有暂存内容，再重新执行确认流程。" };
     case "DIVERGED_HISTORY":
@@ -148,18 +152,24 @@ export function createGitApi(repoRoot: string) {
         warnings: [],
       };
     },
-    async diff(commit?: string) {
-      const files = await git.readDiff(commit ? { commit } : undefined);
-      let changesHash: string | undefined;
+    async diff(commit?: string, selectedFiles?: string[]) {
+      const diffFiles = await git.readDiff(commit ? { commit } : undefined);
       if (!commit) {
         const changes = await git.listChanges();
-        changesHash = hashSelectedChanges(changes);
+        const selected = selectedFiles ? changes.filter((change) => selectedFiles.includes(change.path)) : changes;
+        const patch = diffFiles.find((file) => typeof file.patch === "string")?.patch;
+        return {
+          files: selected.map((file) => ({ path: file.path, status: file.status })),
+          ...(patch ? { patch } : {}),
+          changesHash: hashSelectedChanges(selected),
+        };
       }
-      const patch = files.find((file) => typeof file.patch === "string")?.patch;
+      const patch = diffFiles.find((file) => typeof file.patch === "string")?.patch;
       return {
-        files: files.map((file) => ({ path: file.path, status: file.status })),
+        files: diffFiles
+          .filter((file) => !selectedFiles || selectedFiles.includes(file.path))
+          .map((file) => ({ path: file.path, status: file.status })),
         ...(patch ? { patch } : {}),
-        ...(changesHash ? { changesHash } : {}),
       };
     },
     async fetch(): Promise<GitWriteResult> {
