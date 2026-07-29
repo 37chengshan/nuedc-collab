@@ -215,7 +215,7 @@ describe("repository facade", () => {
     expect(ideas.items[0]?.data.status).toBe("open");
   });
 
-  it("仓库样例全部有效且赛前画布不声明最终比赛方案", async () => {
+  it("仓库样例全部有效且画布反映当前 B 题数字系统方案", async () => {
     const projectRoot = path.resolve(process.cwd(), "../..");
     // when running from packages/protocol, cwd is package root
     const root = path.resolve(process.cwd(), "../..");
@@ -228,8 +228,9 @@ describe("repository facade", () => {
       path.join(root, "比赛设计/总体方案/系统画布.json"),
       "utf8",
     );
-    expect(canvasRaw).toContain("赛前准备");
-    expect(canvasRaw).not.toContain("最终赛题");
+    expect(canvasRaw).toContain("B 题数字系统总体链路");
+    expect(canvasRaw).toContain("PA27 ADC 采样");
+    expect(canvasRaw).not.toContain("K230 视觉能力");
     const ajv = new (Ajv as any)({ allErrors: true, strict: false });
     (addFormats as any)(ajv);
     const ok = ajv.validate(systemCanvasSchema, JSON.parse(canvasRaw));

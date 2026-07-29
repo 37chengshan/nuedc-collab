@@ -124,8 +124,9 @@ test.describe("八页面协作看板", () => {
     await expect(page.getByText(/先检查焊点/)).toBeVisible();
 
     await page.goto("/design");
-    await page.getByText("系统总体方案", { exact: true }).click();
-    await expect(page.getByText("视觉模块", { exact: true })).toBeVisible();
+    await expect(page.getByText("PA27 ADC 采样", { exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "2026 电赛 B 题 MCU 后端总体方案" })).toBeVisible();
+    await expect(page.getByText(/schemaVersion/)).toHaveCount(0);
   });
 
   test("HTML 资料只在无权限沙箱 iframe 中预览", async ({ page }) => {

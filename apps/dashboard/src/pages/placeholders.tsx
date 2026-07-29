@@ -1,11 +1,13 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
+  ArrowRight,
   ArrowUpRight,
   CheckCircle2,
   CircleAlert,
   Clock3,
   FileCode2,
+  FileText,
   GitCommitHorizontal,
   Lightbulb,
   Plus,
@@ -104,10 +106,58 @@ function SafeContentPreview({
       />
     );
   }
+  if (content.contentType.includes("markdown")) {
+    return <MarkdownPreview body={content.body} className={className} />;
+  }
   return (
     <pre className={`mt-4 max-h-[620px] whitespace-pre-wrap break-words overflow-auto font-body text-sm leading-7 text-body ${className}`}>
       {content.body}
     </pre>
+  );
+}
+
+function renderInlineMarkdown(value: string): ReactNode[] {
+  return value.split(/(\*\*[^*]+\*\*|`[^`]+`)/g).filter(Boolean).map((part, index) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return <strong key={`${part}-${index}`} className="font-semibold text-ink">{part.slice(2, -2)}</strong>;
+    }
+    if (part.startsWith("`") && part.endsWith("`")) {
+      return <code key={`${part}-${index}`} className="rounded bg-muted px-1.5 py-0.5 font-mono text-[0.9em] text-ink">{part.slice(1, -1)}</code>;
+    }
+    return part;
+  });
+}
+
+function MarkdownPreview({ body, className = "" }: { body: string; className?: string }) {
+  const segments = body.split("```");
+  return (
+    <article className={cn("mt-4 max-h-[720px] overflow-y-auto pe-2 text-sm leading-7 text-body", className)}>
+      {segments.map((segment, segmentIndex) => {
+        if (segmentIndex % 2 === 1) {
+          const code = segment.replace(/^[^\n]*\n/, "");
+          return (
+            <pre key={`code-${segmentIndex}`} className="my-4 overflow-x-auto rounded-control border border-border bg-muted p-4 font-mono text-xs leading-6 text-ink">
+              {code.trim()}
+            </pre>
+          );
+        }
+        return segment.split("\n").map((line, lineIndex) => {
+          const key = `${segmentIndex}-${lineIndex}`;
+          if (!line.trim()) return <div key={key} className="h-3" aria-hidden />;
+          if (line === "---") return <hr key={key} className="my-5 border-border" />;
+          if (line.startsWith("### ")) return <h4 key={key} className="mt-6 font-title text-lg text-ink">{renderInlineMarkdown(line.slice(4))}</h4>;
+          if (line.startsWith("## ")) return <h3 key={key} className="mt-8 border-b border-border pb-2 font-title text-xl text-ink">{renderInlineMarkdown(line.slice(3))}</h3>;
+          if (line.startsWith("# ")) return <h2 key={key} className="font-title text-2xl text-ink">{renderInlineMarkdown(line.slice(2))}</h2>;
+          if (line.startsWith("> ")) return <blockquote key={key} className="border-s-2 border-orange ps-4 text-subtle">{renderInlineMarkdown(line.slice(2))}</blockquote>;
+          if (/^- /.test(line)) return <p key={key} className="ps-5 before:me-3 before:text-orange before:content-['•']">{renderInlineMarkdown(line.slice(2))}</p>;
+          const ordered = line.match(/^(\d+)\.\s+(.*)$/);
+          if (ordered) {
+            return <p key={key} className="grid grid-cols-[24px_1fr] gap-2"><span className="font-mono text-xs text-orange-dark">{ordered[1]}.</span><span>{renderInlineMarkdown(ordered[2] ?? "")}</span></p>;
+          }
+          return <p key={key}>{renderInlineMarkdown(line)}</p>;
+        });
+      })}
+    </article>
   );
 }
 
@@ -848,6 +898,16 @@ export function MaterialsPage() {
 export function DesignPage() {
   const design = useDesignQuery();
   const [selected, setSelected] = useState<DesignEntry | null>(null);
+  const entries = useMemo(() => {
+    const canvasPath = design.data?.canvas?.sourcePath;
+    return (design.data?.entries ?? []).filter((entry) =>
+      entry.relativePath.startsWith("比赛设计/") && entry.relativePath !== canvasPath && entry.format !== "json",
+    );
+  }, [design.data]);
+  const primaryEntry = entries.find((entry) => entry.relativePath.includes("B题_MCU总体方案")) ?? entries[0] ?? null;
+  useEffect(() => {
+    if (!selected && primaryEntry) setSelected(primaryEntry);
+  }, [primaryEntry, selected]);
   const content = useQuery({
     queryKey: ["design-content", selected?.relativePath],
     queryFn: () => getDesignContent(selected!.relativePath),
@@ -855,45 +915,104 @@ export function DesignPage() {
   });
   if (design.isLoading) return <LoadingState label="正在读取总体设计…" />;
   if (design.isError) return <QueryFailure error={design.error} retry={() => void design.refetch()} />;
+  const nodes = design.data?.canvas?.nodes ?? [];
+  const edges = design.data?.canvas?.edges ?? [];
+  const nodeLabels = new Map(nodes.map((node) => [node.id, node.title ?? node.label ?? node.id]));
   return (
     <div className="space-y-7">
-      <PageHeader title="总体设计" description="题目公布前只展示准备状态与接口画布；不会把预选硬件写成最终方案。" />
-      <div className="grid gap-6 xl:grid-cols-[0.7fr_1.3fr]">
-        <div className="space-y-3">
-          {(design.data?.entries ?? []).map((entry) => (
-            <button key={entry.id} type="button" onClick={() => setSelected(entry)}
-              className="w-full border-b border-border px-1 py-3 text-start transition-colors hover:bg-muted/55">
-              <Badge>{entry.category}</Badge>
-              <p className="mt-3 font-medium text-ink">{entry.title}</p>
-              <p className="mt-1 break-all font-mono text-xs text-faint">{entry.relativePath}</p>
-            </button>
-          ))}
+      <PageHeader
+        title="总体设计"
+        description="B 题“无源”交流电流表及无线读表器：当前展示仓库内已经确定的 MCU 数字系统方案。"
+        meta={<><Badge tone="orange">方案设计</Badge><Badge>MSPM0G3507</Badge></>}
+      />
+
+      <section className="border-y border-border py-5" aria-labelledby="system-chain-title">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="text-xs font-semibold tracking-wide text-orange-dark">当前系统链路</p>
+            <h2 id="system-chain-title" className="mt-1 font-title text-2xl text-ink">模拟采样到无线读表</h2>
+          </div>
+          <p className="max-w-2xl text-sm leading-6 text-subtle">
+            老师负责取电、传感和模拟调理；我们负责信号进入 MSPM0G3507 后的采样、计算、显示、协议与无线读表。
+          </p>
         </div>
-        <div className="space-y-6">
-          <Card className="shadow-none">
-            <div className="flex items-center justify-between border-b border-border pb-3">
-              <h2 className="text-sm font-semibold text-ink">系统画布</h2>
-              <Badge tone="orange">准备阶段</Badge>
-            </div>
-            <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {(design.data?.canvas?.nodes ?? []).map((node) => (
-                <div key={node.id} className="rounded-panel border border-border bg-muted/50 p-4">
-                  <p className="font-title text-lg text-ink">{node.title ?? node.label ?? node.id}</p>
-                  <p className="mt-2 text-sm text-subtle">{node.responsibility}</p>
-                  <p className="mt-3 text-xs text-faint">{node.inputs.join("、") || "待定义"} → {node.outputs.join("、") || "待定义"}</p>
+
+        <ol className="mt-6 grid border-t border-border md:grid-cols-2 xl:grid-cols-4">
+          {nodes.map((node, index) => (
+            <li key={node.id} className="relative border-b border-border px-4 py-4 md:border-e xl:[&:nth-child(4n)]:border-e-0">
+              <div className="flex items-start gap-3">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-orange/40 bg-orange-soft font-mono text-xs text-orange-dark">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <div className="min-w-0">
+                  <h3 className="font-medium text-ink">{node.title ?? node.label ?? node.id}</h3>
+                  <p className="mt-1 text-xs leading-5 text-subtle">{node.responsibility}</p>
+                  <p className="mt-2 text-xs text-faint">{node.status}</p>
                 </div>
-              ))}
-              {!design.data?.canvas?.nodes?.length ? <p className="text-sm text-subtle">题目公布后填写系统节点。</p> : null}
-            </div>
-          </Card>
-          {selected ? (
-            <Card className="shadow-none">
-              <h2 className="text-sm font-semibold text-ink">{selected.title}</h2>
-              {content.isLoading ? <LoadingState className="mt-4" /> : null}
-              {content.data?.body ? <SafeContentPreview content={content.data} className="max-h-80" /> : null}
-            </Card>
-          ) : null}
+              </div>
+            </li>
+          ))}
+        </ol>
+
+        <div className="mt-5">
+          <h3 className="text-xs font-semibold tracking-wide text-subtle">接口流向</h3>
+          <div className="mt-2 divide-y divide-border border-y border-border">
+            {edges.map((edge) => (
+              <div key={edge.id ?? `${edge.from}-${edge.to}`} className="grid gap-1 py-2.5 text-sm sm:grid-cols-[1fr_auto_1fr_1.2fr] sm:items-center sm:gap-3">
+                <span className="text-ink">{nodeLabels.get(edge.from) ?? edge.from}</span>
+                <ArrowRight className="hidden h-4 w-4 text-orange sm:block" aria-hidden />
+                <span className="text-ink">{nodeLabels.get(edge.to) ?? edge.to}</span>
+                <span className="text-xs text-subtle sm:text-end">{edge.label}</span>
+              </div>
+            ))}
+          </div>
         </div>
+      </section>
+
+      <div className="grid gap-7 xl:grid-cols-[260px_minmax(0,1fr)]">
+        <aside aria-labelledby="design-documents-title">
+          <div className="flex items-center gap-2 border-b border-border pb-3">
+            <FileText className="h-4 w-4 text-orange" />
+            <h2 id="design-documents-title" className="text-sm font-semibold text-ink">当前方案文件</h2>
+          </div>
+          <div className="divide-y divide-border">
+            {entries.map((entry) => (
+              <button
+                key={entry.id}
+                type="button"
+                onClick={() => setSelected(entry)}
+                className={cn(
+                  "w-full px-1 py-4 text-start transition-colors hover:bg-muted/55",
+                  selected?.id === entry.id && "text-orange-dark",
+                )}
+              >
+                <p className="font-medium">{entry.title}</p>
+                <p className="mt-1 text-xs text-subtle">{entry.category} · {formatRelativeTime(entry.updatedAt)}</p>
+              </button>
+            ))}
+            {entries.length === 0 ? <p className="py-4 text-sm text-subtle">“比赛设计”目录中暂无方案正文。</p> : null}
+          </div>
+          <p className="mt-4 text-xs leading-5 text-faint">模板、实施计划和内部画布 JSON 不在这里展示。</p>
+        </aside>
+
+        <section className="min-w-0 border-t border-border pt-5 xl:border-s xl:border-t-0 xl:ps-7 xl:pt-0" aria-labelledby="design-document-title">
+          {selected ? (
+            <>
+              <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border pb-4">
+                <div>
+                  <p className="text-xs font-semibold text-orange-dark">{selected.category}</p>
+                  <h2 id="design-document-title" className="mt-1 font-title text-2xl text-ink">{selected.title}</h2>
+                </div>
+                <Badge>{selected.format}</Badge>
+              </div>
+              {content.isLoading ? <LoadingState className="mt-4" label="正在读取当前方案…" /> : null}
+              {content.isError ? <QueryFailure error={content.error} retry={() => void content.refetch()} /> : null}
+              {content.data?.body ? <SafeContentPreview content={content.data} /> : null}
+            </>
+          ) : (
+            <EmptyState title="暂无当前方案" description="在“比赛设计”目录中加入方案文档后会自动显示。" />
+          )}
+        </section>
       </div>
     </div>
   );

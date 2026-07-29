@@ -1,20 +1,28 @@
 {
   "schemaVersion": 1,
-  "title": "赛前能力画布",
-  "phase": "赛前准备",
+  "title": "B 题数字系统总体链路",
+  "phase": "方案设计",
   "nodes": [
-    {"id": "mspm0", "label": "MSPM0 实时控制", "status": "赛前准备", "module": "MSPM0"},
-    {"id": "k230", "label": "K230 视觉能力", "status": "赛前准备", "module": "K230 视觉"},
-    {"id": "power", "label": "小车主板供电检查", "status": "赛前准备", "module": "小车主板"}
+    {"id": "analog", "label": "老师模拟前端", "status": "接口待确认", "module": "取电、传感与信号调理"},
+    {"id": "adc", "label": "PA27 ADC 采样", "status": "当前第一闭环", "module": "MSPM0G3507 模拟采样"},
+    {"id": "rms", "label": "滤波、RMS 与标定", "status": "方案已确定", "module": "数字信号处理"},
+    {"id": "local", "label": "地址、显示与状态", "status": "待实现验证", "module": "OLED、4 位地址与报警"},
+    {"id": "protocol", "label": "UART 数据协议", "status": "协议设计中", "module": "数据帧、状态位与 CRC16"},
+    {"id": "wireless", "label": "可插拔无线模块", "status": "后续闭环", "module": "HC-05 临时验证，正式模块替换"},
+    {"id": "reader", "label": "无线读表器", "status": "后续闭环", "module": "读取、搜索、报警、历史与趋势"}
   ],
   "edges": [
-    {"from": "k230", "to": "mspm0", "label": "目标坐标/状态输入"},
-    {"from": "power", "to": "mspm0", "label": "稳定供电"}
+    {"from": "analog", "to": "adc", "label": "模拟电压"},
+    {"from": "adc", "to": "rms", "label": "连续采样值"},
+    {"from": "rms", "to": "local", "label": "标定后的实际电流"},
+    {"from": "local", "to": "protocol", "label": "地址、电流与状态"},
+    {"from": "protocol", "to": "wireless", "label": "UART 数据帧"},
+    {"from": "wireless", "to": "reader", "label": "无线读表数据"}
   ],
   "context": {
     "linkedIssueIds": [],
     "linkedEventIds": [],
     "linkedMaterialIds": []
   },
-  "updatedAt": "2026-07-28T20:00:00+08:00"
+  "updatedAt": "2026-07-29T11:41:04+08:00"
 }

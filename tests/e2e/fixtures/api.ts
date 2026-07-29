@@ -219,22 +219,30 @@ export async function installDashboardApi(page: Page): Promise<DashboardFixture>
       await route.fulfill(json({
         entries: [{
           id: "system-overview",
-          title: "系统总体方案",
+          title: "系统画布",
           category: "总体方案",
           relativePath: "比赛设计/总体方案/系统画布.json",
           format: "json",
+          updatedAt: now,
+          previewMode: "text",
+        }, {
+          id: "b-mcu-plan",
+          title: "B题_MCU总体方案",
+          category: "总体方案",
+          relativePath: "比赛设计/总体方案/B题_MCU总体方案.md",
+          format: "markdown",
           updatedAt: now,
           previewMode: "text",
         }],
         canvas: {
           sourcePath: "比赛设计/总体方案/系统画布.json",
           nodes: [{
-            id: "vision",
-            title: "视觉模块",
-            responsibility: "识别目标",
-            inputs: ["图像"],
-            outputs: ["坐标"],
-            status: "planned",
+            id: "adc",
+            title: "PA27 ADC 采样",
+            responsibility: "MSPM0G3507 模拟采样",
+            inputs: ["模拟电压"],
+            outputs: ["连续采样值"],
+            status: "当前第一闭环",
             x: 0,
             y: 0,
           }],
@@ -248,8 +256,8 @@ export async function installDashboardApi(page: Page): Promise<DashboardFixture>
     if (path === "/api/design/content") {
       await route.fulfill(json({
         path: url.searchParams.get("path"),
-        contentType: "application/json",
-        body: "{\"nodes\":[]}",
+        contentType: "text/markdown",
+        body: "# 2026 电赛 B 题 MCU 后端总体方案\n\n老师负责模拟前端，我们负责 ADC、RMS、显示、协议与无线读表。",
       }));
       return;
     }
