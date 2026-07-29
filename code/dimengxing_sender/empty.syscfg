@@ -105,7 +105,7 @@ SYSCTL.forceDefaultClkConfig = true;
 SYSCTL.clockTreeEn           = true;
 
 UART1.$name                            = "LINK";
-UART1.targetBaudRate                   = 115200;
+UART1.targetBaudRate                   = 9600;
 UART1.enableFIFO                       = true;
 UART1.rxFifoThreshold                  = "DL_UART_RX_FIFO_LEVEL_ONE_ENTRY";
 UART1.peripheral.$assign               = "UART1";

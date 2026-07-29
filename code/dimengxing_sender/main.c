@@ -5,6 +5,9 @@
 #include <stdbool.h>
 #include <stdio.h>
 
+#define ACK_POLL_WINDOWS 80U
+#define ACK_POLL_INTERVAL_MS 5U
+
 static volatile bool g_adc_ready;
 
 void ADC_INPUT_INST_IRQHandler(void)
@@ -30,7 +33,7 @@ static bool wait_for_ack(LinkParser *parser, uint8_t sequence)
     uint8_t frame[LINK_FRAME_SIZE];
     uint8_t window;
 
-    for (window = 0U; window < 40U; window++) {
+    for (window = 0U; window < ACK_POLL_WINDOWS; window++) {
         while (!DL_UART_Main_isRXFIFOEmpty(LINK_INST)) {
             uint8_t byte = (uint8_t)DL_UART_Main_receiveData(LINK_INST);
             if (link_parser_push(parser, byte, frame) &&
@@ -38,7 +41,7 @@ static bool wait_for_ack(LinkParser *parser, uint8_t sequence)
                 return true;
             }
         }
-        delay_ms(5);
+        delay_ms(ACK_POLL_INTERVAL_MS);
     }
     return false;
 }
