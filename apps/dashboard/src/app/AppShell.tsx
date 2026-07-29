@@ -19,7 +19,8 @@ import { GitStatusBar } from "@/app/GitStatusBar";
 import { Button } from "@/components/Button";
 import { Drawer } from "@/components/Drawer";
 import { useToast } from "@/components/Toast";
-import { useGitFetchMutation, useGitStatusQuery } from "@/hooks/queries";
+import { useGitFetchMutation } from "@/hooks/queries";
+import { useGitStatus } from "@/hooks/useGitStatus";
 import { useGitWizard } from "@/features/git/GitWizardContext";
 import { RouterLink, useRouter } from "@/app/router";
 import { isNavActive } from "@/app/nav";
@@ -37,7 +38,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { pathname } = useRouter();
   const { push } = useToast();
   const { openWizard } = useGitWizard();
-  const status = useGitStatusQuery();
+  const status = useGitStatus();
   const fetchMutation = useGitFetchMutation();
 
   useEffect(() => {

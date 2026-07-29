@@ -1,4 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { spawnSync } from 'node:child_process';
 import { GitFixture } from './git-fixture.js';
 
 describe('git operations integration', () => {
@@ -31,6 +34,27 @@ describe('git operations integration', () => {
     await expect(
       fixture.core('cloneA').commitSelected(await fixture.commitRequest('cloneA')),
     ).rejects.toMatchObject({ code: 'PREEXISTING_STAGED_CHANGES' });
+  });
+
+  it('commit 失败后恢复原始 index，不遗留半暂存文件', async () => {
+    fixture.write('cloneA', 'rollback.txt', 'rollback me\n');
+    const request = await fixture.commitRequest('cloneA', ['rollback.txt']);
+    const repo = fixture.path('cloneA');
+    const indexPath = join(repo, '.git', 'index');
+    const beforeIndex = readFileSync(indexPath);
+    spawnSync('git', ['config', 'user.name', ''], { cwd: repo, shell: false });
+    spawnSync('git', ['config', 'user.email', ''], { cwd: repo, shell: false });
+
+    await expect(fixture.core('cloneA').commitSelected(request)).rejects.toMatchObject({
+      code: 'GIT_COMMAND_FAILED',
+    });
+    expect(readFileSync(indexPath)).toEqual(beforeIndex);
+    const cached = spawnSync('git', ['diff', '--cached', '--name-only'], {
+      cwd: repo,
+      encoding: 'utf8',
+      shell: false,
+    });
+    expect(cached.stdout.trim()).toBe('');
   });
 
   it('clean behind 可以快进拉取', async () => {

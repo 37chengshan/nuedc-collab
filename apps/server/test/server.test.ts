@@ -1,5 +1,5 @@
 import { execFile } from "node:child_process";
-import { mkdtemp, mkdir, readdir, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readdir, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
@@ -55,6 +55,12 @@ describe("NUEDC 本地 API 服务", () => {
     const healthBody = (await health.json()) as { localAuthToken: string };
     const token = health.headers.get("x-local-auth") ?? healthBody.localAuthToken;
     expect(token).toBeTruthy();
+    expect(healthBody).not.toHaveProperty("localAuthToken");
+
+    const unfamiliarLocalOrigin = await fetch(`${ctx.baseUrl}/api/health`, {
+      headers: { Origin: "http://127.0.0.1:9999" },
+    });
+    expect(unfamiliarLocalOrigin.status).toBe(403);
 
     const invalidAuth = await fetch(`${ctx.baseUrl}/api/tasks`, {
       headers: { Origin: ctx.baseUrl, "X-Local-Auth": "definitely-wrong" },
@@ -197,7 +203,7 @@ describe("NUEDC 本地 API 服务", () => {
       `${ctx.baseUrl}/api/git/diff`,
       token,
     );
-    const selected = await fetchJson<{ files: Array<{ path: string }>; changesHash: string }>(
+    const selected = await fetchJson<{ files: Array<{ path: string }>; changesHash: string; patch?: string }>(
       `${ctx.baseUrl}/api/git/diff?file=${encodeURIComponent("selected-a.txt")}`,
       token,
     );
@@ -206,6 +212,7 @@ describe("NUEDC 本地 API 服务", () => {
     expect(selected.files).toEqual([{ path: "selected-a.txt", status: "A" }]);
     expect(selected.changesHash).toMatch(/^[0-9a-f]{64}$/);
     expect(selected.changesHash).not.toBe(all.changesHash);
+    expect(selected.patch).toBeUndefined();
 
     const status = await fetchJson<{ head: string }>(`${ctx.baseUrl}/api/git/status`, token);
     const commit = await fetch(`${ctx.baseUrl}/api/git/commit`, {
@@ -219,12 +226,62 @@ describe("NUEDC 本地 API 服务", () => {
         message: "test: 提交选中文件",
       }),
     });
-    expect(commit.status).toBe(200);
-    await expect(commit.json()).resolves.toMatchObject({
+    const commitBody = await commit.json();
+    expect(commit.status, JSON.stringify(commitBody)).toBe(200);
+    expect(commitBody).toMatchObject({
       ok: true,
       operation: "commit",
       state: { worktree: "dirty", dirtyFiles: ["selected-b.txt"] },
     });
+  });
+
+  test("非法 JSON、超大请求体与超大预览返回结构化错误", async () => {
+    const token = await getToken();
+    const malformed = await fetch(`${ctx.baseUrl}/api/git/push`, {
+      method: "POST",
+      headers: jsonHeaders(token),
+      body: "{\"confirmed\":",
+    });
+    expect(malformed.status).toBe(400);
+    await expect(malformed.json()).resolves.toMatchObject({ code: "INVALID_JSON_BODY" });
+
+    const oversized = await fetch(`${ctx.baseUrl}/api/git/push`, {
+      method: "POST",
+      headers: jsonHeaders(token),
+      body: JSON.stringify({ payload: "x".repeat(1024 * 1024 + 1) }),
+    });
+    expect(oversized.status).toBe(413);
+    await expect(oversized.json()).resolves.toMatchObject({ code: "REQUEST_BODY_TOO_LARGE" });
+
+    const largePreviewPath = path.join(ctx.repoRoot, "参考资料/硬件资料/large.txt");
+    await writeFile(largePreviewPath, "x".repeat(5 * 1024 * 1024 + 1));
+    const preview = await fetch(
+      `${ctx.baseUrl}/api/materials/content?path=${encodeURIComponent("参考资料/硬件资料/large.txt")}`,
+      { headers: { "X-Local-Auth": token } },
+    );
+    expect(preview.status).toBe(413);
+    await expect(preview.json()).resolves.toMatchObject({ code: "PREVIEW_TOO_LARGE" });
+
+    const tooManyFiles = new URL(`${ctx.baseUrl}/api/git/diff`);
+    for (let index = 0; index < 201; index += 1) tooManyFiles.searchParams.append("file", `file-${index}.txt`);
+    const diff = await fetch(tooManyFiles, { headers: { "X-Local-Auth": token } });
+    expect(diff.status).toBe(413);
+    await expect(diff.json()).resolves.toMatchObject({ code: "GIT_DIFF_REQUEST_TOO_LARGE" });
+  });
+
+  test("资料内容接口拒绝通过符号链接逃出白名单", async () => {
+    const token = await getToken();
+    const outside = path.join(ctx.remoteRoot, "outside-secret.txt");
+    const link = path.join(ctx.repoRoot, "参考资料/硬件资料/outside-link.txt");
+    await writeFile(outside, "not-for-preview\n");
+    await symlink(outside, link);
+
+    const response = await fetch(
+      `${ctx.baseUrl}/api/materials/content?path=${encodeURIComponent("参考资料/硬件资料/outside-link.txt")}`,
+      { headers: { "X-Local-Auth": token } },
+    );
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({ code: "INVALID_PATH" });
   });
 });
 

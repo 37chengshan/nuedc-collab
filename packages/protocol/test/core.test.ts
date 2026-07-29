@@ -163,6 +163,38 @@ describe('repository facade', () => {
     expect((await runtime.repository.listEvents()).items[0]?.data.actor).toBe('37chengshan');
   });
 
+  it('两个本地进程使用同一 revision 并发写入时只允许一个成功', async () => {
+    const root = await makeRepo();
+    const runtimeA = await createProtocolRuntime(root);
+    const created = await runtimeA.actions.execute('web', 'task.create', {
+      idempotencyKey: 'test-concurrent-create-0001',
+      payload: {
+        title: '并发更新保护',
+        module: '协作',
+        priority: 'high',
+      },
+    });
+    expect(created.ok).toBe(true);
+    const task = (await runtimeA.repository.listTasks()).items[0]!;
+    const runtimeB = await createProtocolRuntime(root);
+
+    const results = await Promise.all([
+      runtimeA.actions.execute('web', 'task.setStatus', {
+        idempotencyKey: 'test-concurrent-status-a',
+        expectedRevision: task.revision,
+        payload: { id: task.data.id, to: 'doing', message: '进程 A 更新' },
+      }),
+      runtimeB.actions.execute('web', 'task.setStatus', {
+        idempotencyKey: 'test-concurrent-status-b',
+        expectedRevision: task.revision,
+        payload: { id: task.data.id, to: 'review', message: '进程 B 更新' },
+      }),
+    ]);
+
+    expect(results.filter((result) => result.ok)).toHaveLength(1);
+    expect(results.filter((result) => result.error?.code === 'STALE_ENTITY')).toHaveLength(1);
+  });
+
   it('只读门面不暴露写方法，并能隔离坏文件', async () => {
     const root = await makeRepo();
     const store = new DomainRecordStore(root);

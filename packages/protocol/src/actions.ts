@@ -1,7 +1,7 @@
 import { DOMAIN_ACTIONS, getActionSchema, validateActionRequest } from './schemas.js';
 import { generateEventId, generateIdeaId, generateIssueId, generateTaskId, nowIso } from './ids.js';
 import { computeRequestHash, computeRevision, sha256Hex } from './json.js';
-import { atomicWriteJson, fileExists, readJsonFile } from './fs.js';
+import { atomicWriteJson, fileExists, readJsonFile, withRepositoryWriteLock } from './fs.js';
 import { actionReceiptPath } from './paths.js';
 import { DomainRecordStore, envelope } from './repository.js';
 import type {
@@ -650,7 +650,18 @@ export function createDomainActionService(
       return getActionSchema(action);
     },
     execute(channel, action, request) {
-      return withLock(() => executeInner(channel, action, request));
+      return withLock(async () => {
+        try {
+          return await withRepositoryWriteLock(repoRoot, () => executeInner(channel, action, request));
+        } catch (error) {
+          return fail(
+            action,
+            String((request as any)?.idempotencyKey ?? 'invalid'),
+            'ACTION_VALIDATION_FAILED',
+            error instanceof Error ? error.message : String(error),
+          );
+        }
+      });
     },
   };
 }

@@ -1,7 +1,9 @@
-import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import {
   hashSelectedChanges,
+  hashObjectFile,
+  listStagedBlobIds,
   listSelectedChanges,
   validateCommitFiles,
   validateCommitMessage,
@@ -162,6 +164,10 @@ export function createGitCore(options: CreateGitCoreOptions): GitCore {
       if (changesHash !== request.expectedChangesHash) {
         throw new GitError('STALE_GIT_STATE', '选中文件内容摘要已变化，未执行提交。');
       }
+      const expectedBlobIds = new Map<string, string | null>();
+      for (const item of selected) {
+        expectedBlobIds.set(item.path, item.status === 'D' ? null : await hashObjectFile(repoRoot, item.path));
+      }
 
       const staged = await readStagedNameStatus(repoRoot);
       if (staged.length > 0) {
@@ -171,29 +177,33 @@ export function createGitCore(options: CreateGitCoreOptions): GitCore {
       const cacheDir = ensureCacheDir(repoRoot);
       const indexPath = join(repoRoot, '.git', 'index');
       const backupPath = join(cacheDir, `index-backup-${Date.now()}.bin`);
-      if (existsSync(indexPath)) {
+      const hadIndex = existsSync(indexPath);
+      if (hadIndex) {
         copyFileSync(indexPath, backupPath);
-      } else {
-        writeFileSync(backupPath, '');
       }
-
       const restoreIndex = () => {
-        if (existsSync(backupPath) && readFileSync(backupPath).length > 0) {
-          copyFileSync(backupPath, indexPath);
-        } else if (existsSync(indexPath) && readFileSync(backupPath).length === 0 && !existsSync(join(repoRoot, '.git', 'index'))) {
-          // nothing
-        } else if (existsSync(backupPath) && readFileSync(backupPath).length === 0 && existsSync(indexPath)) {
-          // keep current if no original index? prefer remove staged by restoring empty only when no original
-        }
         try {
+          if (hadIndex && existsSync(backupPath)) {
+            copyFileSync(backupPath, indexPath);
+          } else if (!hadIndex) {
+            rmSync(indexPath, { force: true });
+          }
           rmSync(backupPath, { force: true });
         } catch {
-          // ignore
+          // 保留原始 Git 错误；后续状态检查会暴露残留 index。
         }
       };
 
       try {
         await runGit(repoRoot, 'add', files);
+        const stagedBlobIds = await listStagedBlobIds(repoRoot, files);
+        for (const item of selected) {
+          const expectedBlobId = expectedBlobIds.get(item.path);
+          const stagedBlobId = stagedBlobIds.get(item.path);
+          if (expectedBlobId === null ? stagedBlobId !== undefined : stagedBlobId !== expectedBlobId) {
+            throw new GitError('STALE_GIT_STATE', `文件在确认后发生变化，未提交: ${item.path}`);
+          }
+        }
         const stagedAfter = await readStagedNameStatus(repoRoot);
         const stagedSet = new Set(stagedAfter);
         for (const file of files) {
@@ -226,18 +236,7 @@ export function createGitCore(options: CreateGitCoreOptions): GitCore {
           message: '提交成功',
         };
       } catch (error) {
-        // restore index
-        try {
-          if (existsSync(backupPath)) {
-            if (readFileSync(backupPath).length > 0) {
-              copyFileSync(backupPath, indexPath);
-            }
-          }
-          rmSync(backupPath, { force: true });
-        } catch {
-          // ignore restore errors
-        }
-        void restoreIndex;
+        restoreIndex();
         throw error;
       }
     });

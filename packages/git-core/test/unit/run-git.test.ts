@@ -19,4 +19,9 @@ describe('buildGitInvocation', () => {
     const invocation = buildGitInvocation('mergeFfOnly');
     expect(invocation.args).toEqual(['merge', '--ff-only', 'origin/main']);
   });
+
+  it('读取暂存 blob 时使用路径分隔符防止参数注入', () => {
+    const invocation = buildGitInvocation('lsFiles', ['-dangerous-name.txt']);
+    expect(invocation.args).toEqual(['ls-files', '--stage', '-z', '--', '-dangerous-name.txt']);
+  });
 });

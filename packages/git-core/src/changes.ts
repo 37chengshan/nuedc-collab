@@ -85,8 +85,20 @@ export async function listSelectedChanges(repoRoot: string): Promise<SelectedCha
 
 export async function hashObjectFile(repoRoot: string, relativePath: string): Promise<string> {
   const path = normalizeRelativePath(relativePath);
-  const result = await runGit(repoRoot, 'hashObject', [path]);
+  const result = await runGit(repoRoot, 'hashObject', [`--path=${path}`, '--', path]);
   return result.stdout.trim();
+}
+
+export async function listStagedBlobIds(repoRoot: string, relativePaths: string[]): Promise<Map<string, string>> {
+  const paths = relativePaths.map(normalizeRelativePath);
+  const result = await runGit(repoRoot, 'lsFiles', paths, { allowFailure: true });
+  const blobs = new Map<string, string>();
+  for (const entry of result.stdout.split('\0').filter(Boolean)) {
+    const match = /^\d+ ([0-9a-f]+) 0\t(.+)$/i.exec(entry);
+    if (!match) continue;
+    blobs.set(normalizeRelativePath(match[2]!), match[1]!);
+  }
+  return blobs;
 }
 
 export function validateCommitFiles(files: string[]): string[] {

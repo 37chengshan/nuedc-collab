@@ -44,3 +44,45 @@ export async function fileExists(filePath: string): Promise<boolean> {
 export async function readTextFile(filePath: string): Promise<string> {
   return readFile(filePath, 'utf8');
 }
+
+const WRITE_LOCK_TIMEOUT_MS = 10_000;
+const STALE_WRITE_LOCK_MS = 30_000;
+
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+export async function withRepositoryWriteLock<T>(repoRoot: string, operation: () => Promise<T>): Promise<T> {
+  const lockDir = path.join(repoRoot, '.看板缓存', 'locks');
+  const lockPath = path.join(lockDir, 'protocol-write.lock');
+  await ensureDir(lockDir);
+  const deadline = Date.now() + WRITE_LOCK_TIMEOUT_MS;
+
+  while (true) {
+    try {
+      const handle = await open(lockPath, 'wx');
+      try {
+        await handle.writeFile(JSON.stringify({ pid: process.pid, createdAt: new Date().toISOString() }), 'utf8');
+        return await operation();
+      } finally {
+        await handle.close().catch(() => undefined);
+        await rm(lockPath, { force: true }).catch(() => undefined);
+      }
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
+      try {
+        const info = await stat(lockPath);
+        if (Date.now() - info.mtimeMs > STALE_WRITE_LOCK_MS) {
+          await rm(lockPath, { force: true });
+          continue;
+        }
+      } catch {
+        continue;
+      }
+      if (Date.now() >= deadline) {
+        throw new Error('等待仓库写锁超时；可能有另一个本地服务或脚本正在写入。');
+      }
+      await wait(50);
+    }
+  }
+}

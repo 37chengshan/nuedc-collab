@@ -18,6 +18,7 @@ import { LoadingState } from "@/components/LoadingState";
 import { ErrorState } from "@/components/ErrorState";
 import { Badge } from "@/components/Badge";
 import { useToast } from "@/components/Toast";
+import { queryKeys } from "@/hooks/queries";
 
 const STEPS: GitWizardStep[] = ["view", "fill", "review", "confirm", "result"];
 
@@ -63,14 +64,14 @@ export function GitConfirmWizard({
   } | null>(null);
 
   const statusQuery = useQuery({
-    queryKey: ["git-status", "wizard", kind],
+    queryKey: queryKeys.gitStatus,
     queryFn: getGitStatus,
     enabled: open,
     retry: false,
   });
 
   const diffQuery = useQuery({
-    queryKey: ["git-diff", "wizard", kind],
+    queryKey: ["git", "diff", "wizard", kind],
     queryFn: () => getGitDiff(),
     enabled: open && (kind === "commit" || step === "view"),
     retry: false,
@@ -95,12 +96,6 @@ export function GitConfirmWizard({
     const fromDiff = (diffQuery.data?.files || []).map((f) => f.path);
     return Array.from(new Set([...fromState, ...fromDiff]));
   }, [snapshot, diffQuery.data]);
-
-  useEffect(() => {
-    if (kind === "commit" && dirtyFiles.length && files.length === 0 && step === "fill") {
-      setFiles(dirtyFiles.slice(0, 200));
-    }
-  }, [kind, dirtyFiles, files.length, step]);
 
   const policy = useMemo(() => {
     if (!snapshot) return { allowed: false, reason: "正在读取 Git 状态…" };
@@ -139,8 +134,11 @@ export function GitConfirmWizard({
         state: data.state,
       });
       setStep("result");
-      void queryClient.invalidateQueries({ queryKey: ["git-status"] });
-      void queryClient.invalidateQueries({ queryKey: ["git-log"] });
+      if (kind === "pull") {
+        void queryClient.invalidateQueries();
+      } else {
+        void queryClient.invalidateQueries({ queryKey: ["git"] });
+      }
       if (data.ok !== false) {
         push({ title: `${TITLES[kind]}成功`, description: data.summary, tone: "success" });
       }
@@ -231,7 +229,7 @@ export function GitConfirmWizard({
         description: kind === "commit" ? "提交说明和仍有效的文件选择已保留。" : "请再次确认最新状态。",
         tone: "success",
       });
-      void queryClient.invalidateQueries({ queryKey: ["git-status"] });
+      void queryClient.invalidateQueries({ queryKey: ["git"] });
     } catch (err) {
       const api = err instanceof ApiError ? err : null;
       setResult({
@@ -379,7 +377,22 @@ export function GitConfirmWizard({
           {kind === "commit" ? (
             <>
               <div className="max-h-56 overflow-auto rounded-control border border-border bg-surface p-3">
-                <p className="mb-2 text-sm font-medium text-ink">选择要提交的文件（1—200）</p>
+                <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <p className="text-sm font-medium text-ink">选择要提交的文件（1—200）</p>
+                    <p className="mt-0.5 text-xs text-subtle">默认不勾选，避免混入其他成员或其他操作产生的改动。</p>
+                  </div>
+                  {dirtyFiles.length > 0 ? (
+                    <div className="flex gap-1">
+                      <Button type="button" size="sm" variant="ghost" onClick={() => setFiles(dirtyFiles.slice(0, 200))}>
+                        全选
+                      </Button>
+                      <Button type="button" size="sm" variant="ghost" disabled={files.length === 0} onClick={() => setFiles([])}>
+                        清空
+                      </Button>
+                    </div>
+                  ) : null}
+                </div>
                 {dirtyFiles.length === 0 ? (
                   <p className="text-sm text-subtle">没有检测到改动文件。</p>
                 ) : (

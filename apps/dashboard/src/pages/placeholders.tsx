@@ -70,12 +70,17 @@ import {
 import { useToast } from "@/components/Toast";
 import { useGitWizard } from "@/features/git/GitWizardContext";
 import { toErrorView } from "@/lib/query-error";
+import { ApiError } from "@/api/http";
 
 function actionKey(action: string) {
   const suffix = typeof crypto !== "undefined" && "randomUUID" in crypto
     ? crypto.randomUUID()
     : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
   return `web-${action}-${suffix}`;
+}
+
+function isStaleEntityError(error: unknown): error is ApiError {
+  return error instanceof ApiError && error.code === "STALE_ENTITY";
 }
 
 function QueryFailure({ error, retry }: { error: unknown; retry: () => void }) {
@@ -338,7 +343,15 @@ function TaskCreateDialog({ open, onClose }: { open: boolean; onClose: () => voi
   );
 }
 
-function TaskDetailDialog({ envelope, onClose }: { envelope: RecordEnvelope<TaskRecord> | null; onClose: () => void }) {
+function TaskDetailDialog({
+  envelope,
+  onClose,
+  onRefresh,
+}: {
+  envelope: RecordEnvelope<TaskRecord> | null;
+  onClose: () => void;
+  onRefresh: () => Promise<unknown>;
+}) {
   const mutation = useDomainAction();
   const { push } = useToast();
   const [status, setStatus] = useState<TaskStatus>(envelope?.data.status ?? "todo");
@@ -372,6 +385,21 @@ function TaskDetailDialog({ envelope, onClose }: { envelope: RecordEnvelope<Task
         </ul>
       </div>
       {errorView ? <ErrorState impact={errorView.impact} nextStep={errorView.nextStep} details={errorView.details} /> : null}
+      {isStaleEntityError(mutation.error) ? (
+        <div className="flex justify-end">
+          <Button
+            variant="secondary"
+            onClick={() => {
+              void onRefresh().then(() => {
+                mutation.reset();
+                push({ title: "已载入最新任务版本", description: "当前状态选择已保留，请重新复核后保存。", tone: "success" });
+              });
+            }}
+          >
+            载入最新版本并保留选择
+          </Button>
+        </div>
+      ) : null}
     </Dialog>
   );
 }
@@ -379,7 +407,7 @@ function TaskDetailDialog({ envelope, onClose }: { envelope: RecordEnvelope<Task
 export function TasksPage() {
   const query = useTasksQuery();
   const [creating, setCreating] = useState(false);
-  const [selected, setSelected] = useState<RecordEnvelope<TaskRecord> | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const createButtonRef = useRef<HTMLButtonElement>(null);
   const closeCreate = () => {
     setCreating(false);
@@ -388,8 +416,8 @@ export function TasksPage() {
   if (query.isLoading) return <LoadingState label="正在读取任务 JSON…" />;
   if (query.isError) return <QueryFailure error={query.error} retry={() => void query.refetch()} />;
   const items = query.data?.items ?? [];
+  const selected = selectedId ? items.find((item) => item.data.id === selectedId) ?? null : null;
   const groups = groupTasks(items.map((item) => item.data));
-  const byId = new Map(items.map((item) => [item.data.id, item]));
   return (
     <div className="space-y-7">
       <PageHeader title="任务" description="四列看板用于稳定扫描；阻塞任务保留在“进行中”并用红色状态标识。"
@@ -404,7 +432,7 @@ export function TasksPage() {
             </div>
             <div className="space-y-3">
               {groups[column.id].map((task) => (
-                <button key={task.id} type="button" onClick={() => setSelected(byId.get(task.id) ?? null)}
+                <button key={task.id} type="button" onClick={() => setSelectedId(task.id)}
                   className="w-full border-b border-border px-1 py-3 text-start transition-colors duration-hover last:border-b-0 hover:bg-muted/60">
                   <div className="flex flex-wrap gap-2"><TaskStatusPill status={task.status} /><PriorityPill priority={task.priority} /></div>
                   <p className="mt-3 font-medium leading-5 text-ink">{task.title}</p>
@@ -418,7 +446,7 @@ export function TasksPage() {
         ))}
       </div>
       <TaskCreateDialog open={creating} onClose={closeCreate} />
-      <TaskDetailDialog envelope={selected} onClose={() => setSelected(null)} />
+      <TaskDetailDialog envelope={selected} onRefresh={() => query.refetch()} onClose={() => setSelectedId(null)} />
     </div>
   );
 }
@@ -455,10 +483,12 @@ function IssueDetailDialog({
   envelope,
   members,
   onClose,
+  onRefresh,
 }: {
   envelope: RecordEnvelope<IssueRecord>;
   members: Array<RecordEnvelope<MemberRecord>>;
   onClose: () => void;
+  onRefresh: () => Promise<unknown>;
 }) {
   const updateMutation = useDomainAction();
   const handoffMutation = useDomainAction();
@@ -676,6 +706,23 @@ function IssueDetailDialog({
       </section>
 
       {errorView ? <ErrorState impact={errorView.impact} nextStep={errorView.nextStep} details={errorView.details} /> : null}
+      {isStaleEntityError(mutationError) ? (
+        <div className="flex justify-end">
+          <Button
+            variant="secondary"
+            onClick={() => {
+              void onRefresh().then(() => {
+                updateMutation.reset();
+                handoffMutation.reset();
+                eventMutation.reset();
+                push({ title: "已载入最新问题版本", description: "当前填写内容已保留，请重新复核后保存。", tone: "success" });
+              });
+            }}
+          >
+            载入最新版本并保留填写
+          </Button>
+        </div>
+      ) : null}
       {busy ? <p className="sr-only" role="status">正在保存问题操作</p> : null}
     </Dialog>
   );
@@ -685,11 +732,12 @@ export function IssuesPage() {
   const query = useIssuesQuery();
   const members = useMembersQuery();
   const [creating, setCreating] = useState(false);
-  const [selected, setSelected] = useState<RecordEnvelope<IssueRecord> | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   if (query.isLoading || members.isLoading) return <LoadingState label="正在读取问题记录…" />;
   if (query.isError) return <QueryFailure error={query.error} retry={() => void query.refetch()} />;
   if (members.isError) return <QueryFailure error={members.error} retry={() => void members.refetch()} />;
   const items = query.data?.items ?? [];
+  const selected = selectedId ? items.find((item) => item.data.id === selectedId) ?? null : null;
   return (
     <div className="space-y-7">
       <PageHeader title="问题" description="按阻塞性和严重度排列；关闭问题前必须写清解决与复测证据。"
@@ -707,7 +755,7 @@ export function IssuesPage() {
                 key={data.id}
                 type="button"
                 className="grid w-full gap-3 px-4 py-4 text-start transition-colors hover:bg-muted/55 md:grid-cols-[auto_1fr_110px_130px_120px_44px] md:items-center"
-                onClick={() => setSelected(item)}
+                onClick={() => setSelectedId(data.id)}
                 aria-label={`查看问题：${data.title}`}
               >
                 <IssueStatusPill status={data.status} />
@@ -732,7 +780,8 @@ export function IssuesPage() {
           key={selected.data.id}
           envelope={selected}
           members={members.data?.items ?? []}
-          onClose={() => setSelected(null)}
+          onRefresh={() => query.refetch()}
+          onClose={() => setSelectedId(null)}
         />
       ) : null}
     </div>
@@ -761,11 +810,20 @@ function IdeaCreateDialog({ open, onClose }: { open: boolean; onClose: () => voi
   );
 }
 
-function IdeaDetailDialog({ envelope, onClose }: { envelope: RecordEnvelope<IdeaRecord> | null; onClose: () => void }) {
+function IdeaDetailDialog({
+  envelope,
+  onClose,
+  onRefresh,
+}: {
+  envelope: RecordEnvelope<IdeaRecord> | null;
+  onClose: () => void;
+  onRefresh: () => Promise<unknown>;
+}) {
   const mutation = useDomainAction();
   const { push } = useToast();
   if (!envelope) return null;
   const idea = envelope.data;
+  const errorView = mutation.isError ? toErrorView(mutation.error) : null;
   const promote = () => mutation.mutate({
     action: "idea.promoteToTask",
     request: {
@@ -779,6 +837,22 @@ function IdeaDetailDialog({ envelope, onClose }: { envelope: RecordEnvelope<Idea
       footer={<><Button variant="secondary" onClick={onClose}>关闭</Button><Button loading={mutation.isPending} onClick={promote}>提升为任务</Button></>}>
       <div className="flex flex-wrap gap-2"><IdeaStatusPill status={envelope.effectiveState ?? idea.status} /><Badge>{idea.author}</Badge></div>
       <p className="text-sm leading-6 text-body">{idea.description || "暂无说明。"}</p>
+      {errorView ? <ErrorState impact={errorView.impact} nextStep={errorView.nextStep} details={errorView.details} /> : null}
+      {isStaleEntityError(mutation.error) ? (
+        <div className="flex justify-end">
+          <Button
+            variant="secondary"
+            onClick={() => {
+              void onRefresh().then(() => {
+                mutation.reset();
+                push({ title: "已载入最新想法版本", tone: "success" });
+              });
+            }}
+          >
+            载入最新版本
+          </Button>
+        </div>
+      ) : null}
     </Dialog>
   );
 }
@@ -786,16 +860,18 @@ function IdeaDetailDialog({ envelope, onClose }: { envelope: RecordEnvelope<Idea
 export function IdeasPage() {
   const query = useIdeasQuery();
   const [creating, setCreating] = useState(false);
-  const [selected, setSelected] = useState<RecordEnvelope<IdeaRecord> | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   if (query.isLoading) return <LoadingState label="正在读取想法…" />;
   if (query.isError) return <QueryFailure error={query.error} retry={() => void query.refetch()} />;
+  const items = query.data?.items ?? [];
+  const selected = selectedId ? items.find((item) => item.data.id === selectedId) ?? null : null;
   return (
     <div className="space-y-7">
       <PageHeader title="想法" description="想法池是低成本探索区；只有明确验证目标后才提升为任务。"
         actions={<Button leftIcon={<Plus className="h-4 w-4" />} onClick={() => setCreating(true)}>新建想法</Button>} />
       <div className="grid border-y border-border md:grid-cols-2 xl:grid-cols-3">
-        {(query.data?.items ?? []).map((item) => (
-          <button key={item.data.id} type="button" onClick={() => setSelected(item)}
+        {items.map((item) => (
+          <button key={item.data.id} type="button" onClick={() => setSelectedId(item.data.id)}
             className="border-b border-border p-4 text-start transition-colors duration-hover hover:bg-muted/55 md:border-e xl:[&:nth-child(3n)]:border-e-0">
             <div className="flex items-start justify-between gap-3">
               <Lightbulb className="h-5 w-5 shrink-0 text-orange" />
@@ -808,7 +884,7 @@ export function IdeasPage() {
         ))}
       </div>
       <IdeaCreateDialog open={creating} onClose={() => setCreating(false)} />
-      <IdeaDetailDialog envelope={selected} onClose={() => setSelected(null)} />
+      <IdeaDetailDialog envelope={selected} onRefresh={() => query.refetch()} onClose={() => setSelectedId(null)} />
     </div>
   );
 }
@@ -870,19 +946,25 @@ export function MaterialsPage() {
       <PageHeader title="参考资料" description="焊接教程、硬件资料与外部仓库统一索引；来源和验证状态始终可见。" />
       <div className="grid gap-6 xl:grid-cols-[0.75fr_1.25fr]">
         <div className="space-y-3">
-          {(materials.data?.items ?? []).map((item) => (
-            <button key={item.id} type="button" onClick={() => setSelected(item.relativePath)}
-              className="w-full border-b border-border px-1 py-3 text-start transition-colors hover:bg-muted/55">
+          {(materials.data?.items ?? []).map((item) => {
+            const previewable = item.previewMode === "text" || item.previewMode === "sandboxHtml";
+            return (
+            <button key={item.id} type="button" disabled={!previewable} onClick={() => previewable && setSelected(item.relativePath)}
+              className="w-full border-b border-border px-1 py-3 text-start transition-colors enabled:hover:bg-muted/55 disabled:cursor-not-allowed disabled:opacity-65">
               <div className="flex items-start gap-3">
                 <FileCode2 className="mt-0.5 h-5 w-5 shrink-0 text-orange" />
                 <div className="min-w-0">
                   <p className="font-medium text-ink">{item.title}</p>
                   <p className="mt-1 text-xs text-subtle">{item.sourceLabel} · {item.modules.join(" / ")}</p>
-                  <div className="mt-3"><Badge tone={item.verificationStatus === "verified" ? "success" : "warning"}>{item.verificationStatus}</Badge></div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Badge tone={item.verificationStatus === "verified" ? "success" : "warning"}>{item.verificationStatus}</Badge>
+                    {!previewable ? <Badge>{item.previewMode === "pdf" ? "PDF 请本地打开" : "请本地打开"}</Badge> : null}
+                  </div>
                 </div>
               </div>
             </button>
-          ))}
+            );
+          })}
         </div>
         <Card className="min-w-0 shadow-none">
           <h2 className="border-b border-border pb-3 text-sm font-semibold text-ink">安全预览</h2>

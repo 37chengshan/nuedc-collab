@@ -65,12 +65,8 @@ export function useMaterialsQuery() {
 export function useDesignQuery() {
   return useQuery({ queryKey: queryKeys.design, queryFn: getDesign });
 }
-export function useGitStatusQuery(options?: { refetchInterval?: number | false }) {
-  return useQuery({
-    queryKey: queryKeys.gitStatus,
-    queryFn: getGitStatus,
-    refetchInterval: options?.refetchInterval ?? 15_000,
-  });
+export function useGitStatusQuery() {
+  return useQuery({ queryKey: queryKeys.gitStatus, queryFn: getGitStatus, retry: false });
 }
 export function useGitLogQuery() {
   return useQuery({ queryKey: queryKeys.gitLog, queryFn: getGitLog });

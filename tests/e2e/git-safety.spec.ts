@@ -35,6 +35,7 @@ test.describe("Git 五步确认", () => {
     await page.goto("/");
     await openGitWizard(page, /^提交$/);
     await page.getByRole("button", { name: /下一步|继续/ }).click();
+    await page.getByLabel("比赛管理/任务/T-20260729-TEST.json").check();
     await page.getByLabel(/提交说明|提交信息/).fill("test: 五步确认");
     await page.getByRole("button", { name: /下一步|继续/ }).click();
     await expect(page.getByText(/复核|第 3 步/).first()).toBeVisible();
@@ -105,6 +106,7 @@ test.describe("Git 五步确认", () => {
     await page.goto("/");
     await openGitWizard(page, /^提交$/);
     await page.getByRole("button", { name: /下一步|继续/ }).click();
+    await page.getByLabel("比赛管理/任务/T-20260729-TEST.json").check();
     await page.getByLabel(/提交说明|提交信息/).fill("fix: 保留提交说明");
     await page.getByRole("button", { name: /下一步|继续/ }).click();
     await page.getByRole("button", { name: /下一步|继续/ }).click();

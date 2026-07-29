@@ -1,4 +1,4 @@
-import { ensureSession, getAuthToken } from "./session";
+import { ensureSession, getAuthToken, resetSession } from "./session";
 
 export class ApiError extends Error {
   status: number;
@@ -41,40 +41,48 @@ export async function apiFetch<T>(
   options: { auth?: boolean; skipHealth?: boolean } = {},
 ): Promise<T> {
   const auth = options.auth !== false;
-  if (auth && !options.skipHealth) {
-    await ensureSession();
-  }
-
-  const headers = new Headers(init.headers || {});
-  if (!headers.has("Accept")) headers.set("Accept", "application/json");
-  if (init.body && !headers.has("Content-Type")) {
-    headers.set("Content-Type", "application/json");
-  }
-  const token = getAuthToken();
-  if (auth && token) headers.set("X-Local-Auth", token);
-
-  const res = await fetch(path, { ...init, headers });
-  const text = await res.text();
-  let body: any = null;
-  if (text) {
-    try {
-      body = JSON.parse(text);
-    } catch {
-      body = { message: text };
+  const request = async (allowSessionRetry: boolean): Promise<T> => {
+    if (auth && !options.skipHealth) {
+      await ensureSession();
     }
-  }
 
-  if (!res.ok) {
-    const mapped = mapStatusToChinese(res.status, body);
-    throw new ApiError({
-      status: res.status,
-      code: mapped.code,
-      impact: mapped.impact,
-      nextStep: mapped.nextStep,
-      details: mapped.details,
-      payload: body,
-    });
-  }
+    const headers = new Headers(init.headers || {});
+    if (!headers.has("Accept")) headers.set("Accept", "application/json");
+    if (init.body && !headers.has("Content-Type")) {
+      headers.set("Content-Type", "application/json");
+    }
+    const token = getAuthToken();
+    if (auth && token) headers.set("X-Local-Auth", token);
 
-  return body as T;
+    const res = await fetch(path, { ...init, headers });
+    const text = await res.text();
+    let body: any = null;
+    if (text) {
+      try {
+        body = JSON.parse(text);
+      } catch {
+        body = { message: text };
+      }
+    }
+
+    if (!res.ok) {
+      const mapped = mapStatusToChinese(res.status, body);
+      if (auth && allowSessionRetry && res.status === 401 && mapped.code === "LOCAL_AUTH_REQUIRED") {
+        resetSession();
+        return request(false);
+      }
+      throw new ApiError({
+        status: res.status,
+        code: mapped.code,
+        impact: mapped.impact,
+        nextStep: mapped.nextStep,
+        details: mapped.details,
+        payload: body,
+      });
+    }
+
+    return body as T;
+  };
+
+  return request(true);
 }

@@ -83,10 +83,10 @@ export function buildGitInvocation(
       args = ['diff', '--cached', '--name-status', '-z'];
       break;
     case 'lsFiles':
-      args = ['ls-files', '--stage', '-z'];
+      args = ['ls-files', '--stage', '-z', '--'];
       break;
     case 'hashObject':
-      args = ['hash-object', '--'];
+      args = ['hash-object'];
       break;
     case 'fetch':
       args = ['fetch', '--prune', 'origin'];

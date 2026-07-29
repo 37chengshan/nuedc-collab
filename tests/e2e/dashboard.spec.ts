@@ -98,6 +98,46 @@ test.describe("八页面协作看板", () => {
     )).toBe(true);
   });
 
+  test("问题 revision 过期后可载入最新版本并保留填写内容", async ({ page, dashboard }) => {
+    const revisions: string[] = [];
+    let attempts = 0;
+    await page.route("**/api/actions/issue.update", async (route) => {
+      attempts += 1;
+      const body = route.request().postDataJSON() as { expectedRevision?: string };
+      revisions.push(body.expectedRevision ?? "");
+      if (attempts === 1) {
+        dashboard.issue.revision = "b".repeat(64);
+        dashboard.issue.data.workaround = "队友刚写入的临时方案";
+        await route.fulfill({
+          status: 409,
+          contentType: "application/json",
+          body: JSON.stringify({
+            code: "STALE_ENTITY",
+            error: {
+              impact: "目标记录已经变化，当前提交不再安全。",
+              nextStep: "载入最新记录并再次确认。",
+            },
+            latestEntity: dashboard.issue,
+          }),
+        });
+        return;
+      }
+      await route.fallback();
+    });
+
+    await page.goto("/issues");
+    await page.getByRole("button", { name: "查看问题：串口偶发丢帧" }).click();
+    await page.getByLabel("临时方案").fill("我正在编辑的本地草稿");
+    await page.getByRole("button", { name: "保存修改" }).click();
+    await expect(page.getByRole("button", { name: "载入最新版本并保留填写" })).toBeVisible();
+    await page.getByRole("button", { name: "载入最新版本并保留填写" }).click();
+    await expect(page.getByLabel("临时方案")).toHaveValue("我正在编辑的本地草稿");
+    await page.getByRole("button", { name: "保存修改" }).click();
+
+    await expect.poll(() => attempts).toBe(2);
+    expect(revisions).toEqual(["a".repeat(64), "b".repeat(64)]);
+  });
+
   test("可创建想法并提升为任务", async ({ page, dashboard }) => {
     await page.goto("/ideas");
     await openCreateDialog(page, /新建想法|创建想法/);

@@ -157,7 +157,7 @@ export function createGitApi(repoRoot: string) {
       if (!commit) {
         const changes = await git.listChanges();
         const selected = selectedFiles ? changes.filter((change) => selectedFiles.includes(change.path)) : changes;
-        const patch = diffFiles.find((file) => typeof file.patch === "string")?.patch;
+        const patch = selectedFiles ? undefined : diffFiles.find((file) => typeof file.patch === "string")?.patch;
         return {
           files: selected.map((file) => ({ path: file.path, status: file.status })),
           ...(patch ? { patch } : {}),

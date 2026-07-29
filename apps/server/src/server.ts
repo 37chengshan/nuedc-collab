@@ -23,6 +23,11 @@ import { ensureLocalIdentity } from "./identity.js";
 
 const DEFAULT_HOST = "127.0.0.1";
 const DEFAULT_PORT = 3210;
+const MAX_JSON_BODY_BYTES = 1024 * 1024;
+const DEFAULT_DASHBOARD_ORIGINS = [
+  "http://127.0.0.1:5173",
+  "http://localhost:5173",
+] as const;
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../..");
 const VALID_ACTIONS = new Set<string>(DOMAIN_ACTIONS);
 
@@ -39,6 +44,7 @@ interface StartServerOptions {
   repoRoot?: string;
   authToken?: string;
   githubUsernameDetector?: () => Promise<string | null>;
+  allowedOrigins?: string[];
 }
 
 interface StartedServer {
@@ -64,11 +70,18 @@ function validateHost(hostHeader: string | undefined): boolean {
   }
 }
 
-function validateOrigin(originHeader: string | undefined): boolean {
+function validateOrigin(
+  originHeader: string | undefined,
+  hostHeader: string | undefined,
+  allowedOrigins: ReadonlySet<string>,
+): boolean {
   if (!originHeader) return true;
   try {
     const parsed = new URL(originHeader);
-    return parsed.protocol === "http:" && isLocalHostname(parsed.hostname);
+    if (parsed.protocol !== "http:" || !isLocalHostname(parsed.hostname)) return false;
+    const normalized = `${parsed.protocol}//${parsed.host}`;
+    const sameOrigin = hostHeader ? normalized === `http://${hostHeader}` : false;
+    return sameOrigin || allowedOrigins.has(normalized);
   } catch {
     return false;
   }
@@ -83,13 +96,39 @@ function sameToken(expected: string, provided: string | undefined): boolean {
 
 async function readJsonBody(request: IncomingMessage): Promise<unknown> {
   const chunks: Buffer[] = [];
+  let totalBytes = 0;
   for await (const chunk of request) {
-    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    const bytes = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+    totalBytes += bytes.length;
+    if (totalBytes > MAX_JSON_BODY_BYTES) {
+      throw {
+        status: 413,
+        body: {
+          code: "REQUEST_BODY_TOO_LARGE",
+          impact: "请求体超过 1 MiB，本地服务已停止读取。",
+          nextStep: "缩小 JSON payload 或拆分操作后重试。",
+          details: `limit=${MAX_JSON_BODY_BYTES}`,
+        },
+      };
+    }
+    chunks.push(bytes);
   }
   if (chunks.length === 0) return {};
   const text = Buffer.concat(chunks).toString("utf8");
   if (!text.trim()) return {};
-  return JSON.parse(text);
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw {
+      status: 400,
+      body: {
+        code: "INVALID_JSON_BODY",
+        impact: "请求体不是有效 JSON，操作没有执行。",
+        nextStep: "检查 JSON 引号、逗号和括号后重试。",
+        details: "JSON.parse failed",
+      },
+    };
+  }
 }
 
 function sendJson(
@@ -108,6 +147,7 @@ function sendJson(
   }
   if (options.authToken) {
     headers["X-Local-Auth"] = options.authToken;
+    headers["Access-Control-Expose-Headers"] = "X-Local-Auth";
   }
   response.writeHead(status, headers);
   response.end(JSON.stringify(payload));
@@ -240,6 +280,13 @@ export async function startServer(options: StartServerOptions = {}): Promise<Sta
   const host = options.host ?? DEFAULT_HOST;
   const port = options.port ?? DEFAULT_PORT;
   const localAuthToken = options.authToken ?? randomBytes(24).toString("hex");
+  const allowedOrigins = new Set(
+    options.allowedOrigins ??
+      [
+        ...DEFAULT_DASHBOARD_ORIGINS,
+        ...(process.env.NUEDC_DASHBOARD_ORIGINS ?? "").split(",").map((item) => item.trim()).filter(Boolean),
+      ],
+  );
   const runtime = await createProtocolRuntime(repoRoot);
   await ensureLocalIdentity(runtime.repository, options.githubUsernameDetector);
   const git = createGitApi(repoRoot);
@@ -255,12 +302,12 @@ export async function startServer(options: StartServerOptions = {}): Promise<Sta
       });
       return;
     }
-    if (!validateOrigin(origin)) {
+    if (!validateOrigin(origin, request.headers.host, allowedOrigins)) {
       sendJson(response, 403, {
         code: "INVALID_ORIGIN",
         impact: "请求来源不是本地页面，已被拒绝。",
-        nextStep: "仅从本机 dashboard 或本地开发页面访问该服务。",
-        details: "Origin 必须是 http://127.0.0.1:* 或 http://localhost:*。",
+        nextStep: "仅从当前 API 同源页面或已配置的 dashboard 地址访问。",
+        details: `允许来源：${[...allowedOrigins].join(", ")}`,
       });
       return;
     }
@@ -306,7 +353,6 @@ export async function startServer(options: StartServerOptions = {}): Promise<Sta
             ok: true,
             ...(actor ? { actor } : {}),
             sessionRequired: true,
-            localAuthToken,
           },
           responseOptions(origin, localAuthToken),
         );
@@ -454,6 +500,15 @@ export async function startServer(options: StartServerOptions = {}): Promise<Sta
       }
       if (pathname === "/api/git/diff" && request.method === "GET") {
         const files = url.searchParams.getAll("file");
+        if (files.length > 200 || (request.url?.length ?? 0) > 32_768) {
+          sendJson(response, 413, {
+            code: "GIT_DIFF_REQUEST_TOO_LARGE",
+            impact: "Git diff 文件选择超过安全上限。",
+            nextStep: "每次最多选择 200 个文件，并缩短文件路径后重试。",
+            details: `files=${files.length}`,
+          }, responseOptions(origin));
+          return;
+        }
         sendJson(
           response,
           200,

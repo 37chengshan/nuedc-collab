@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { readdir, readFile, stat } from "node:fs/promises";
+import { lstat, readdir, readFile, realpath, stat } from "node:fs/promises";
 import path from "node:path";
 
 const MATERIAL_ROOTS = ["比赛文档", "参考资料", "reference-code"] as const;
@@ -11,6 +11,7 @@ const DESIGN_ROOTS = [
 ] as const;
 
 type PreviewMode = "text" | "sandboxHtml" | "image" | "pdf" | "downloadOnly";
+const MAX_PREVIEW_BYTES = 5 * 1024 * 1024;
 
 export interface WarningItem {
   code: string;
@@ -220,7 +221,7 @@ async function listFilesForRoots(repoRoot: string, roots: readonly string[]): Pr
   return all.sort((a, b) => a.localeCompare(b));
 }
 
-function resolveAllowedPath(repoRoot: string, relativePath: string, allowedRoots: readonly string[]): string {
+async function resolveAllowedPath(repoRoot: string, relativePath: string, allowedRoots: readonly string[]): Promise<string> {
   const normalized = normalizeRelativePath(relativePath);
   if (!isAllowedRelativePath(normalized, allowedRoots)) {
     throw new Error("仅允许访问白名单资料目录。");
@@ -230,7 +231,30 @@ function resolveAllowedPath(repoRoot: string, relativePath: string, allowedRoots
   if (repoRelative.startsWith("../") || repoRelative === "..") {
     throw new Error("路径越界已被拒绝。");
   }
-  return absolute;
+  let info;
+  try {
+    info = await lstat(absolute);
+  } catch {
+    throw new Error("路径不存在或无法读取。");
+  }
+  if (info.isSymbolicLink()) {
+    throw new Error("路径包含符号链接，已拒绝访问。");
+  }
+  const [repoRealPath, targetRealPath] = await Promise.all([realpath(repoRoot), realpath(absolute)]);
+  for (const root of allowedRoots) {
+    try {
+      const rootRealPath = await realpath(path.resolve(repoRoot, root));
+      const rootInsideRepo = path.relative(repoRealPath, rootRealPath);
+      if (rootInsideRepo.startsWith("..") || path.isAbsolute(rootInsideRepo)) continue;
+      const targetInsideRoot = path.relative(rootRealPath, targetRealPath);
+      if (!targetInsideRoot.startsWith("..") && !path.isAbsolute(targetInsideRoot)) {
+        return targetRealPath;
+      }
+    } catch {
+      // 不存在的白名单根目录不参与匹配。
+    }
+  }
+  throw new Error("真实文件路径越过白名单目录，已拒绝访问。");
 }
 
 export async function listMaterials(repoRoot: string): Promise<{ items: MaterialItem[]; warnings: WarningItem[] }> {
@@ -362,7 +386,7 @@ async function readAllowedContent(
   relativePath: string,
   allowedRoots: readonly string[],
 ): Promise<FileContentResponse> {
-  const absolute = resolveAllowedPath(repoRoot, relativePath, allowedRoots);
+  const absolute = await resolveAllowedPath(repoRoot, relativePath, allowedRoots);
   const contentType = detectContentType(relativePath);
   const previewMode = detectPreviewMode(relativePath);
 
@@ -370,6 +394,18 @@ async function readAllowedContent(
     throw new Error("当前仅支持文本、JSON 与 HTML 预览。");
   }
 
+  const info = await stat(absolute);
+  if (info.size > MAX_PREVIEW_BYTES) {
+    throw {
+      status: 413,
+      body: {
+        code: "PREVIEW_TOO_LARGE",
+        impact: "资料文件超过 5 MiB，未载入浏览器预览。",
+        nextStep: "使用本地编辑器打开，或拆分为较小的文本文件。",
+        details: `${relativePath}: ${info.size} bytes`,
+      },
+    };
+  }
   const raw = await readFile(absolute, "utf8");
   if (previewMode === "sandboxHtml") {
     return {
