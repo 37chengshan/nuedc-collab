@@ -1,0 +1,11 @@
+{
+  "actor": "37chengshan",
+  "createdAt": "2026-07-29T14:50:25+08:00",
+  "entityId": "T-20260729-TT02",
+  "entityType": "task",
+  "id": "E-20260729-145025-XBQB",
+  "kind": "statusChange",
+  "message": "双地猛星UART通信、OLED同步显示和Type-C BSL烧录已进入验收收尾。",
+  "recordType": "event",
+  "schemaVersion": 1
+}

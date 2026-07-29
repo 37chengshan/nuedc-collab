@@ -1,0 +1,11 @@
+{
+  "actor": "37chengshan",
+  "createdAt": "2026-07-29T14:50:44+08:00",
+  "entityId": "T-20260729-TT02",
+  "entityType": "task",
+  "id": "E-20260729-145044-4RDY",
+  "kind": "statusChange",
+  "message": "发送端和接收端构建均为0错误；接收端已通过Type-C UART BSL完成实机烧录，用户确认双端显示正常。",
+  "recordType": "event",
+  "schemaVersion": 1
+}

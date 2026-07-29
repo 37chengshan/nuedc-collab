@@ -1,0 +1,32 @@
+{
+  "acceptanceCriteria": [
+    "发送端仅显示接收端ACK确认的ADC、毫伏值和序号",
+    "接收端通过UART中断和环形缓冲接收并刷新OLED且不丢帧",
+    "发送端和接收端CCS Debug全量构建均为0错误",
+    "接收端通过Type-C UART BSL烧录，双端OLED数据一致且刷新正常"
+  ],
+  "blockingIssueIds": [],
+  "completedAcceptanceCriteria": [
+    "发送端仅显示接收端ACK确认的ADC、毫伏值和序号",
+    "接收端通过UART中断和环形缓冲接收并刷新OLED且不丢帧",
+    "发送端和接收端CCS Debug全量构建均为0错误",
+    "接收端通过Type-C UART BSL烧录，双端OLED数据一致且刷新正常"
+  ],
+  "createdAt": "2026-07-29T14:50:09+08:00",
+  "dependencies": [],
+  "description": "地猛星①采集PA27 ADC与PB6-PB9地址，通过UART1向地猛星②发送带CRC和序号的数据帧；两端OLED显示同一已确认帧，并为后续透明无线串口模块保留接口。",
+  "id": "T-20260729-TT02",
+  "module": "地猛星双机通信",
+  "owner": "37chengshan",
+  "participants": [],
+  "priority": "high",
+  "recordType": "task",
+  "relatedCommits": [
+    "4ba7d8650de086c08838f9ed35a0cf84001d7afb",
+    "5cb10c346c381f5d824870d4e01b080485348283"
+  ],
+  "schemaVersion": 1,
+  "status": "done",
+  "title": "完成双地猛星UART同步采集显示",
+  "updatedAt": "2026-07-29T14:52:19+08:00"
+}
