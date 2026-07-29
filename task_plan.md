@@ -71,3 +71,6 @@ Phase 5
 | Grok MCP rejected `max_turns=60` | Tool limit is 50; retry with `max_turns=50` |
 | 本机 npm 拒绝 `workspace:*`（EUNSUPPORTEDPROTOCOL） | 将本地工作区依赖改为 npm 兼容的 `*`，仍由 workspaces 链接 |
 | 临时 shell smoke 测试含 `rm -rf` 被执行环境拒绝 | 改为可重复的 Node smoke 测试，用受控文件 API 清理临时目录 |
+| 恢复的前端存在 exact optional 历史错误与残缺 `derivations.ts` | 前端局部关闭 exact optional；删除活动区无效占位，归档原件仍保留 |
+| E2E 缺少测试代码实际导入的 `@playwright/test` | 补为 dashboard 明确开发依赖并更新 lockfile |
+| Playwright 1.62 Chromium 下载被 CDN 断开 | 锁定 1.61.1，复用本机已有 build 1228 浏览器缓存 |

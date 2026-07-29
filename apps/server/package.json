@@ -1,0 +1,17 @@
+{
+  "name": "@nuedc/server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "node ../../node_modules/typescript/bin/tsc -p tsconfig.json",
+    "typecheck": "node ../../node_modules/typescript/bin/tsc -p tsconfig.json --noEmit",
+    "test": "node ../../node_modules/vitest/vitest.mjs run"
+  },
+  "dependencies": {
+    "@nuedc/git-core": "file:../../packages/git-core",
+    "@nuedc/protocol": "file:../../packages/protocol"
+  }
+}
