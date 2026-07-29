@@ -1,0 +1,6 @@
+**/Debug/
+**/Release/
+**/.metadata/
+**/*.launch
+**/.clangd
+.theia/
