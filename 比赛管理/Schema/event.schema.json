@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "recordType",
+    "schemaVersion",
+    "id",
+    "entityType",
+    "entityId",
+    "kind",
+    "actor",
+    "message",
+    "createdAt"
+  ],
+  "properties": {
+    "recordType": {
+      "const": "event"
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^E-\\d{8}-\\d{6}-[0-9A-HJKMNP-TV-Z]{4}$"
+    },
+    "entityType": {
+      "type": "string",
+      "enum": [
+        "task",
+        "issue",
+        "idea"
+      ]
+    },
+    "entityId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "comment",
+        "progress",
+        "statusChange",
+        "handoff",
+        "decision",
+        "testResult"
+      ]
+    },
+    "actor": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$",
+      "minLength": 1,
+      "maxLength": 39
+    },
+    "message": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4000
+    },
+    "relatedCommit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{7,40}$"
+    },
+    "supersedesEventId": {
+      "type": "string",
+      "pattern": "^E-\\d{8}-\\d{6}-[0-9A-HJKMNP-TV-Z]{4}$"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "recordType": "issue",
+  "schemaVersion": 1,
+  "id": "I-20260728-91BC",
+  "title": "K230 串口偶发丢帧",
+  "status": "investigating",
+  "severity": "high",
+  "owner": "37chengshan",
+  "blocking": true,
+  "linkedTaskIds": ["T-20260728-A3F2"],
+  "symptoms": ["串口偶发丢帧", "控制延迟抖动"],
+  "workaround": "降低采样频率后暂稳",
+  "resolution": "",
+  "relatedCommits": [],
+  "createdAt": "2026-07-28T20:10:00+08:00",
+  "updatedAt": "2026-07-28T20:10:00+08:00"
+}

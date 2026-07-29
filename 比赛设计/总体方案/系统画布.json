@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "title": "赛前能力画布",
+  "phase": "赛前准备",
+  "nodes": [
+    {"id": "mspm0", "label": "MSPM0 实时控制", "status": "赛前准备", "module": "MSPM0"},
+    {"id": "k230", "label": "K230 视觉能力", "status": "赛前准备", "module": "K230 视觉"},
+    {"id": "power", "label": "小车主板供电检查", "status": "赛前准备", "module": "小车主板"}
+  ],
+  "edges": [
+    {"from": "k230", "to": "mspm0", "label": "目标坐标/状态输入"},
+    {"from": "power", "to": "mspm0", "label": "稳定供电"}
+  ],
+  "context": {
+    "linkedIssueIds": [],
+    "linkedEventIds": [],
+    "linkedMaterialIds": []
+  },
+  "updatedAt": "2026-07-28T20:00:00+08:00"
+}

@@ -1,0 +1,90 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import "./tokens.css";
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html,
+  body,
+  #root {
+    min-height: 100%;
+  }
+
+  body {
+    margin: 0;
+    background: var(--color-canvas);
+    color: var(--color-body);
+    font-family: var(--font-body);
+    font-size: 14px;
+    line-height: 22px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  .font-title {
+    font-family: var(--font-title);
+    color: var(--color-ink);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-orange);
+    outline-offset: 2px;
+  }
+
+  button:disabled,
+  input:disabled,
+  select:disabled,
+  textarea:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-press: 0ms;
+    --motion-hover: 0ms;
+    --motion-toast: 100ms;
+    --motion-menu: 100ms;
+    --motion-drawer: 100ms;
+    --motion-page: 100ms;
+  }
+}
+
+[data-motion="none"] {
+  --motion-press: 0ms;
+  --motion-hover: 0ms;
+  --motion-toast: 0ms;
+  --motion-menu: 0ms;
+  --motion-drawer: 0ms;
+  --motion-page: 0ms;
+}
+
+[data-motion="reduced"] {
+  --motion-press: 0ms;
+  --motion-hover: 0ms;
+  --motion-toast: 100ms;
+  --motion-menu: 100ms;
+  --motion-drawer: 100ms;
+  --motion-page: 100ms;
+}
+
+@layer utilities {
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  @media (max-width: 640px) {
+    .form-control {
+      font-size: 16px;
+      line-height: 24px;
+    }
+  }
+}

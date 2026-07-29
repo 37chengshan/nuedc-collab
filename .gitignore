@@ -1,18 +1,21 @@
-# 本机协作状态
-.本机配置/
-.看板缓存/
-
-# Superpowers 视觉设计会话
-.superpowers/
-
-# Node.js
 node_modules/
 dist/
+build/
 coverage/
-playwright-report/
-test-results/
-
-# 编辑器与系统文件
 .DS_Store
-*.swp
+*.log
+.本机配置/
+.看板缓存/
 *.tmp
+*.swp
+.idea/
+.vscode/
+.env
+.env.*
+!.env.example
+_w.py
+生成内容/*.tmp
+归档/前端看板/**/node_modules/
+.superpowers/brainstorm/.last-port
+.superpowers/brainstorm/.last-token
+.superpowers/

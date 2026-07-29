@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "id": "mspm0-soldering-guide",
+  "title": "MSPM0 小车主板焊接教程 · 从裸板到首次上电",
+  "type": "tutorial",
+  "sourceLabel": "用户导入原件",
+  "versionLabel": "REV 0.4.1",
+  "modules": [
+    "小车主板",
+    "MSPM0",
+    "焊接与调试"
+  ],
+  "verificationStatus": "verified",
+  "previewMode": "sandboxHtml",
+  "sha256": "c84dde49c135bb4b3a51035bd332e98a6bab58d67ccab9de7afe85fb7779c665",
+  "sizeBytes": 2982969,
+  "relativePath": "参考资料/焊接与调试/MSPM0小车主板/焊接教程.html",
+  "updatedAt": "2026-07-29T07:50:00+08:00",
+  "notes": [
+    "原件完整复制，未改写 HTML 正文。",
+    "外链资源：无；内嵌 JPEG data URL：17。",
+    "进度保存依赖浏览器 localStorage；看板 sandbox 预览不保证进度持久化。"
+  ],
+  "safetyPreview": {
+    "recommended": "sandbox iframe 预览",
+    "sandboxFlags": "allow-scripts",
+    "deny": [
+      "allow-same-origin",
+      "allow-top-navigation",
+      "allow-forms",
+      "allow-popups"
+    ],
+    "externalResources": [],
+    "localStorageExpected": true,
+    "localStorageInDashboard": "not guaranteed under sandbox without same-origin"
+  }
+}

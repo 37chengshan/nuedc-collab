@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "title": "待赛题公布后填写的总体设计画布",
+  "phase": "赛题分析",
+  "nodes": [],
+  "edges": [],
+  "context": {
+    "linkedIssueIds": [],
+    "linkedEventIds": [],
+    "linkedMaterialIds": []
+  },
+  "updatedAt": "2026-07-29T09:00:00+08:00"
+}

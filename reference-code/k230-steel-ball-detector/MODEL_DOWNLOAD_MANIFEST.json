@@ -1,0 +1,113 @@
+{
+  "schemaVersion": 1,
+  "upstream": "https://github.com/37chengshan/k230-steel-ball-detector",
+  "commit": "0490ea50928bcb2e6a46610397d868d2e32d51c7",
+  "license": "MIT for original code/docs; third-party assets retain own licenses",
+  "omittedBinaries": [
+    {
+      "path": "candidates/v2_raw_graph_f32/steel_ball_reference_yolo11n_1024_raw_graph_f32.kmodel",
+      "sizeBytes": 4141168,
+      "sha256": "57109d5204e0cd14c1dbc2834bf1abe4040e09e2945625d3af7f49f24a30817a",
+      "copiedIntoRepo": false,
+      "reason": "large binary / third-party weight; keep download-only"
+    },
+    {
+      "path": "candidates/v3_fp32_isolation/steel_ball_reference_yolo11n_1024_fp32_isolation.kmodel",
+      "sizeBytes": 10607160,
+      "sha256": "bae8fa43022622c3720817d47cfca7e979056972a097b47904f2867a82107f24",
+      "copiedIntoRepo": false,
+      "reason": "large binary / third-party weight; keep download-only"
+    },
+    {
+      "path": "candidates/v4_target_pipeline_ptq/steel_ball_reference_yolo11n_1024_target_pipeline_ptq.kmodel",
+      "sizeBytes": 4139552,
+      "sha256": "a2079fa818d0e56ba786226f91695416ecbeeab688f80c2b9974eb824f01986c",
+      "copiedIntoRepo": false,
+      "reason": "large binary / third-party weight; keep download-only"
+    },
+    {
+      "path": "candidates/v5_416_proven_path/steel_ball_reference_yolo11n_416_target_pipeline_calib103.kmodel",
+      "sizeBytes": 3130088,
+      "sha256": "69fc1cc939c189cd5e0495811adfff2319f89221f15e18ffcbebe512910c66bb",
+      "copiedIntoRepo": false,
+      "reason": "large binary / third-party weight; keep download-only"
+    },
+    {
+      "path": "candidates/v6_416_w16/steel_ball_reference_yolo11n_416_target_pipeline_calib103_w16.kmodel",
+      "sizeBytes": 5837312,
+      "sha256": "042a1e0659ee7ccef70ea2458b7827636b2dc360f7b3857f57e2cf16ef25c367",
+      "copiedIntoRepo": false,
+      "reason": "large binary / third-party weight; keep download-only"
+    },
+    {
+      "path": "models/steel_ball_reference_yolo11n_1024_best.pt",
+      "sizeBytes": 16129313,
+      "sha256": "2b1cc59c5cdc5dd917abc32082adb9be6735a5e79f4c32ddccce8dfd675a1f95",
+      "copiedIntoRepo": false,
+      "reason": "large binary / third-party weight; keep download-only"
+    },
+    {
+      "path": "models/steel_ball_reference_yolo11n_1024_uint8.kmodel",
+      "sizeBytes": 4139552,
+      "sha256": "8eb2a99cc877872598d0f9c09a9c316a14d3f947c8648f0537c7eddbb85817ac",
+      "copiedIntoRepo": false,
+      "reason": "large binary / third-party weight; keep download-only"
+    },
+    {
+      "path": "models/steel_ball_yolo26n_epoch19_1024.onnx",
+      "sizeBytes": 9707198,
+      "sha256": "776099fec1851e2c5bbc3db62084d616fad98fb8528cd7c49c4cb0a1ce7af155",
+      "copiedIntoRepo": false,
+      "reason": "large binary / third-party weight; keep download-only"
+    },
+    {
+      "path": "models/steel_ball_yolo26n_epoch19_1024_fp32.kmodel",
+      "sizeBytes": 9781512,
+      "sha256": "7667e3f331b619ee07cbe28a96e4c0e101985bd6e89a58e4e11a58d81219ea76",
+      "copiedIntoRepo": false,
+      "reason": "large binary / third-party weight; keep download-only"
+    },
+    {
+      "path": "models/steel_ball_yolo26n_epoch19_416.onnx",
+      "sizeBytes": 9634295,
+      "sha256": "4a09f9e37dfcbc93bc40ffe6614c6fd4a293a8f9929acac239ceb1798b197215",
+      "copiedIntoRepo": false,
+      "reason": "large binary / third-party weight; keep download-only"
+    },
+    {
+      "path": "models/steel_ball_yolo26n_epoch19_416_fp32.kmodel",
+      "sizeBytes": 9566056,
+      "sha256": "edc8e2fe39e8e283d663e09b733cc121db0c77d6cefbed585754a0a9b5d432e5",
+      "copiedIntoRepo": false,
+      "reason": "large binary / third-party weight; keep download-only"
+    },
+    {
+      "path": "models/steel_ball_yolo26n_epoch19_416_i16w8.kmodel",
+      "sizeBytes": 3257816,
+      "sha256": "e78bb8ad630f5bb0766220f0ab7d1733311d51a0f0bd0901f2a284c16f0ba340",
+      "copiedIntoRepo": false,
+      "reason": "large binary / third-party weight; keep download-only"
+    },
+    {
+      "path": "models/steel_ball_yolo26n_epoch19_416_u8w16.kmodel",
+      "sizeBytes": 5542696,
+      "sha256": "1079b7e56ec248d3836a211a64bee2ade833e774b86f4c4e7685538f87ea25a9",
+      "copiedIntoRepo": false,
+      "reason": "large binary / third-party weight; keep download-only"
+    },
+    {
+      "path": "models/steel_ball_yolo26n_epoch19_best.pt",
+      "sizeBytes": 20910883,
+      "sha256": "18e2360901315f745ec3e99092d841a8ffadd29c54191130727fc5a88c147bb9",
+      "copiedIntoRepo": false,
+      "reason": "large binary / third-party weight; keep download-only"
+    },
+    {
+      "path": "models/yolo11n.pt",
+      "sizeBytes": 5613764,
+      "sha256": "0ebbc80d4a7680d14987a577cd21342b65ecfd94632bd9a8da63ae6417644ee1",
+      "copiedIntoRepo": false,
+      "reason": "large binary / third-party weight; keep download-only"
+    }
+  ]
+}

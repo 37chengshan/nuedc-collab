@@ -1,0 +1,143 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "recordType",
+    "schemaVersion",
+    "id",
+    "title",
+    "module",
+    "status",
+    "priority",
+    "participants",
+    "dependencies",
+    "blockingIssueIds",
+    "relatedCommits",
+    "description",
+    "acceptanceCriteria",
+    "completedAcceptanceCriteria",
+    "createdAt",
+    "updatedAt"
+  ],
+  "properties": {
+    "recordType": {
+      "const": "task"
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^T-\\d{8}-[0-9A-HJKMNP-TV-Z]{4}$"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200
+    },
+    "module": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^\\S(?:.*\\S)?$"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "todo",
+        "doing",
+        "blocked",
+        "review",
+        "done"
+      ]
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "critical"
+      ]
+    },
+    "owner": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$",
+      "minLength": 1,
+      "maxLength": 39
+    },
+    "participants": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$",
+        "minLength": 1,
+        "maxLength": 39
+      },
+      "uniqueItems": true
+    },
+    "dependencies": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^T-\\d{8}-[0-9A-HJKMNP-TV-Z]{4}$"
+      },
+      "uniqueItems": true
+    },
+    "blockingIssueIds": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^I-\\d{8}-[0-9A-HJKMNP-TV-Z]{4}$"
+      },
+      "uniqueItems": true
+    },
+    "relatedCommits": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[0-9a-f]{7,40}$"
+      },
+      "uniqueItems": true
+    },
+    "description": {
+      "type": "string",
+      "maxLength": 4000
+    },
+    "acceptanceCriteria": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 500
+      },
+      "uniqueItems": true
+    },
+    "completedAcceptanceCriteria": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 500
+      },
+      "uniqueItems": true
+    },
+    "sourceIdeaId": {
+      "type": "string",
+      "pattern": "^A-\\d{8}-[0-9A-HJKMNP-TV-Z]{4}$"
+    },
+    "dueAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

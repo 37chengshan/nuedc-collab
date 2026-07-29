@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "githubUsername",
+    "port",
+    "autoFetchIntervalSeconds",
+    "motionLevel",
+    "confirmGitWrites"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "githubUsername": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?$",
+      "minLength": 1,
+      "maxLength": 39
+    },
+    "port": {
+      "type": "integer",
+      "minimum": 1024,
+      "maximum": 65535
+    },
+    "autoFetchIntervalSeconds": {
+      "type": "integer",
+      "minimum": 30,
+      "maximum": 600
+    },
+    "motionLevel": {
+      "type": "string",
+      "enum": [
+        "system",
+        "none",
+        "reduced",
+        "standard"
+      ]
+    },
+    "confirmGitWrites": {
+      "const": true
+    }
+  }
+}

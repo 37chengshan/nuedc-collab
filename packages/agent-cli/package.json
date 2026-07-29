@@ -1,0 +1,35 @@
+{
+  "name": "@nuedc/agent-cli",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/runner.js",
+  "types": "./dist/runner.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/runner.d.ts",
+      "import": "./dist/runner.js"
+    }
+  },
+  "bin": {
+    "nuedc-agent": "./dist/runner.js"
+  },
+  "scripts": {
+    "prebuild": "npm run build --workspace=@nuedc/protocol && npm run build --workspace=@nuedc/git-core",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@nuedc/git-core": "*",
+    "@nuedc/protocol": "*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

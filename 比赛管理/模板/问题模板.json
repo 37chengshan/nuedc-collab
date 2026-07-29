@@ -1,0 +1,16 @@
+{
+  "recordType": "issue",
+  "schemaVersion": 1,
+  "id": "I-20260728-TEMP",
+  "title": "示例问题标题",
+  "status": "open",
+  "severity": "medium",
+  "blocking": false,
+  "linkedTaskIds": [],
+  "symptoms": ["描述可复现现象"],
+  "workaround": "",
+  "resolution": "",
+  "relatedCommits": [],
+  "createdAt": "2026-07-28T20:00:00+08:00",
+  "updatedAt": "2026-07-28T20:00:00+08:00"
+}

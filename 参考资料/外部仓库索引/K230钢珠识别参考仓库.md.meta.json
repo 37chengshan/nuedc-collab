@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "k230-steel-ball-detector-index",
+  "title": "K230 钢珠识别参考仓库",
+  "type": "externalRepository",
+  "sourceLabel": "GitHub 37chengshan/k230-steel-ball-detector",
+  "versionLabel": "0490ea5",
+  "modules": [
+    "K230 视觉",
+    "CanMV",
+    "钢珠检测参考"
+  ],
+  "verificationStatus": "verified",
+  "previewMode": "text",
+  "relativePath": "参考资料/外部仓库索引/K230钢珠识别参考仓库.md",
+  "updatedAt": "2026-07-29T08:00:00+08:00",
+  "upstreamUrl": "https://github.com/37chengshan/k230-steel-ball-detector",
+  "pinnedCommit": "0490ea50928bcb2e6a46610397d868d2e32d51c7",
+  "license": "MIT (original code/docs)"
+}

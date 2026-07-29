@@ -1,0 +1,182 @@
+{
+  "generatedAt": "2026-07-29T09:57:42+08:00",
+  "ideas": [
+    {
+      "author": "37chengshan",
+      "createdAt": "2026-07-28T20:20:00+08:00",
+      "description": "高频输出粗坐标，低频输出完整识别结果。",
+      "effectiveState": "open",
+      "id": "A-20260728-K3M7",
+      "module": "K230 视觉",
+      "recordType": "idea",
+      "schemaVersion": 1,
+      "status": "open",
+      "title": "使用双速视觉链路降低控制延迟",
+      "updatedAt": "2026-07-28T20:20:00+08:00"
+    }
+  ],
+  "issues": [
+    {
+      "blocking": true,
+      "createdAt": "2026-07-28T20:10:00+08:00",
+      "id": "I-20260728-91BC",
+      "linkedTaskIds": [
+        "T-20260728-A3F2"
+      ],
+      "owner": "37chengshan",
+      "recordType": "issue",
+      "relatedCommits": [],
+      "resolution": "",
+      "schemaVersion": 1,
+      "severity": "high",
+      "status": "investigating",
+      "symptoms": [
+        "串口偶发丢帧",
+        "控制延迟抖动"
+      ],
+      "title": "K230 串口偶发丢帧",
+      "updatedAt": "2026-07-28T20:10:00+08:00",
+      "workaround": "降低采样频率后暂稳"
+    }
+  ],
+  "members": [
+    {
+      "createdAt": "2026-07-28T20:00:00+08:00",
+      "githubUsername": "37chengshan",
+      "recordType": "member",
+      "responsibilities": [
+        "仓库协议与协作流程"
+      ],
+      "roles": [
+        "coordinator"
+      ],
+      "schemaVersion": 1,
+      "status": "active",
+      "updatedAt": "2026-07-28T20:00:00+08:00"
+    },
+    {
+      "createdAt": "2026-07-29T10:00:00+08:00",
+      "githubUsername": "teammate-hardware",
+      "recordType": "member",
+      "responsibilities": [
+        "占位账号：请替换为第二位队员的真实 GitHub username"
+      ],
+      "roles": [
+        "hardware"
+      ],
+      "schemaVersion": 1,
+      "status": "inactive",
+      "updatedAt": "2026-07-29T10:00:00+08:00"
+    },
+    {
+      "createdAt": "2026-07-29T10:00:00+08:00",
+      "githubUsername": "teammate-vision",
+      "recordType": "member",
+      "responsibilities": [
+        "占位账号：请替换为第三位队员的真实 GitHub username"
+      ],
+      "roles": [
+        "vision"
+      ],
+      "schemaVersion": 1,
+      "status": "inactive",
+      "updatedAt": "2026-07-29T10:00:00+08:00"
+    }
+  ],
+  "recentCommits": [
+    {
+      "authorEmail": "37chengshan@users.noreply.github.com",
+      "authorName": "37chengshan",
+      "committedAt": "2026-07-29T00:23:56+08:00",
+      "parents": [
+        "524e7f14bdfd3a2c98fdf200d74cc32703629e8a"
+      ],
+      "sha": "443f6e828710900069599b0fc99383e45bf87350",
+      "shortSha": "443f6e8",
+      "subject": "docs: 添加阶段二 Git 与本地 API 草案"
+    },
+    {
+      "authorEmail": "37chengshan@users.noreply.github.com",
+      "authorName": "37chengshan",
+      "committedAt": "2026-07-28T23:47:39+08:00",
+      "parents": [
+        "994e02e0942d0ffa42669a6eddca100c3eb57d7a"
+      ],
+      "sha": "524e7f14bdfd3a2c98fdf200d74cc32703629e8a",
+      "shortSha": "524e7f1",
+      "subject": "docs: 添加阶段一仓库与协议实施计划"
+    },
+    {
+      "authorEmail": "37chengshan@users.noreply.github.com",
+      "authorName": "37chengshan",
+      "committedAt": "2026-07-28T23:43:01+08:00",
+      "parents": [
+        "b7cf667c1a2ba16f03f01c125d6ec9ef3ddf1171"
+      ],
+      "sha": "994e02e0942d0ffa42669a6eddca100c3eb57d7a",
+      "shortSha": "994e02e",
+      "subject": "docs: 增加想法与 agent-native 动作协议"
+    },
+    {
+      "authorEmail": "37chengshan@users.noreply.github.com",
+      "authorName": "37chengshan",
+      "committedAt": "2026-07-28T23:01:12+08:00",
+      "parents": [
+        "7cc4c3644aadbdd74a2f22725382a89eea579345"
+      ],
+      "sha": "b7cf667c1a2ba16f03f01c125d6ec9ef3ddf1171",
+      "shortSha": "b7cf667",
+      "subject": "docs: 确认 Claude 橙色协作台设计"
+    },
+    {
+      "authorEmail": "37chengshan@users.noreply.github.com",
+      "authorName": "37chengshan",
+      "committedAt": "2026-07-28T22:12:50+08:00",
+      "parents": [],
+      "sha": "7cc4c3644aadbdd74a2f22725382a89eea579345",
+      "shortSha": "7cc4c36",
+      "subject": "docs: 定义赛前协作底座设计"
+    }
+  ],
+  "recentEvents": [
+    {
+      "actor": "37chengshan",
+      "createdAt": "2026-07-28T20:15:00+08:00",
+      "entityId": "T-20260728-A3F2",
+      "entityType": "task",
+      "id": "E-20260728-201500-7D2A",
+      "kind": "testResult",
+      "message": "3.3V 与 5V 空载测试通过。",
+      "recordType": "event",
+      "relatedCommit": "0490ea5",
+      "schemaVersion": 1
+    }
+  ],
+  "schemaVersion": 1,
+  "summary": {
+    "blockedTasks": 0,
+    "openIdeas": 1,
+    "openIssues": 1,
+    "openTasks": 1
+  },
+  "tasks": [
+    {
+      "acceptanceCriteria": [],
+      "blockingIssueIds": [],
+      "completedAcceptanceCriteria": [],
+      "createdAt": "2026-07-28T20:00:00+08:00",
+      "dependencies": [],
+      "description": "",
+      "id": "T-20260728-A3F2",
+      "module": "小车主板",
+      "participants": [],
+      "priority": "high",
+      "recordType": "task",
+      "relatedCommits": [],
+      "schemaVersion": 1,
+      "status": "todo",
+      "title": "检查小车五路电源",
+      "updatedAt": "2026-07-28T20:00:00+08:00"
+    }
+  ]
+}

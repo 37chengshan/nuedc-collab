@@ -1,0 +1,618 @@
+<style>
+  :root {
+    --ec-canvas: #f6f3ed;
+    --ec-panel: #fffdfa;
+    --ec-panel-2: #f0ebe3;
+    --ec-line: #e3dcd1;
+    --ec-text: #2d2925;
+    --ec-muted: #746c63;
+    --ec-green: #386653;
+    --ec-green-soft: #dce9e1;
+    --ec-blue: #3e5e82;
+    --ec-blue-soft: #e4eaf2;
+    --ec-amber: #966a32;
+    --ec-amber-soft: #f3e6d3;
+    --ec-red: #a3433f;
+    --ec-red-soft: #f4dfdc;
+  }
+
+  .ec-intro {
+    display: grid;
+    grid-template-columns: 1.35fr .65fr;
+    gap: 18px;
+    margin: 18px 0 24px;
+  }
+
+  .ec-note,
+  .ec-palette {
+    border: 1px solid var(--ec-line);
+    border-radius: 14px;
+    background: var(--ec-panel);
+    padding: 16px;
+  }
+
+  .ec-note strong {
+    color: var(--ec-text);
+  }
+
+  .ec-note p {
+    color: var(--ec-muted);
+    margin: 5px 0 0;
+    font-size: 13px;
+    line-height: 1.65;
+  }
+
+  .ec-swatches {
+    display: flex;
+    gap: 8px;
+    margin-top: 9px;
+  }
+
+  .ec-swatch {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    border: 1px solid rgba(45, 41, 37, .08);
+  }
+
+  .ec-page-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+  }
+
+  .ec-page {
+    cursor: pointer;
+    border: 1px solid var(--ec-line);
+    border-radius: 16px;
+    background: var(--ec-panel);
+    overflow: hidden;
+    transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+  }
+
+  .ec-page:hover {
+    transform: translateY(-2px);
+    border-color: #c7baaa;
+    box-shadow: 0 12px 26px rgba(45, 41, 37, .08);
+  }
+
+  .ec-page.selected {
+    border-color: var(--ec-green);
+    box-shadow: 0 0 0 3px rgba(56, 102, 83, .12);
+  }
+
+  .ec-page-meta {
+    padding: 13px 15px 15px;
+    border-top: 1px solid var(--ec-line);
+  }
+
+  .ec-page-meta h3 {
+    margin: 0;
+    font-size: 15px;
+    color: var(--ec-text);
+  }
+
+  .ec-page-meta p {
+    margin: 5px 0 0;
+    font-size: 12px;
+    color: var(--ec-muted);
+    line-height: 1.55;
+  }
+
+  .ec-window {
+    background: var(--ec-canvas);
+    min-height: 215px;
+    padding: 9px;
+    color: var(--ec-text);
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+
+  .ec-top {
+    height: 27px;
+    border: 1px solid var(--ec-line);
+    border-radius: 9px 9px 0 0;
+    background: var(--ec-panel);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 9px;
+    font-size: 7px;
+    color: var(--ec-muted);
+  }
+
+  .ec-logo {
+    width: 15px;
+    height: 15px;
+    display: grid;
+    place-items: center;
+    border-radius: 5px;
+    background: var(--ec-text);
+    color: #fffdfa;
+    font-size: 7px;
+    font-weight: 700;
+  }
+
+  .ec-tab.active {
+    color: var(--ec-text);
+    font-weight: 700;
+  }
+
+  .ec-status {
+    margin-left: auto;
+    border-radius: 999px;
+    padding: 2px 6px;
+    background: var(--ec-green-soft);
+    color: var(--ec-green);
+    font-weight: 700;
+  }
+
+  .ec-body {
+    display: grid;
+    grid-template-columns: 72px minmax(0, 1fr) 92px;
+    gap: 7px;
+    min-height: 171px;
+    padding: 7px;
+    border: 1px solid var(--ec-line);
+    border-top: 0;
+    border-radius: 0 0 9px 9px;
+  }
+
+  .ec-col,
+  .ec-main,
+  .ec-panel-mini {
+    border: 1px solid var(--ec-line);
+    background: var(--ec-panel);
+    border-radius: 8px;
+    padding: 7px;
+  }
+
+  .ec-label {
+    font-size: 6px;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: #9a9186;
+    margin-bottom: 6px;
+  }
+
+  .ec-line {
+    height: 5px;
+    border-radius: 99px;
+    background: #e8e1d8;
+    margin: 5px 0;
+  }
+
+  .ec-line.dark { background: #8e857a; }
+  .ec-line.green { background: #8bb09e; }
+  .ec-line.blue { background: #9fb1c7; }
+  .ec-line.red { background: #c78b88; }
+  .ec-line.w75 { width: 75%; }
+  .ec-line.w55 { width: 55%; }
+  .ec-line.w35 { width: 35%; }
+
+  .ec-card-mini {
+    border: 1px solid var(--ec-line);
+    background: #fff;
+    border-radius: 7px;
+    padding: 6px;
+    margin-bottom: 5px;
+  }
+
+  .ec-card-mini.warn { border-left: 3px solid var(--ec-amber); }
+  .ec-card-mini.blocked { border-left: 3px solid var(--ec-red); }
+  .ec-card-mini.done { border-left: 3px solid var(--ec-green); opacity: .8; }
+
+  .ec-chip {
+    display: inline-block;
+    font-size: 5px;
+    line-height: 1;
+    border-radius: 999px;
+    padding: 3px 5px;
+    margin: 2px 2px 0 0;
+    background: var(--ec-panel-2);
+    color: var(--ec-muted);
+  }
+
+  .ec-chip.green { background: var(--ec-green-soft); color: var(--ec-green); }
+  .ec-chip.blue { background: var(--ec-blue-soft); color: var(--ec-blue); }
+  .ec-chip.red { background: var(--ec-red-soft); color: var(--ec-red); }
+  .ec-chip.amber { background: var(--ec-amber-soft); color: var(--ec-amber); }
+
+  .ec-btn-mini {
+    border-radius: 6px;
+    padding: 4px 6px;
+    background: var(--ec-green);
+    color: #fff;
+    font-size: 6px;
+    text-align: center;
+    margin-top: 6px;
+  }
+
+  .ec-board {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .ec-board-column {
+    min-width: 0;
+  }
+
+  .ec-board-title {
+    font-size: 6px;
+    color: var(--ec-muted);
+    margin-bottom: 6px;
+  }
+
+  .ec-list-row {
+    display: grid;
+    grid-template-columns: 12px 1fr 40px;
+    gap: 5px;
+    align-items: center;
+    border-bottom: 1px solid #eee8e0;
+    padding: 5px 0;
+  }
+
+  .ec-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--ec-amber);
+  }
+
+  .ec-dot.red { background: var(--ec-red); }
+  .ec-dot.green { background: var(--ec-green); }
+  .ec-dot.blue { background: var(--ec-blue); }
+
+  .ec-timeline {
+    border-left: 1px solid #d7cec2;
+    margin-left: 5px;
+    padding-left: 10px;
+  }
+
+  .ec-commit {
+    position: relative;
+    margin-bottom: 7px;
+  }
+
+  .ec-commit::before {
+    content: "";
+    position: absolute;
+    left: -14px;
+    top: 3px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--ec-green);
+  }
+
+  .ec-doc-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+
+  .ec-doc {
+    border: 1px solid var(--ec-line);
+    border-radius: 7px;
+    padding: 7px;
+    min-height: 45px;
+    background: #fff;
+  }
+
+  .ec-diagram {
+    position: relative;
+    min-height: 112px;
+  }
+
+  .ec-node {
+    position: absolute;
+    border: 1px solid var(--ec-line);
+    border-radius: 7px;
+    background: #fff;
+    padding: 7px;
+    font-size: 6px;
+  }
+
+  .ec-node.n1 { left: 4%; top: 36%; }
+  .ec-node.n2 { left: 38%; top: 5%; }
+  .ec-node.n3 { left: 38%; bottom: 5%; }
+  .ec-node.n4 { right: 4%; top: 36%; }
+
+  .ec-arrow {
+    position: absolute;
+    height: 1px;
+    background: #b9afa4;
+    transform-origin: left center;
+  }
+
+  .ec-form-row {
+    display: grid;
+    grid-template-columns: 70px 1fr;
+    gap: 8px;
+    align-items: center;
+    margin: 7px 0;
+  }
+
+  .ec-input-mini {
+    height: 17px;
+    border: 1px solid var(--ec-line);
+    border-radius: 5px;
+    background: #fff;
+  }
+
+  .ec-confirm {
+    width: 76%;
+    margin: 15px auto;
+    border: 1px solid #d5c9bb;
+    border-radius: 11px;
+    background: var(--ec-panel);
+    padding: 10px;
+    box-shadow: 0 12px 25px rgba(45, 41, 37, .1);
+  }
+
+  .ec-confirm-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 5px;
+    margin-top: 8px;
+  }
+
+  .ec-secondary,
+  .ec-primary {
+    padding: 4px 7px;
+    border-radius: 5px;
+    font-size: 6px;
+  }
+
+  .ec-secondary { border: 1px solid var(--ec-line); }
+  .ec-primary { background: var(--ec-green); color: #fff; }
+
+  @media (max-width: 900px) {
+    .ec-intro,
+    .ec-page-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<h2>电赛协作台 · 全部页面总览</h2>
+<p class="subtitle">Claude 的温暖克制视觉 + Cline Kanban 的任务/Git 信息结构。先确认整体方向，再逐页放大。</p>
+
+<div class="ec-intro">
+  <div class="ec-note">
+    <strong>设计关键词</strong>
+    <p>暖米白、细边框、低饱和状态色、高信息密度、中文解释优先。危险 Git 操作始终二次确认；不做离线模式，不做企业数据大屏。</p>
+  </div>
+  <div class="ec-palette">
+    <div class="label">核心色板</div>
+    <div class="ec-swatches">
+      <span class="ec-swatch" style="background:#f6f3ed"></span>
+      <span class="ec-swatch" style="background:#fffdfa"></span>
+      <span class="ec-swatch" style="background:#386653"></span>
+      <span class="ec-swatch" style="background:#3e5e82"></span>
+      <span class="ec-swatch" style="background:#966a32"></span>
+      <span class="ec-swatch" style="background:#a3433f"></span>
+    </div>
+  </div>
+</div>
+
+<p class="label">点击需要优先调整或放大的页面，可多选</p>
+<div class="ec-page-grid" data-multiselect>
+  <div class="ec-page" data-choice="workspace" onclick="toggleSelect(this)">
+    <div class="ec-window">
+      <div class="ec-top">
+        <span class="ec-logo">EC</span><span class="ec-tab active">工作台</span><span class="ec-tab">任务</span><span class="ec-tab">问题</span><span class="ec-tab">设计</span>
+        <span class="ec-status">已同步</span>
+      </div>
+      <div class="ec-body">
+        <div class="ec-col">
+          <div class="ec-label">我的焦点</div>
+          <div class="ec-card-mini warn"><div class="ec-line dark w75"></div><span class="ec-chip amber">今天</span></div>
+          <div class="ec-card-mini blocked"><div class="ec-line dark w55"></div><span class="ec-chip red">阻塞</span></div>
+          <div class="ec-line w75"></div><div class="ec-line w55"></div>
+        </div>
+        <div class="ec-main">
+          <div class="ec-label">全队工作</div>
+          <div class="ec-card-mini"><div class="ec-line dark w75"></div><div class="ec-line green w35"></div><span class="ec-chip green">进行中</span><span class="ec-chip">37chengshan</span></div>
+          <div class="ec-card-mini"><div class="ec-line dark w55"></div><div class="ec-line blue w35"></div><span class="ec-chip blue">评审</span></div>
+          <div class="ec-card-mini done"><div class="ec-line dark w75"></div><span class="ec-chip green">完成</span></div>
+        </div>
+        <div class="ec-col">
+          <div class="ec-label">Git 与同步</div>
+          <span class="ec-chip green">main · 干净</span>
+          <div class="ec-line dark w75"></div><div class="ec-line w55"></div>
+          <div class="ec-btn-mini">检查更新</div>
+          <div class="ec-label" style="margin-top:9px">最新提交</div>
+          <div class="ec-line dark"></div><div class="ec-line w75"></div>
+        </div>
+      </div>
+    </div>
+    <div class="ec-page-meta">
+      <h3>01 · 工作台</h3>
+      <p>我的焦点、全队任务与 Git 状态三栏同屏，是每天默认入口。</p>
+    </div>
+  </div>
+
+  <div class="ec-page" data-choice="tasks" onclick="toggleSelect(this)">
+    <div class="ec-window">
+      <div class="ec-top">
+        <span class="ec-logo">EC</span><span class="ec-tab">工作台</span><span class="ec-tab active">任务</span><span class="ec-tab">问题</span><span class="ec-tab">提交</span>
+        <span class="ec-status">3 人协作</span>
+      </div>
+      <div class="ec-body ec-board">
+        <div class="ec-board-column"><div class="ec-board-title">待办 · 3</div><div class="ec-card-mini"><div class="ec-line dark"></div><span class="ec-chip">MSPM0</span></div><div class="ec-card-mini"><div class="ec-line dark w75"></div><span class="ec-chip">K230</span></div></div>
+        <div class="ec-board-column"><div class="ec-board-title">进行中 · 2</div><div class="ec-card-mini warn"><div class="ec-line dark"></div><span class="ec-chip green">37chengshan</span></div><div class="ec-card-mini"><div class="ec-line dark w55"></div><span class="ec-chip amber">高</span></div></div>
+        <div class="ec-board-column"><div class="ec-board-title">阻塞 · 1</div><div class="ec-card-mini blocked"><div class="ec-line dark"></div><span class="ec-chip red">电源</span></div></div>
+        <div class="ec-board-column"><div class="ec-board-title">评审 / 完成</div><div class="ec-card-mini done"><div class="ec-line dark w75"></div><span class="ec-chip green">通过</span></div></div>
+      </div>
+    </div>
+    <div class="ec-page-meta">
+      <h3>02 · 任务看板</h3>
+      <p>接近 Cline Kanban 的卡片密度，支持依赖、负责人、优先级和关联提交。</p>
+    </div>
+  </div>
+
+  <div class="ec-page" data-choice="issues" onclick="toggleSelect(this)">
+    <div class="ec-window">
+      <div class="ec-top">
+        <span class="ec-logo">EC</span><span class="ec-tab">工作台</span><span class="ec-tab">任务</span><span class="ec-tab active">问题</span><span class="ec-tab">资料</span>
+        <span class="ec-status" style="background:var(--ec-amber-soft);color:var(--ec-amber)">2 个待处理</span>
+      </div>
+      <div class="ec-body" style="grid-template-columns:1.2fr .8fr">
+        <div class="ec-main">
+          <div class="ec-label">问题列表</div>
+          <div class="ec-list-row"><span class="ec-dot red"></span><div><div class="ec-line dark w75"></div><div class="ec-line w55"></div></div><span class="ec-chip red">严重</span></div>
+          <div class="ec-list-row"><span class="ec-dot"></span><div><div class="ec-line dark"></div><div class="ec-line w35"></div></div><span class="ec-chip amber">调查中</span></div>
+          <div class="ec-list-row"><span class="ec-dot green"></span><div><div class="ec-line dark w55"></div><div class="ec-line w75"></div></div><span class="ec-chip green">已解决</span></div>
+        </div>
+        <div class="ec-col">
+          <div class="ec-label">问题详情</div>
+          <div class="ec-line dark"></div><div class="ec-line w75"></div>
+          <span class="ec-chip red">阻塞任务</span><span class="ec-chip">K230 UART</span>
+          <div class="ec-label" style="margin-top:10px">处理记录</div>
+          <div class="ec-line"></div><div class="ec-line w75"></div><div class="ec-btn-mini">追加事件</div>
+        </div>
+      </div>
+    </div>
+    <div class="ec-page-meta">
+      <h3>03 · 问题管理</h3>
+      <p>问题列表与证据详情并排，突出阻塞关系、处理事件和关联任务。</p>
+    </div>
+  </div>
+
+  <div class="ec-page" data-choice="commits" onclick="toggleSelect(this)">
+    <div class="ec-window">
+      <div class="ec-top">
+        <span class="ec-logo">EC</span><span class="ec-tab">任务</span><span class="ec-tab">问题</span><span class="ec-tab active">提交历史</span><span class="ec-tab">资料</span>
+        <span class="ec-status">main</span>
+      </div>
+      <div class="ec-body" style="grid-template-columns:.9fr 1.1fr">
+        <div class="ec-main">
+          <div class="ec-label">提交时间线</div>
+          <div class="ec-timeline">
+            <div class="ec-commit"><div class="ec-line dark w75"></div><span class="ec-chip green">7cc4c36</span></div>
+            <div class="ec-commit"><div class="ec-line dark"></div><span class="ec-chip">37chengshan</span></div>
+            <div class="ec-commit"><div class="ec-line dark w55"></div><span class="ec-chip blue">远端</span></div>
+          </div>
+        </div>
+        <div class="ec-col">
+          <div class="ec-label">选中提交 · 变更证据</div>
+          <div class="ec-line dark w75"></div><div class="ec-line"></div>
+          <div class="ec-card-mini"><span class="ec-chip green">+1027</span><span class="ec-chip red">-0</span><div class="ec-line w75"></div></div>
+          <div class="ec-label">关联任务</div><span class="ec-chip blue">T-20260728-A3F2</span>
+        </div>
+      </div>
+    </div>
+    <div class="ec-page-meta">
+      <h3>04 · 提交历史</h3>
+      <p>时间线、文件变化和关联任务同屏，原始 Git 细节按需展开。</p>
+    </div>
+  </div>
+
+  <div class="ec-page" data-choice="materials" onclick="toggleSelect(this)">
+    <div class="ec-window">
+      <div class="ec-top">
+        <span class="ec-logo">EC</span><span class="ec-tab">提交</span><span class="ec-tab active">参考资料</span><span class="ec-tab">总体设计</span><span class="ec-tab">设置</span>
+        <span class="ec-status">18 项资料</span>
+      </div>
+      <div class="ec-body" style="grid-template-columns:76px 1fr">
+        <div class="ec-col">
+          <div class="ec-label">分类</div>
+          <span class="ec-chip green">小车主板</span><span class="ec-chip">MSPM0</span><span class="ec-chip">K230</span><span class="ec-chip">官方通知</span>
+        </div>
+        <div class="ec-main">
+          <div class="ec-label">资料库</div>
+          <div class="ec-doc-grid">
+            <div class="ec-doc"><span class="ec-chip amber">HTML</span><div class="ec-line dark"></div><div class="ec-line w55"></div></div>
+            <div class="ec-doc"><span class="ec-chip green">硬件</span><div class="ec-line dark w75"></div><div class="ec-line w35"></div></div>
+            <div class="ec-doc"><span class="ec-chip blue">仓库</span><div class="ec-line dark"></div><div class="ec-line w55"></div></div>
+            <div class="ec-doc"><span class="ec-chip">规则</span><div class="ec-line dark w55"></div><div class="ec-line w75"></div></div>
+            <div class="ec-doc"><span class="ec-chip">接口</span><div class="ec-line dark"></div><div class="ec-line w35"></div></div>
+            <div class="ec-doc"><span class="ec-chip">测试</span><div class="ec-line dark w75"></div><div class="ec-line w55"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="ec-page-meta">
+      <h3>05 · 参考资料</h3>
+      <p>硬件、教程、外部仓库和比赛通知统一检索，支持安全预览。</p>
+    </div>
+  </div>
+
+  <div class="ec-page" data-choice="design" onclick="toggleSelect(this)">
+    <div class="ec-window">
+      <div class="ec-top">
+        <span class="ec-logo">EC</span><span class="ec-tab">资料</span><span class="ec-tab active">总体设计</span><span class="ec-tab">设置</span>
+        <span class="ec-status" style="background:var(--ec-blue-soft);color:var(--ec-blue)">赛题待公布</span>
+      </div>
+      <div class="ec-body" style="grid-template-columns:1fr">
+        <div class="ec-main">
+          <div class="ec-label">总体方案画布</div>
+          <div class="ec-diagram">
+            <div class="ec-node n1">传感 / 视觉</div>
+            <div class="ec-node n2">MSPM0 控制</div>
+            <div class="ec-node n3">K230 推理</div>
+            <div class="ec-node n4">小车 / 执行器</div>
+            <span class="ec-arrow" style="left:25%;top:48%;width:23%;transform:rotate(-22deg)"></span>
+            <span class="ec-arrow" style="left:25%;top:52%;width:23%;transform:rotate(22deg)"></span>
+            <span class="ec-arrow" style="left:57%;top:22%;width:22%;transform:rotate(22deg)"></span>
+            <span class="ec-arrow" style="left:57%;top:75%;width:22%;transform:rotate(-22deg)"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="ec-page-meta">
+      <h3>06 · 总体设计</h3>
+      <p>题目公布前展示能力地图；公布后承载系统框图、接口与方案 HTML。</p>
+    </div>
+  </div>
+
+  <div class="ec-page" data-choice="settings" onclick="toggleSelect(this)">
+    <div class="ec-window">
+      <div class="ec-top">
+        <span class="ec-logo">EC</span><span class="ec-tab">资料</span><span class="ec-tab">总体设计</span><span class="ec-tab active">设置</span>
+        <span class="ec-status">本机</span>
+      </div>
+      <div class="ec-body" style="grid-template-columns:1fr">
+        <div class="ec-main">
+          <div class="ec-label">本机配置</div>
+          <div class="ec-form-row"><span class="ec-chip">GitHub 用户名</span><div class="ec-input-mini"></div></div>
+          <div class="ec-form-row"><span class="ec-chip">端口</span><div class="ec-input-mini"></div></div>
+          <div class="ec-form-row"><span class="ec-chip">检查间隔</span><div class="ec-input-mini"></div></div>
+          <div class="ec-form-row"><span class="ec-chip green">安全确认</span><div class="ec-line green w35"></div></div>
+          <div class="ec-btn-mini" style="width:60px;margin-left:auto">保存设置</div>
+        </div>
+      </div>
+    </div>
+    <div class="ec-page-meta">
+      <h3>07 · 设置</h3>
+      <p>只管理本机身份和检查频率；危险 Git 操作确认固定开启。</p>
+    </div>
+  </div>
+
+  <div class="ec-page" data-choice="git-safety" onclick="toggleSelect(this)">
+    <div class="ec-window">
+      <div class="ec-top">
+        <span class="ec-logo">EC</span><span class="ec-tab active">安全操作</span>
+        <span class="ec-status" style="background:var(--ec-amber-soft);color:var(--ec-amber)">需要确认</span>
+      </div>
+      <div class="ec-body" style="grid-template-columns:1fr">
+        <div class="ec-confirm">
+          <div class="ec-label">推送到 GitHub</div>
+          <div class="ec-line dark w75"></div>
+          <div class="ec-line"></div><div class="ec-line w55"></div>
+          <span class="ec-chip green">2 个提交</span><span class="ec-chip">origin/main</span>
+          <div class="ec-card-mini warn" style="margin-top:8px"><div class="ec-line dark w75"></div><div class="ec-line w55"></div></div>
+          <div class="ec-confirm-actions"><span class="ec-secondary">取消</span><span class="ec-primary">确认推送</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="ec-page-meta">
+      <h3>08 · Git 安全状态</h3>
+      <p>拉取、提交、推送、网络错误和冲突统一使用解释型确认与阻断界面。</p>
+    </div>
+  </div>
+</div>
+
+<div class="ec-note" style="margin-top:20px">
+  <strong>这一轮只确认整体方向</strong>
+  <p>请先看页面覆盖、导航顺序、Claude/Cline 混合风格是否正确。下一轮会放大工作台和任务看板，展示真实交互密度。</p>
+</div>

@@ -1,0 +1,23 @@
+{
+  "name": "nuedc-workspace",
+  "private": true,
+  "workspaces": ["packages/*", "apps/*"],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "check": "npm run typecheck --workspace=@nuedc/protocol && npm run test --workspace=@nuedc/protocol",
+    "sync:ai-docs": "node scripts/sync-ai-docs.mjs",
+    "agent": "npm run build --workspace=@nuedc/protocol && node packages/protocol/dist/agent-cli.js",
+    "dev": "npm run dev --workspace=@nuedc/dashboard",
+    "start": "npm run start --workspace=@nuedc/server",
+    "test:integration": "npm run test:integration --workspace=@nuedc/git-core",
+    "test:e2e": "npm run test:e2e --workspace=@nuedc/dashboard"
+  },
+  "engines": {"node": ">=20"},
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}

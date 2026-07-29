@@ -1,0 +1,18 @@
+{
+  "recordType": "task",
+  "schemaVersion": 1,
+  "id": "T-20260728-TEMP",
+  "title": "示例任务标题",
+  "module": "示例模块",
+  "status": "todo",
+  "priority": "medium",
+  "participants": [],
+  "dependencies": [],
+  "blockingIssueIds": [],
+  "relatedCommits": [],
+  "description": "复制后请同时修改文件名与 id。",
+  "acceptanceCriteria": ["完成定义清晰的验收条件"],
+  "completedAcceptanceCriteria": [],
+  "createdAt": "2026-07-28T20:00:00+08:00",
+  "updatedAt": "2026-07-28T20:00:00+08:00"
+}

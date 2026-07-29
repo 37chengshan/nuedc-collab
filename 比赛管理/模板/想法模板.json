@@ -1,0 +1,12 @@
+{
+  "recordType": "idea",
+  "schemaVersion": 1,
+  "id": "A-20260728-TEMP",
+  "title": "示例想法标题",
+  "status": "open",
+  "author": "37chengshan",
+  "module": "示例模块",
+  "description": "记录可验证假设与风险。",
+  "createdAt": "2026-07-28T20:00:00+08:00",
+  "updatedAt": "2026-07-28T20:00:00+08:00"
+}

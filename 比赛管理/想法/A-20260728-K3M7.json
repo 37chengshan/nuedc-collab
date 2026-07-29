@@ -1,0 +1,12 @@
+{
+  "recordType": "idea",
+  "schemaVersion": 1,
+  "id": "A-20260728-K3M7",
+  "title": "使用双速视觉链路降低控制延迟",
+  "status": "open",
+  "author": "37chengshan",
+  "module": "K230 视觉",
+  "description": "高频输出粗坐标，低频输出完整识别结果。",
+  "createdAt": "2026-07-28T20:20:00+08:00",
+  "updatedAt": "2026-07-28T20:20:00+08:00"
+}

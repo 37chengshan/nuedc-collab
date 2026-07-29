@@ -1,0 +1,11 @@
+{
+  "recordType": "event",
+  "schemaVersion": 1,
+  "id": "E-20260728-200000-TEMP",
+  "entityType": "task",
+  "entityId": "T-20260728-TEMP",
+  "kind": "progress",
+  "actor": "37chengshan",
+  "message": "示例进度、交接、测试或决策说明。",
+  "createdAt": "2026-07-28T20:00:00+08:00"
+}
