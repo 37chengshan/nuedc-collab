@@ -1,0 +1,1 @@
+timestamp_ms,test_point_id,anchor_id,key_addr,distance_mm,parse_valid,age_ms,x_mm,y_mm,radial_mm,bearing_deg,residual_mm,valid_mask,expected_id,key_id,auth,zone,lock_state,structure_version,firmware_version,notes

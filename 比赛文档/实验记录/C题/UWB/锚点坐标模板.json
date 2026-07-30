@@ -1,0 +1,40 @@
+{
+  "recordType": "c_problem_anchor_measurement",
+  "measuredAt": "",
+  "actor": "",
+  "coordinateSystem": {
+    "origin": "门锁圆柱中心 O",
+    "positiveX": "面向 FRONT 时的右侧",
+    "positiveY": "FRONT",
+    "unit": "mm",
+    "radialZeroOffsetMm": 300
+  },
+  "keyReference": "",
+  "anchors": [
+    {
+      "id": "A1",
+      "xMm": null,
+      "yMm": null,
+      "zMm": null,
+      "antennaReferenceDescription": ""
+    },
+    {
+      "id": "A2",
+      "xMm": null,
+      "yMm": null,
+      "zMm": null,
+      "antennaReferenceDescription": ""
+    },
+    {
+      "id": "A3",
+      "xMm": null,
+      "yMm": null,
+      "zMm": null,
+      "antennaReferenceDescription": ""
+    }
+  ],
+  "measurementTool": "",
+  "estimatedUncertaintyMm": null,
+  "structureVersion": "v0.4",
+  "notes": ""
+}
