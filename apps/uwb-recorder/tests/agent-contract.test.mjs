@@ -22,6 +22,9 @@ test("Agent schema exposes read and mutating resources", () => {
   assert.equal(schemaAtPath("status.get").safety, "read");
   assert.equal(schemaAtPath("parameters.writeToModule").safety, "mutating");
   assert.equal(schemaAtPath("sessions.delete").safety, "destructive");
+  assert.equal(schemaAtPath("captures.list").safety, "read");
+  assert.equal(schemaAtPath("captures.start").safety, "mutating");
+  assert.equal(schemaAtPath("captures.export").safety, "read");
 });
 
 test("success envelope carries schema version", () => {
