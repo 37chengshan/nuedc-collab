@@ -1,0 +1,11 @@
+{
+  "actor": "37chengshan",
+  "createdAt": "2026-07-29T15:29:03+08:00",
+  "entityId": "T-20260729-KK97",
+  "entityType": "task",
+  "id": "E-20260729-152903-H9RZ",
+  "kind": "statusChange",
+  "message": "C 题官方题目、工程上下文与厂商资料已归档；需求矩阵、协议边界、坐标零点、3D 结构原则和五项正式任务已同步，仓库校验通过。",
+  "recordType": "event",
+  "schemaVersion": 1
+}

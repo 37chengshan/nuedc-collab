@@ -1,0 +1,11 @@
+{
+  "actor": "37chengshan",
+  "createdAt": "2026-07-29T15:21:43+08:00",
+  "entityId": "T-20260729-KK97",
+  "entityType": "task",
+  "id": "E-20260729-152143-7S5D",
+  "kind": "statusChange",
+  "message": "已开始归档官方题目、核对厂商资料并编写 C 题总体方案基线。",
+  "recordType": "event",
+  "schemaVersion": 1
+}

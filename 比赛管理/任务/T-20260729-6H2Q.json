@@ -1,0 +1,26 @@
+{
+  "acceptanceCriteria": [
+    "4 个设备的 EWM/EWT 板型、外廓、孔位、天线参考点、供电范围和 UART 电平均有实物记录",
+    "实机确认 ROLE、SRCADDR、DSTADDR、RESPONDER_NUM 的准确指令拼写、参数掉电保持和上电自动测距行为",
+    "一主一从、一主二从、一主三从均保存连续 UART 原始日志，且三个标签分别输出一致的主机地址与距离",
+    "完成 0.5 m、1 m、2 m、3 m 及 0°、±15°、±30°、±45° 的首轮测距记录并统计更新率和异常"
+  ],
+  "blockingIssueIds": [],
+  "completedAcceptanceCriteria": [],
+  "createdAt": "2026-07-29T15:19:37+08:00",
+  "dependencies": [
+    "T-20260729-KK97"
+  ],
+  "description": "以厂商资料支持的一主三从 TWR 为首选拓扑，先鉴定 4 个到货设备的实际板型、电气接口和固件行为，再逐级验证一主一从、一主二从和一主三从；未取得串口日志前不得写成上板通过。",
+  "id": "T-20260729-6H2Q",
+  "module": "C题UWB链路",
+  "owner": "37chengshan",
+  "participants": [],
+  "priority": "critical",
+  "recordType": "task",
+  "relatedCommits": [],
+  "schemaVersion": 1,
+  "status": "doing",
+  "title": "完成 EWM/EWT550 到货鉴定与一主三从测距验证",
+  "updatedAt": "2026-07-30T10:01:01+08:00"
+}

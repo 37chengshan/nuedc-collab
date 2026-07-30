@@ -1,0 +1,11 @@
+{
+  "actor": "37chengshan",
+  "createdAt": "2026-07-29T15:28:57+08:00",
+  "entityId": "T-20260729-KK97",
+  "entityType": "task",
+  "id": "E-20260729-152857-NT51",
+  "kind": "decision",
+  "message": "总体方案基线采用“数字钥匙 1 个 EWM/EWT550 Initiator + 门锁 3 个固定 Responder + MSPM0G3507”的待实测首选拓扑。厂商 EWT550 规格书修订历史最新为 2.0，确认一主三从和标签端主机地址+距离输出，但实物板型、指令拼写和链路尚未上板；官方要求缺失第 2 项，不自行补造。",
+  "recordType": "event",
+  "schemaVersion": 1
+}

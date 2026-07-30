@@ -1,0 +1,28 @@
+{
+  "acceptanceCriteria": [
+    "三路 UART 实例、引脚复用、电平、921600 8N1 可行性和调试接口冲突已按实际板卡核对，SysConfig 无未解释警告",
+    "三路解析器保存完整地址、低4位ID、距离与时间戳，只融合完整地址一致且时间窗内有效的数据，并保留可重放原始样本",
+    "定位算法输出 x、y、比赛径向距离和方位角，包含三路最小二乘、两路降级以及一路保持锁定策略",
+    "四位 ID 输入支持临时四按键翻转和最终拨码直读，ST7735S、迎宾声光和红绿锁态 LED 的状态机可复现验证",
+    "CCS Debug 全量构建为 0 错误；构建结果与目标板上串口、显示和状态机证据分别记录"
+  ],
+  "blockingIssueIds": [],
+  "completedAcceptanceCriteria": [],
+  "createdAt": "2026-07-29T15:19:40+08:00",
+  "dependencies": [
+    "T-20260729-KK97",
+    "T-20260729-6H2Q"
+  ],
+  "description": "以 .syscfg 为引脚、外设、时钟和中断配置源；先核对 MSPM0G3507 实际三路 UART 资源、电平和特殊引脚，再实现三路完整地址与时间戳解析、定位、4 bit ID 验证、区域状态机及 ST7735S 背面显示。2026-07-30 暂无拨码开关，先以四个低有效按键翻转 bit3~bit0，拨码到货后仅替换 ID 输入后端。",
+  "id": "T-20260729-4GQN",
+  "module": "C题MSPM0固件",
+  "owner": "37chengshan",
+  "participants": [],
+  "priority": "critical",
+  "recordType": "task",
+  "relatedCommits": [],
+  "schemaVersion": 1,
+  "status": "doing",
+  "title": "实现 MSPM0 三路 UWB 接收、定位与门锁状态机",
+  "updatedAt": "2026-07-30T10:31:13+08:00"
+}

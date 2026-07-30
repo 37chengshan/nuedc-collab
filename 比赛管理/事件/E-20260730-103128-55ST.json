@@ -1,0 +1,11 @@
+{
+  "actor": "37chengshan",
+  "createdAt": "2026-07-30T10:31:28+08:00",
+  "entityId": "T-20260729-4GQN",
+  "entityType": "task",
+  "id": "E-20260730-103128-55ST",
+  "kind": "testResult",
+  "message": "已建立 C 题 MSPM0G3507 主机侧逻辑骨架和自动化回归。测试覆盖四按键 30 ms 消抖/按下翻转/长按不重复、最终拨码 16 个 ID、EWT 标签帧 P,1111,10cm 的完整地址与 cm→mm 解析、分包粘包噪声、同低4位不同完整地址拒绝融合、三/两/一路定位、0°/±45°和1/2/3m、合法/非法 ID、掉线保持锁定。2026-07-30 主线程复跑结果：231 assertions, 0 failures。SysConfig 静态检查 0 error；仍有未生成 ti_msp_dl_config/Debug 输出、未核对 XDS110、三路生产 UART/按键/ST7735S 引脚未实物确认等预期告警。未构建、未烧录、未上板。",
+  "recordType": "event",
+  "schemaVersion": 1
+}

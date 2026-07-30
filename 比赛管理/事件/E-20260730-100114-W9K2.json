@@ -1,0 +1,11 @@
+{
+  "actor": "37chengshan",
+  "createdAt": "2026-07-30T10:01:14+08:00",
+  "entityId": "T-20260729-4GQN",
+  "entityType": "task",
+  "id": "E-20260730-100114-W9K2",
+  "kind": "statusChange",
+  "message": "开始搭建 C 题独立 MSPM0G3507 固件骨架：先实现单 UART 烟雾入口、三逻辑通道解析/融合、定位、临时四按键 ID、未来拨码后端和锁状态机；不猜三路生产 UART 引脚。",
+  "recordType": "event",
+  "schemaVersion": 1
+}

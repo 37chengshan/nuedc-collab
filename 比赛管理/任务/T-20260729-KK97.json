@@ -1,0 +1,29 @@
+{
+  "acceptanceCriteria": [
+    "官方 C 题 PDF 已归档，并逐项映射通信、定位、区域、ID、尺寸、显示位置和抗多径要求",
+    "总体方案明确 600 mm 圆柱边界为径向零点，并定义 FRONT、BACK、中心 O 与 KEY REF",
+    "官方要求编号缺失第 2 项作为待赛区确认事项记录，未自行补写要求",
+    "任务、设计和参考资料互相链接，且活动数据与总体设计通过仓库校验"
+  ],
+  "blockingIssueIds": [],
+  "completedAcceptanceCriteria": [
+    "官方 C 题 PDF 已归档，并逐项映射通信、定位、区域、ID、尺寸、显示位置和抗多径要求",
+    "总体方案明确 600 mm 圆柱边界为径向零点，并定义 FRONT、BACK、中心 O 与 KEY REF",
+    "官方要求编号缺失第 2 项作为待赛区确认事项记录，未自行补写要求",
+    "任务、设计和参考资料互相链接，且活动数据与总体设计通过仓库校验"
+  ],
+  "createdAt": "2026-07-29T15:18:47+08:00",
+  "dependencies": [],
+  "description": "归档官方 C 题和工程上下文，建立“官方题目/厂商资料/当前实物与实测”证据层级；将一主三从 UWB 定位作为待实测首选拓扑，并记录官方要求编号缺失第 2 项的原文异常。",
+  "id": "T-20260729-KK97",
+  "module": "C题总体设计",
+  "owner": "37chengshan",
+  "participants": [],
+  "priority": "critical",
+  "recordType": "task",
+  "relatedCommits": [],
+  "schemaVersion": 1,
+  "status": "done",
+  "title": "冻结 C 题官方需求、证据层级与总体方案基线",
+  "updatedAt": "2026-07-29T15:29:03+08:00"
+}

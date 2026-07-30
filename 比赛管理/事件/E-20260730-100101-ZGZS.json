@@ -1,0 +1,11 @@
+{
+  "actor": "37chengshan",
+  "createdAt": "2026-07-30T10:01:01+08:00",
+  "entityId": "T-20260729-6H2Q",
+  "entityType": "task",
+  "id": "E-20260730-100101-ZGZS",
+  "kind": "statusChange",
+  "message": "已归档用户提供的 EWT550 v2.1、商品参数截图和模组引脚图，并建立 UWB 接线、原始日志、测距数据和锚点坐标记录模板；实物链路仍待验证。",
+  "recordType": "event",
+  "schemaVersion": 1
+}
