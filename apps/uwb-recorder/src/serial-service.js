@@ -135,16 +135,50 @@ function csvCell(value) {
   return `"${String(value ?? "").replaceAll('"', '""')}"`;
 }
 
+function measurementsToCsv(measurements) {
+  const header = [
+    "timestamp",
+    "elapsed_ms",
+    "device",
+    "link_index",
+    "address",
+    "distance_cm",
+    "snr_db",
+    "raw",
+  ];
+  return [
+    header.join(","),
+    ...measurements.map((measurement) =>
+      [
+        measurement.timestamp,
+        measurement.elapsedMs,
+        measurement.device,
+        measurement.linkIndex ?? "",
+        measurement.address,
+        measurement.distanceCm,
+        measurement.snrDb ?? "",
+        measurement.raw,
+      ]
+        .map(csvCell)
+        .join(","),
+    ),
+  ].join("\r\n");
+}
+
 export class UwbSerialService {
   constructor({ dataDirectory, serialPortClass = SerialPort } = {}) {
     this.dataDirectory = dataDirectory;
     this.sessionsDirectory = join(dataDirectory, "sessions");
+    this.capturesDirectory = join(dataDirectory, "captures");
     this.SerialPortClass = serialPortClass;
     this.port = null;
     this.parser = new UwbStreamParser();
     this.decoder = new TextDecoder();
     this.session = null;
     this.sessionStream = null;
+    this.capture = null;
+    this.captureStream = null;
+    this.captureTimer = null;
     this.eventSequence = 0;
     this.events = [];
     this.measurements = [];
@@ -164,6 +198,7 @@ export class UwbSerialService {
 
   async initialize() {
     await mkdir(this.sessionsDirectory, { recursive: true });
+    await mkdir(this.capturesDirectory, { recursive: true });
   }
 
   async listPorts() {
@@ -183,11 +218,13 @@ export class UwbSerialService {
       baudRate: this.port?.settings?.baudRate ?? null,
       atMode: this.atMode,
       session: this.session,
+      capture: this.currentCapture(),
       latestByDevice,
       eventSequence: this.eventSequence,
       parameters: structuredClone(this.parameters),
       persistence: {
         directory: this.sessionsDirectory,
+        capturesDirectory: this.capturesDirectory,
         format: "jsonl",
       },
     };
@@ -245,6 +282,9 @@ export class UwbSerialService {
       });
     });
     port.on("close", () => {
+      if (this.capture?.status === "recording") {
+        void this.finishCapture("interrupted");
+      }
       if (this.session && !this.session.endedAt) {
         this.session.endedAt = new Date().toISOString();
         void this.#persistSessionMetadata();
@@ -280,6 +320,9 @@ export class UwbSerialService {
   async disconnect() {
     if (!this.port) {
       return this.status();
+    }
+    if (this.capture?.status === "recording") {
+      await this.finishCapture("interrupted");
     }
     this.#processMessages(this.parser.flush());
     const port = this.port;
@@ -520,33 +563,151 @@ export class UwbSerialService {
       sessionId,
       limit: 10000,
     });
-    const header = [
-      "timestamp",
-      "elapsed_ms",
-      "device",
-      "link_index",
-      "address",
-      "distance_cm",
-      "snr_db",
-      "raw",
-    ];
-    return [
-      header.join(","),
-      ...measurements.map((measurement) =>
-        [
-          measurement.timestamp,
-          measurement.elapsedMs,
-          measurement.device,
-          measurement.linkIndex ?? "",
-          measurement.address,
-          measurement.distanceCm,
-          measurement.snrDb ?? "",
-          measurement.raw,
-        ]
-          .map(csvCell)
-          .join(","),
-      ),
-    ].join("\r\n");
+    return measurementsToCsv(measurements);
+  }
+
+  async startCapture({ label, durationSeconds = 45 } = {}) {
+    if (!this.port?.isOpen || !this.session) {
+      throw new AppError("SERIAL_NOT_CONNECTED", "串口尚未连接", {
+        status: 409,
+        retryable: true,
+      });
+    }
+    if (this.capture?.status === "recording") {
+      throw new AppError("CAPTURE_ALREADY_RUNNING", "已有一项采集正在进行", {
+        status: 409,
+        details: { captureId: this.capture.id },
+      });
+    }
+
+    const normalizedLabel = String(label ?? "").trim();
+    if (!normalizedLabel || normalizedLabel.length > 80) {
+      throw new AppError(
+        "VALIDATION_ERROR",
+        "测点名称不能为空且不能超过80个字符",
+        { details: { field: "label", value: label } },
+      );
+    }
+    const normalizedDuration = integerInRange(
+      durationSeconds,
+      1,
+      3600,
+      "durationSeconds",
+    );
+    const startedAt = new Date();
+    const id = `capture-${startedAt
+      .toISOString()
+      .replaceAll(":", "-")
+      .replaceAll(".", "-")}`;
+    this.capture = {
+      id,
+      label: normalizedLabel,
+      durationSeconds: normalizedDuration,
+      startedAt: startedAt.toISOString(),
+      endsAt: new Date(
+        startedAt.getTime() + normalizedDuration * 1000,
+      ).toISOString(),
+      endedAt: null,
+      sessionId: this.session.id,
+      frameCount: 0,
+      status: "recording",
+    };
+    this.captureStream = createWriteStream(this.#captureDataPath(id), {
+      flags: "a",
+      encoding: "utf8",
+    });
+    await this.#persistCaptureMetadata();
+    this.captureTimer = setTimeout(() => {
+      void this.finishCapture("completed");
+    }, normalizedDuration * 1000);
+    this.captureTimer.unref?.();
+    return this.currentCapture();
+  }
+
+  currentCapture() {
+    if (!this.capture) {
+      return null;
+    }
+    const remainingSeconds =
+      this.capture.status === "recording"
+        ? Math.max(
+            0,
+            Math.ceil(
+              (new Date(this.capture.endsAt).getTime() - Date.now()) / 1000,
+            ),
+          )
+        : 0;
+    return {
+      ...structuredClone(this.capture),
+      remainingSeconds,
+    };
+  }
+
+  async finishCapture(status = "completed") {
+    if (!this.capture || this.capture.status !== "recording") {
+      return this.currentCapture();
+    }
+    if (!["completed", "interrupted"].includes(status)) {
+      throw new AppError("VALIDATION_ERROR", "无效的采集结束状态", {
+        details: { status },
+      });
+    }
+    if (this.captureTimer) {
+      clearTimeout(this.captureTimer);
+      this.captureTimer = null;
+    }
+    this.capture.status = status;
+    this.capture.endedAt = new Date().toISOString();
+    await endStream(this.captureStream);
+    this.captureStream = null;
+    await this.#persistCaptureMetadata();
+    return this.currentCapture();
+  }
+
+  async listCaptures() {
+    const entries = await readdir(this.capturesDirectory, {
+      withFileTypes: true,
+    });
+    const captures = [];
+    for (const entry of entries) {
+      if (!entry.isFile() || !entry.name.endsWith(".meta.json")) {
+        continue;
+      }
+      try {
+        captures.push(
+          JSON.parse(
+            await readFile(join(this.capturesDirectory, entry.name), "utf8"),
+          ),
+        );
+      } catch {
+        // Ignore one damaged metadata file and continue listing other captures.
+      }
+    }
+    return captures.sort((a, b) => b.startedAt.localeCompare(a.startedAt));
+  }
+
+  async getCaptureMeasurements(captureId) {
+    try {
+      const content = await readFile(this.#captureDataPath(captureId), "utf8");
+      return content
+        .split(/\r?\n/)
+        .filter(Boolean)
+        .map((line) => JSON.parse(line));
+    } catch (error) {
+      if (error.code === "ENOENT") {
+        throw new AppError("CAPTURE_NOT_FOUND", "找不到指定的独立采集", {
+          status: 404,
+          details: { captureId },
+        });
+      }
+      throw error;
+    }
+  }
+
+  async exportCaptureCsv(captureId) {
+    return measurementsToCsv(
+      await this.getCaptureMeasurements(captureId),
+    );
   }
 
   async deleteSession(sessionId) {
@@ -665,6 +826,13 @@ export class UwbSerialService {
       if (this.session) {
         this.session.frameCount += 1;
       }
+      if (this.capture?.status === "recording") {
+        this.capture.frameCount += 1;
+        this.captureStream?.write(`${JSON.stringify(record)}\n`);
+        if (this.capture.frameCount % 20 === 0) {
+          void this.#persistCaptureMetadata();
+        }
+      }
     }
     if (this.session) {
       this.session.eventCount += 1;
@@ -683,6 +851,17 @@ export class UwbSerialService {
     await writeFile(
       this.#sessionMetadataPath(this.session.id),
       `${JSON.stringify(this.session, null, 2)}\n`,
+      "utf8",
+    );
+  }
+
+  async #persistCaptureMetadata() {
+    if (!this.capture) {
+      return;
+    }
+    await writeFile(
+      this.#captureMetadataPath(this.capture.id),
+      `${JSON.stringify(this.capture, null, 2)}\n`,
       "utf8",
     );
   }
@@ -711,5 +890,13 @@ export class UwbSerialService {
 
   #sessionMetadataPath(sessionId) {
     return join(this.sessionsDirectory, `${sessionId}.meta.json`);
+  }
+
+  #captureDataPath(captureId) {
+    return join(this.capturesDirectory, `${captureId}.jsonl`);
+  }
+
+  #captureMetadataPath(captureId) {
+    return join(this.capturesDirectory, `${captureId}.meta.json`);
   }
 }

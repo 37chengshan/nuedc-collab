@@ -718,6 +718,50 @@ code {
   font-family: "Cascadia Mono", Consolas, monospace;
 }
 
+.capture-toolbar {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto auto minmax(170px, auto);
+  align-items: end;
+  gap: 10px;
+  margin-bottom: 17px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-muted);
+}
+
+.capture-label-field {
+  display: grid;
+  gap: 7px;
+}
+
+.capture-label-field span {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.capture-label-field input {
+  width: 100%;
+}
+
+.capture-status {
+  align-self: center;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.capture-status[data-kind="recording"] {
+  color: #9a4e36;
+}
+
+.capture-status[data-kind="success"] {
+  color: #4f7352;
+}
+
+.capture-status[data-kind="error"] {
+  color: #a13f3f;
+}
+
 .controls-heading {
   align-items: center;
 }
@@ -886,6 +930,15 @@ dialog form > div {
   .address-section {
     grid-template-columns: 1fr;
   }
+
+  .capture-toolbar {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .capture-label-field,
+  .capture-status {
+    grid-column: 1 / -1;
+  }
 }
 
 @media (max-width: 620px) {
@@ -906,8 +959,14 @@ dialog form > div {
   .command-grid,
   .parameter-grid,
   .destination-grid,
-  .extra-channel-grid {
+  .extra-channel-grid,
+  .capture-toolbar {
     grid-template-columns: 1fr;
+  }
+
+  .capture-label-field,
+  .capture-status {
+    grid-column: auto;
   }
 
   .panel-heading,

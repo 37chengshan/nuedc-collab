@@ -1,4 +1,4 @@
-export const SCHEMA_VERSION = "1.0.0";
+export const SCHEMA_VERSION = "1.1.0";
 
 export class AppError extends Error {
   constructor(code, message, options = {}) {
@@ -102,6 +102,51 @@ export const agentSchema = {
             sinceMs: { type: "integer", min: 0 },
             sessionId: { type: "string" },
           },
+        },
+      },
+    },
+    captures: {
+      description: "启动和读取带测点名称的定时独立采集",
+      actions: {
+        start: {
+          method: "POST",
+          path: "/api/captures",
+          safety: "mutating",
+          input: {
+            label: {
+              type: "string",
+              minLength: 1,
+              maxLength: 80,
+              required: true,
+              example: "双路-中轴-1m",
+            },
+            durationSeconds: {
+              type: "integer",
+              min: 1,
+              max: 3600,
+              default: 45,
+            },
+          },
+        },
+        current: {
+          method: "GET",
+          path: "/api/captures/current",
+          safety: "read",
+        },
+        list: {
+          method: "GET",
+          path: "/api/captures",
+          safety: "read",
+        },
+        measurements: {
+          method: "GET",
+          path: "/api/captures/{id}/measurements",
+          safety: "read",
+        },
+        export: {
+          method: "GET",
+          path: "/api/captures/{id}/export.csv",
+          safety: "read",
         },
       },
     },

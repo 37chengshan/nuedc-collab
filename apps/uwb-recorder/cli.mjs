@@ -20,10 +20,14 @@ UWB Lab Agent CLI
   ports
   measurements [--limit 200] [--device 1] [--since-ms 30000] [--session ID]
   sessions
+  captures
+  capture status
+  capture measurements --id CAPTURE_ID
   parameters get
   schema [resource.action]
 
 状态变更：
+  capture start --label "双路-中轴-1m" [--duration 45]
   connect --port COM6 --baud 115200 [--dry-run]
   disconnect [--dry-run]
   command --text "AT+VERSION" [--raw] [--dry-run]
@@ -33,6 +37,7 @@ UWB Lab Agent CLI
     --power 3 --responders 2 --source 0A00
     --destinations "0100,0200,0000,0000,0000" [--dry-run]
   export --session ID --output path.csv
+  capture export --id CAPTURE_ID --output path.csv
   delete-session --session ID --yes
 
 公共参数：
@@ -204,6 +209,63 @@ async function main() {
     case "sessions":
       envelope = await apiRequest(apiUrl, "/api/sessions");
       break;
+    case "captures":
+      envelope = await apiRequest(apiUrl, "/api/captures");
+      break;
+    case "capture":
+      if (subcommand === "start") {
+        envelope = await apiRequest(apiUrl, "/api/captures", {
+          method: "POST",
+          body: {
+            label: requireFlag(flags, "label"),
+            durationSeconds: numberFlag(flags, "duration", 45),
+          },
+        });
+        break;
+      }
+      if (subcommand === "status") {
+        envelope = await apiRequest(apiUrl, "/api/captures/current");
+        break;
+      }
+      if (subcommand === "measurements") {
+        const captureId = requireFlag(flags, "id");
+        envelope = await apiRequest(
+          apiUrl,
+          `/api/captures/${encodeURIComponent(captureId)}/measurements`,
+        );
+        break;
+      }
+      if (subcommand === "export") {
+        const captureId = requireFlag(flags, "id");
+        const output = resolve(requireFlag(flags, "output"));
+        if (dryRun) {
+          envelope = successEnvelope({
+            dryRun: true,
+            action: "captures.export",
+            captureId,
+            output,
+            changesFileSystem: true,
+          });
+          break;
+        }
+        const result = await apiRequest(
+          apiUrl,
+          `/api/captures/${encodeURIComponent(captureId)}/export.csv`,
+          { raw: true },
+        );
+        await mkdir(dirname(output), { recursive: true });
+        await writeFile(output, result.buffer);
+        envelope = successEnvelope({
+          captureId,
+          output,
+          bytes: result.buffer.length,
+        });
+        break;
+      }
+      throw new AppError(
+        "CLI_VALIDATION_ERROR",
+        "capture只支持 start、status、measurements 或 export",
+      );
     case "schema":
       envelope = await apiRequest(
         apiUrl,

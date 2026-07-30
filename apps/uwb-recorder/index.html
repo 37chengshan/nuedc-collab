@@ -318,6 +318,27 @@
             </div>
 
             <article class="surface data-panel">
+              <div class="capture-toolbar">
+                <label class="capture-label-field">
+                  <span>测点名称</span>
+                  <input
+                    id="capture-label"
+                    type="text"
+                    maxlength="80"
+                    placeholder="例如：双路-中轴-1m"
+                    autocomplete="off"
+                  />
+                </label>
+                <button id="capture-button" class="primary-button" disabled>
+                  采集45秒
+                </button>
+                <button id="capture-download-button" disabled>
+                  下载本次CSV
+                </button>
+                <span id="capture-status" class="capture-status">
+                  连接串口后可开始
+                </span>
+              </div>
               <div class="panel-heading controls-heading">
                 <select id="session-select" aria-label="历史记录">
                   <option value="">暂无历史记录</option>

@@ -5,6 +5,10 @@ const elementIds = [
   "address-4",
   "address-5",
   "baud-rate",
+  "capture-button",
+  "capture-download-button",
+  "capture-label",
+  "capture-status",
   "clear-button",
   "clear-console-button",
   "clear-dialog",
@@ -76,6 +80,7 @@ const state = {
   viewStartedAt: 0,
   language: "zh",
   lastStatusPoll: 0,
+  lastCaptureId: null,
 };
 
 const channelColors = ["#4e7d95", "#d97757", "#8a8074", "#7d6d8f", "#6f8a69"];
@@ -455,6 +460,52 @@ function renderStatus() {
   fillParameterForm(status?.parameters);
 }
 
+function renderCapture() {
+  const connected = state.status?.connected === true;
+  const capture = state.status?.capture ?? null;
+  const recording = capture?.status === "recording";
+
+  elements["capture-button"].disabled = !connected || recording;
+  elements["capture-label"].disabled = recording;
+  elements["capture-button"].textContent = recording
+    ? `记录中 ${capture.remainingSeconds ?? 0}s`
+    : "采集45秒";
+
+  if (recording) {
+    state.lastCaptureId = capture.id;
+    elements["capture-download-button"].disabled = true;
+    elements["capture-status"].dataset.kind = "recording";
+    elements["capture-status"].textContent =
+      `正在保存：${capture.label} · ${capture.frameCount ?? 0}帧`;
+    return;
+  }
+
+  if (capture?.status === "completed") {
+    state.lastCaptureId = capture.id;
+    elements["capture-download-button"].disabled = false;
+    elements["capture-status"].dataset.kind = "success";
+    elements["capture-status"].textContent =
+      `已保存：${capture.label} · ${capture.frameCount ?? 0}帧`;
+    return;
+  }
+
+  if (capture?.status === "interrupted") {
+    state.lastCaptureId = capture.id;
+    elements["capture-download-button"].disabled =
+      (capture.frameCount ?? 0) === 0;
+    elements["capture-status"].dataset.kind = "error";
+    elements["capture-status"].textContent =
+      `采集中断：${capture.label} · 已保存${capture.frameCount ?? 0}帧`;
+    return;
+  }
+
+  elements["capture-download-button"].disabled = !state.lastCaptureId;
+  elements["capture-status"].dataset.kind = "";
+  elements["capture-status"].textContent = connected
+    ? "填写测点名称后开始"
+    : "连接串口后可开始";
+}
+
 function render() {
   for (let device = 1; device <= 5; device += 1) {
     renderChannel(device);
@@ -463,6 +514,7 @@ function render() {
   renderTable();
   renderChart();
   renderStatus();
+  renderCapture();
   elements["export-button"].disabled =
     !state.activeSessionId || state.records.length === 0;
   elements["clear-button"].disabled = !state.activeSessionId;
@@ -663,6 +715,55 @@ async function exportCsv() {
   URL.revokeObjectURL(link.href);
 }
 
+async function startCapture() {
+  const label = elements["capture-label"].value.trim();
+  if (!label) {
+    elements["capture-status"].dataset.kind = "error";
+    elements["capture-status"].textContent = "请先填写测点名称";
+    elements["capture-label"].focus();
+    return;
+  }
+  try {
+    const capture = await apiRequest("/api/captures", {
+      method: "POST",
+      body: { label, durationSeconds: 45 },
+    });
+    state.lastCaptureId = capture.id;
+    state.status = {
+      ...(state.status ?? {}),
+      capture,
+    };
+    renderCapture();
+  } catch (error) {
+    elements["capture-status"].dataset.kind = "error";
+    elements["capture-status"].textContent = `采集失败：${error.message}`;
+  }
+}
+
+async function downloadCaptureCsv() {
+  if (!state.lastCaptureId) {
+    return;
+  }
+  try {
+    const response = await apiRequest(
+      `/api/captures/${encodeURIComponent(state.lastCaptureId)}/export.csv`,
+      { raw: true },
+    );
+    const blob = await response.blob();
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    const safeLabel =
+      elements["capture-label"].value.trim().replace(/[\\/:*?"<>|]+/g, "-") ||
+      state.lastCaptureId;
+    link.download = `uwb-${safeLabel}.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+  } catch (error) {
+    elements["capture-status"].dataset.kind = "error";
+    elements["capture-status"].textContent = `下载失败：${error.message}`;
+  }
+}
+
 async function clearCurrentSession() {
   if (!state.activeSessionId) {
     return;
@@ -774,6 +875,11 @@ elements["disconnect-button"].addEventListener("click", disconnectSerial);
 elements["refresh-ports-button"].addEventListener("click", refreshPorts);
 elements["pause-button"].addEventListener("click", togglePause);
 elements["export-button"].addEventListener("click", exportCsv);
+elements["capture-button"].addEventListener("click", startCapture);
+elements["capture-download-button"].addEventListener(
+  "click",
+  downloadCaptureCsv,
+);
 elements["send-button"].addEventListener("click", sendCommand);
 elements["command-input"].addEventListener("keydown", (event) => {
   if (event.key === "Enter") {

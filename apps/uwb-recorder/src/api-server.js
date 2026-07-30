@@ -223,6 +223,48 @@ export function createApiServer({ http, service, root }) {
         );
         return;
       }
+      if (request.method === "POST" && pathname === "/api/captures") {
+        writeJson(
+          response,
+          200,
+          successEnvelope(
+            await service.startCapture({
+              label: body.label,
+              durationSeconds: body.durationSeconds ?? 45,
+            }),
+          ),
+        );
+        return;
+      }
+      if (request.method === "GET" && pathname === "/api/captures/current") {
+        writeJson(response, 200, successEnvelope(service.currentCapture()));
+        return;
+      }
+      if (request.method === "GET" && pathname === "/api/captures") {
+        writeJson(response, 200, successEnvelope(await service.listCaptures()));
+        return;
+      }
+      if (
+        request.method === "GET" &&
+        parts[1] === "captures" &&
+        parts[3] === "measurements"
+      ) {
+        writeJson(
+          response,
+          200,
+          successEnvelope(await service.getCaptureMeasurements(parts[2])),
+        );
+        return;
+      }
+      if (
+        request.method === "GET" &&
+        parts[1] === "captures" &&
+        parts[3] === "export.csv"
+      ) {
+        const csv = await service.exportCaptureCsv(parts[2]);
+        writeText(response, 200, "text/csv; charset=utf-8", `\uFEFF${csv}`);
+        return;
+      }
       if (request.method === "GET" && pathname === "/api/sessions") {
         writeJson(response, 200, successEnvelope(await service.listSessions()));
         return;
