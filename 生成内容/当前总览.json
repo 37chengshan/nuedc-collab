@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-29T11:07:56+08:00",
+  "generatedAt": "2026-07-31T06:35:23+08:00",
   "ideas": [
     {
       "author": "37chengshan",
@@ -50,7 +50,7 @@
       ],
       "schemaVersion": 1,
       "status": "active",
-      "updatedAt": "2026-07-28T20:00:00+08:00"
+      "updatedAt": "2026-07-30T22:13:09+00:00"
     },
     {
       "createdAt": "2026-07-29T10:00:00+08:00",
@@ -83,121 +83,454 @@
   ],
   "recentCommits": [
     {
-      "authorEmail": "37chengshan@users.noreply.github.com",
-      "authorName": "37chengshan",
-      "committedAt": "2026-07-29T10:59:18+08:00",
+      "authorEmail": "userEmail",
+      "authorName": "userName",
+      "committedAt": "2026-07-31T05:53:19+08:00",
       "parents": [
-        "4c96778690fe558b996082645121f3381f920c74"
+        "979a261b1a8764848917049ab7cde91fdd73fb2d"
       ],
-      "sha": "e3e08d69ee96dfd9af2744446f22f32b45f0a8e5",
-      "shortSha": "e3e08d6",
-      "subject": "feat: 完成本地协作台与安全同步流程"
+      "sha": "cfec98ad44cfdd379b6341a9e306091ca0673717",
+      "shortSha": "cfec98a",
+      "subject": "feat: add paged UWB dashboard with calibrated realtime display"
+    },
+    {
+      "authorEmail": "userEmail",
+      "authorName": "userName",
+      "committedAt": "2026-07-31T05:52:09+08:00",
+      "parents": [
+        "5a94d902ac4926c584e41768bec34f15d7c7fe4d"
+      ],
+      "sha": "979a261b1a8764848917049ab7cde91fdd73fb2d",
+      "shortSha": "979a261",
+      "subject": "feat: serve final capture calibration and realtime position"
+    },
+    {
+      "authorEmail": "userEmail",
+      "authorName": "userName",
+      "committedAt": "2026-07-31T05:49:10+08:00",
+      "parents": [
+        "b7a7ee6babe591bc6486e2e8c4dcea7c17b256ee"
+      ],
+      "sha": "5a94d902ac4926c584e41768bec34f15d7c7fe4d",
+      "shortSha": "5a94d90",
+      "subject": "test: add realtime position dashboard and sidebar paging criteria"
+    },
+    {
+      "authorEmail": "userEmail",
+      "authorName": "userName",
+      "committedAt": "2026-07-31T05:47:06+08:00",
+      "parents": [
+        "2a3d725b38c07cb63ed052d09e935bcd390bbcdf"
+      ],
+      "sha": "b7a7ee6babe591bc6486e2e8c4dcea7c17b256ee",
+      "shortSha": "b7a7ee6",
+      "subject": "test: add final calibration service and realtime API criteria"
+    },
+    {
+      "authorEmail": "userEmail",
+      "authorName": "userName",
+      "committedAt": "2026-07-31T05:46:20+08:00",
+      "parents": [
+        "453dfed381713d15920c476de5a6fdfd6278d48d"
+      ],
+      "sha": "2a3d725b38c07cb63ed052d09e935bcd390bbcdf",
+      "shortSha": "2a3d725",
+      "subject": "feat: add sparse UWB realtime calibration model"
+    },
+    {
+      "authorEmail": "userEmail",
+      "authorName": "userName",
+      "committedAt": "2026-07-31T05:44:34+08:00",
+      "parents": [
+        "2ed8fa415e7f94288b7701216f41b750adc2d0c7"
+      ],
+      "sha": "453dfed381713d15920c476de5a6fdfd6278d48d",
+      "shortSha": "453dfed",
+      "subject": "test: add final UWB sparse calibration replay criteria"
+    },
+    {
+      "authorEmail": "userEmail",
+      "authorName": "userName",
+      "committedAt": "2026-07-31T03:11:26+08:00",
+      "parents": [
+        "00b121cf2208ab286d469eadb51828422aee7daf"
+      ],
+      "sha": "2ed8fa415e7f94288b7701216f41b750adc2d0c7",
+      "shortSha": "2ed8fa4",
+      "subject": "feat: add labeled 45-second UWB captures"
+    },
+    {
+      "authorEmail": "userEmail",
+      "authorName": "userName",
+      "committedAt": "2026-07-31T02:52:02+08:00",
+      "parents": [
+        "016169a619590f7bb8fe82a66d670e55d1852035"
+      ],
+      "sha": "00b121cf2208ab286d469eadb51828422aee7daf",
+      "shortSha": "00b121c",
+      "subject": "test: add 45-second capture workflow coverage"
+    },
+    {
+      "authorEmail": "userEmail",
+      "authorName": "userName",
+      "committedAt": "2026-07-31T02:29:49+08:00",
+      "parents": [
+        "dc73b8c45aed59373f7f1d33747f867d13c3bafb"
+      ],
+      "sha": "016169a619590f7bb8fe82a66d670e55d1852035",
+      "shortSha": "016169a",
+      "subject": "feat: 完成C题双路UWB定位与采集工具"
     },
     {
       "authorEmail": "37chengshan@users.noreply.github.com",
       "authorName": "37chengshan",
-      "committedAt": "2026-07-29T10:27:20+08:00",
+      "committedAt": "2026-07-30T11:44:55+08:00",
       "parents": [
-        "59790038a68ad8d65b53159582d926b539c2192c"
+        "2ee553f0fece226d39aabd7eea4805008f3ced7b"
       ],
-      "sha": "4c96778690fe558b996082645121f3381f920c74",
-      "shortSha": "4c96778",
-      "subject": "docs: 完善AI协作手册并加入MSPM0技能"
-    },
-    {
-      "authorEmail": "37chengshan@users.noreply.github.com",
-      "authorName": "37chengshan",
-      "committedAt": "2026-07-29T10:19:20+08:00",
-      "parents": [
-        "77d4a454b79af3fe512216086563de477cde3198"
-      ],
-      "sha": "59790038a68ad8d65b53159582d926b539c2192c",
-      "shortSha": "5979003",
-      "subject": "总体方案"
-    },
-    {
-      "authorEmail": "37chengshan@users.noreply.github.com",
-      "authorName": "37chengshan",
-      "committedAt": "2026-07-29T10:18:37+08:00",
-      "parents": [
-        "df39ca049a3816045a4fd4c938920655aecd45b3"
-      ],
-      "sha": "77d4a454b79af3fe512216086563de477cde3198",
-      "shortSha": "77d4a45",
-      "subject": "docs: 添加 B 题 MCU 总体方案与官方题目"
-    },
-    {
-      "authorEmail": "37chengshan@users.noreply.github.com",
-      "authorName": "37chengshan",
-      "committedAt": "2026-07-29T09:58:45+08:00",
-      "parents": [
-        "443f6e828710900069599b0fc99383e45bf87350"
-      ],
-      "sha": "df39ca049a3816045a4fd4c938920655aecd45b3",
-      "shortSha": "df39ca0",
-      "subject": "feat: 建立电赛三人文件通讯与安全协作底座"
-    },
-    {
-      "authorEmail": "37chengshan@users.noreply.github.com",
-      "authorName": "37chengshan",
-      "committedAt": "2026-07-29T00:23:56+08:00",
-      "parents": [
-        "524e7f14bdfd3a2c98fdf200d74cc32703629e8a"
-      ],
-      "sha": "443f6e828710900069599b0fc99383e45bf87350",
-      "shortSha": "443f6e8",
-      "subject": "docs: 添加阶段二 Git 与本地 API 草案"
-    },
-    {
-      "authorEmail": "37chengshan@users.noreply.github.com",
-      "authorName": "37chengshan",
-      "committedAt": "2026-07-28T23:47:39+08:00",
-      "parents": [
-        "994e02e0942d0ffa42669a6eddca100c3eb57d7a"
-      ],
-      "sha": "524e7f14bdfd3a2c98fdf200d74cc32703629e8a",
-      "shortSha": "524e7f1",
-      "subject": "docs: 添加阶段一仓库与协议实施计划"
-    },
-    {
-      "authorEmail": "37chengshan@users.noreply.github.com",
-      "authorName": "37chengshan",
-      "committedAt": "2026-07-28T23:43:01+08:00",
-      "parents": [
-        "b7cf667c1a2ba16f03f01c125d6ec9ef3ddf1171"
-      ],
-      "sha": "994e02e0942d0ffa42669a6eddca100c3eb57d7a",
-      "shortSha": "994e02e",
-      "subject": "docs: 增加想法与 agent-native 动作协议"
-    },
-    {
-      "authorEmail": "37chengshan@users.noreply.github.com",
-      "authorName": "37chengshan",
-      "committedAt": "2026-07-28T23:01:12+08:00",
-      "parents": [
-        "7cc4c3644aadbdd74a2f22725382a89eea579345"
-      ],
-      "sha": "b7cf667c1a2ba16f03f01c125d6ec9ef3ddf1171",
-      "shortSha": "b7cf667",
-      "subject": "docs: 确认 Claude 橙色协作台设计"
-    },
-    {
-      "authorEmail": "37chengshan@users.noreply.github.com",
-      "authorName": "37chengshan",
-      "committedAt": "2026-07-28T22:12:50+08:00",
-      "parents": [],
-      "sha": "7cc4c3644aadbdd74a2f22725382a89eea579345",
-      "shortSha": "7cc4c36",
-      "subject": "docs: 定义赛前协作底座设计"
+      "sha": "dc73b8c45aed59373f7f1d33747f867d13c3bafb",
+      "shortSha": "dc73b8c",
+      "subject": "docs: 归档EWM550资料与UWB实验模板"
     }
   ],
-  "recentEvents": [],
+  "recentEvents": [
+    {
+      "actor": "37chengshan",
+      "createdAt": "2026-07-30T22:09:51+00:00",
+      "entityId": "T-20260729-6H2Q",
+      "entityType": "task",
+      "id": "E-20260730-220951-8D05",
+      "kind": "testResult",
+      "message": "2026-07-30 最终两基站数据共 18 组。稀疏模型在 0.5～1.5 m 训练标定点上的距离最大误差约 0.112 m、P95 约 0.103 m；实时距离仍有明显波动。现有 -15°/0°/+15° 角度显示与真实方向不符，角度判定为不可用，禁止参与开锁。已创建扩展距离、角度可观测性、实时稳定性和独立验证四项后续任务。",
+      "recordType": "event",
+      "schemaVersion": 1
+    },
+    {
+      "actor": "37chengshan",
+      "createdAt": "2026-07-30T10:31:28+08:00",
+      "entityId": "T-20260729-4GQN",
+      "entityType": "task",
+      "id": "E-20260730-103128-55ST",
+      "kind": "testResult",
+      "message": "已建立 C 题 MSPM0G3507 主机侧逻辑骨架和自动化回归。测试覆盖四按键 30 ms 消抖/按下翻转/长按不重复、最终拨码 16 个 ID、EWT 标签帧 P,1111,10cm 的完整地址与 cm→mm 解析、分包粘包噪声、同低4位不同完整地址拒绝融合、三/两/一路定位、0°/±45°和1/2/3m、合法/非法 ID、掉线保持锁定。2026-07-30 主线程复跑结果：231 assertions, 0 failures。SysConfig 静态检查 0 error；仍有未生成 ti_msp_dl_config/Debug 输出、未核对 XDS110、三路生产 UART/按键/ST7735S 引脚未实物确认等预期告警。未构建、未烧录、未上板。",
+      "recordType": "event",
+      "schemaVersion": 1
+    },
+    {
+      "actor": "37chengshan",
+      "createdAt": "2026-07-30T10:01:14+08:00",
+      "entityId": "T-20260729-4GQN",
+      "entityType": "task",
+      "id": "E-20260730-100114-W9K2",
+      "kind": "statusChange",
+      "message": "开始搭建 C 题独立 MSPM0G3507 固件骨架：先实现单 UART 烟雾入口、三逻辑通道解析/融合、定位、临时四按键 ID、未来拨码后端和锁状态机；不猜三路生产 UART 引脚。",
+      "recordType": "event",
+      "schemaVersion": 1
+    },
+    {
+      "actor": "37chengshan",
+      "createdAt": "2026-07-30T10:01:01+08:00",
+      "entityId": "T-20260729-6H2Q",
+      "entityType": "task",
+      "id": "E-20260730-100101-ZGZS",
+      "kind": "statusChange",
+      "message": "已归档用户提供的 EWT550 v2.1、商品参数截图和模组引脚图，并建立 UWB 接线、原始日志、测距数据和锚点坐标记录模板；实物链路仍待验证。",
+      "recordType": "event",
+      "schemaVersion": 1
+    },
+    {
+      "actor": "37chengshan",
+      "createdAt": "2026-07-29T15:29:03+08:00",
+      "entityId": "T-20260729-KK97",
+      "entityType": "task",
+      "id": "E-20260729-152903-H9RZ",
+      "kind": "statusChange",
+      "message": "C 题官方题目、工程上下文与厂商资料已归档；需求矩阵、协议边界、坐标零点、3D 结构原则和五项正式任务已同步，仓库校验通过。",
+      "recordType": "event",
+      "schemaVersion": 1
+    },
+    {
+      "actor": "37chengshan",
+      "createdAt": "2026-07-29T15:28:57+08:00",
+      "entityId": "T-20260729-KK97",
+      "entityType": "task",
+      "id": "E-20260729-152857-NT51",
+      "kind": "decision",
+      "message": "总体方案基线采用“数字钥匙 1 个 EWM/EWT550 Initiator + 门锁 3 个固定 Responder + MSPM0G3507”的待实测首选拓扑。厂商 EWT550 规格书修订历史最新为 2.0，确认一主三从和标签端主机地址+距离输出，但实物板型、指令拼写和链路尚未上板；官方要求缺失第 2 项，不自行补造。",
+      "recordType": "event",
+      "schemaVersion": 1
+    },
+    {
+      "actor": "37chengshan",
+      "createdAt": "2026-07-29T15:21:43+08:00",
+      "entityId": "T-20260729-KK97",
+      "entityType": "task",
+      "id": "E-20260729-152143-7S5D",
+      "kind": "statusChange",
+      "message": "已开始归档官方题目、核对厂商资料并编写 C 题总体方案基线。",
+      "recordType": "event",
+      "schemaVersion": 1
+    },
+    {
+      "actor": "37chengshan",
+      "createdAt": "2026-07-29T14:50:44+08:00",
+      "entityId": "T-20260729-TT02",
+      "entityType": "task",
+      "id": "E-20260729-145044-4RDY",
+      "kind": "statusChange",
+      "message": "发送端和接收端构建均为0错误；接收端已通过Type-C UART BSL完成实机烧录，用户确认双端显示正常。",
+      "recordType": "event",
+      "schemaVersion": 1
+    },
+    {
+      "actor": "37chengshan",
+      "createdAt": "2026-07-29T14:50:25+08:00",
+      "entityId": "T-20260729-TT02",
+      "entityType": "task",
+      "id": "E-20260729-145025-XBQB",
+      "kind": "statusChange",
+      "message": "双地猛星UART通信、OLED同步显示和Type-C BSL烧录已进入验收收尾。",
+      "recordType": "event",
+      "schemaVersion": 1
+    }
+  ],
   "schemaVersion": 1,
   "summary": {
     "blockedTasks": 0,
     "openIdeas": 1,
     "openIssues": 1,
-    "openTasks": 0
+    "openTasks": 6
   },
-  "tasks": []
+  "tasks": [
+    {
+      "acceptanceCriteria": [
+        "2～4 路 UART 实例、引脚复用、电平、115200/921600 8N1 可行性和调试接口冲突已按实际板卡核对，SysConfig 无未解释警告",
+        "解析器保存每路完整地址、低4位 keyId、距离、SNR与时间戳；按 keyId 和时间窗融合，完整地址仅用于追溯而不错误要求各基站相同",
+        "定位输出 x、y、比赛径向距离、方位角及各自有效标志，包含多路求解、两路降级、一路仅保留距离/闭锁策略和 NLOS 剔除",
+        "距离不稳定时使用质量门控、滞回和连续三帧确认；角度未通过独立验证时强制 angle_valid=false 且不参与开锁",
+        "四位 ID 输入支持临时四按键翻转和最终拨码直读，显示、迎宾声光和红绿锁态 LED 状态机可复现验证",
+        "CCS Debug 全量构建为 0 错误；构建结果与目标板串口、显示、定位和状态机实测证据分别记录"
+      ],
+      "blockingIssueIds": [],
+      "completedAcceptanceCriteria": [],
+      "createdAt": "2026-07-29T15:19:40+08:00",
+      "dependencies": [
+        "T-20260729-KK97",
+        "T-20260729-6H2Q"
+      ],
+      "description": "以 .syscfg 为引脚、外设、时钟和中断配置源；先核对 MSPM0G3507 实际 UART 资源、电平和特殊引脚，再实现 2～4 路完整地址/keyId/时间戳解析、定位、4 bit ID 验证、区域状态机及显示。2026-07-30 当前两路距离模型在训练点误差已达标但实时仍有波动，角度实测完全不可用；在 T-20260730-11Y3、T-20260730-75QP、T-20260730-CA0K 和 T-20260730-B5J4 通过前，固件只能把角度标记为无效，不得用于开锁。暂无拨码开关时继续以四个低有效按键翻转 bit3～bit0。",
+      "id": "T-20260729-4GQN",
+      "module": "C题MSPM0固件",
+      "owner": "37chengshan",
+      "participants": [],
+      "priority": "critical",
+      "recordType": "task",
+      "relatedCommits": [],
+      "schemaVersion": 1,
+      "status": "doing",
+      "title": "实现 MSPM0 三路 UWB 接收、定位与门锁状态机",
+      "updatedAt": "2026-07-30T22:06:49+00:00"
+    },
+    {
+      "acceptanceCriteria": [
+        "4 个设备的 EWM/EWT 板型、外廓、孔位、天线参考点、供电范围和 UART 电平均有实物记录",
+        "实机确认 ROLE、SRCADDR、DSTADDR、RESPONDER_NUM 的准确指令拼写、参数掉电保持和上电自动测距行为",
+        "一主一从、一主二从、一主三从均保存连续 UART 原始日志；各基站完整地址、低4位钥匙ID、距离、SNR和时间戳均可追溯",
+        "完成 0.5～3.0 m 扩展距离、0°与多角度分层标定；分别报告静态误差、实时抖动、丢帧和异常值，角度未达标时明确标记不可用",
+        "距离和角度必须使用独立验证点验收，禁止仅用训练点误差宣称完成"
+      ],
+      "blockingIssueIds": [],
+      "completedAcceptanceCriteria": [],
+      "createdAt": "2026-07-29T15:19:37+08:00",
+      "dependencies": [
+        "T-20260729-KK97"
+      ],
+      "description": "以厂商资料支持的一主三从 TWR 为目标拓扑，继续完成设备与多从机链路验证。2026-07-30 已取得两基站最终实测集：18 组、13,000 余帧，当前地址分别为 0100/0200，可按低 4 位 keyId=0 与 120 ms 时间窗同步。0.5～1.5 m 标定点距离最大误差约 0.112 m，测量误差可接受但实时输出仍有明显波动；现有角度虽然能显示，但与真实方向不符，判定为不可用，禁止作为开锁依据。后续按 T-20260730-11Y3 扩展距离、T-20260730-75QP 重做角度、T-20260730-CA0K 整定稳定性、T-20260730-B5J4 独立验收。",
+      "id": "T-20260729-6H2Q",
+      "module": "C题UWB链路",
+      "owner": "37chengshan",
+      "participants": [],
+      "priority": "critical",
+      "recordType": "task",
+      "relatedCommits": [],
+      "schemaVersion": 1,
+      "status": "doing",
+      "title": "完成 EWM/EWT550 到货鉴定与一主三从测距验证",
+      "updatedAt": "2026-07-30T22:07:15+00:00"
+    },
+    {
+      "acceptanceCriteria": [
+        "官方 C 题 PDF 已归档，并逐项映射通信、定位、区域、ID、尺寸、显示位置和抗多径要求",
+        "总体方案明确 600 mm 圆柱边界为径向零点，并定义 FRONT、BACK、中心 O 与 KEY REF",
+        "官方要求编号缺失第 2 项作为待赛区确认事项记录，未自行补写要求",
+        "任务、设计和参考资料互相链接，且活动数据与总体设计通过仓库校验"
+      ],
+      "blockingIssueIds": [],
+      "completedAcceptanceCriteria": [
+        "官方 C 题 PDF 已归档，并逐项映射通信、定位、区域、ID、尺寸、显示位置和抗多径要求",
+        "总体方案明确 600 mm 圆柱边界为径向零点，并定义 FRONT、BACK、中心 O 与 KEY REF",
+        "官方要求编号缺失第 2 项作为待赛区确认事项记录，未自行补写要求",
+        "任务、设计和参考资料互相链接，且活动数据与总体设计通过仓库校验"
+      ],
+      "createdAt": "2026-07-29T15:18:47+08:00",
+      "dependencies": [],
+      "description": "归档官方 C 题和工程上下文，建立“官方题目/厂商资料/当前实物与实测”证据层级；将一主三从 UWB 定位作为待实测首选拓扑，并记录官方要求编号缺失第 2 项的原文异常。",
+      "id": "T-20260729-KK97",
+      "module": "C题总体设计",
+      "owner": "37chengshan",
+      "participants": [],
+      "priority": "critical",
+      "recordType": "task",
+      "relatedCommits": [],
+      "schemaVersion": 1,
+      "status": "done",
+      "title": "冻结 C 题官方需求、证据层级与总体方案基线",
+      "updatedAt": "2026-07-29T15:29:03+08:00"
+    },
+    {
+      "acceptanceCriteria": [
+        "发送端仅显示接收端ACK确认的ADC、毫伏值和序号",
+        "接收端通过UART中断和环形缓冲接收并刷新OLED且不丢帧",
+        "发送端和接收端CCS Debug全量构建均为0错误",
+        "接收端通过Type-C UART BSL烧录，双端OLED数据一致且刷新正常"
+      ],
+      "blockingIssueIds": [],
+      "completedAcceptanceCriteria": [
+        "发送端仅显示接收端ACK确认的ADC、毫伏值和序号",
+        "接收端通过UART中断和环形缓冲接收并刷新OLED且不丢帧",
+        "发送端和接收端CCS Debug全量构建均为0错误",
+        "接收端通过Type-C UART BSL烧录，双端OLED数据一致且刷新正常"
+      ],
+      "createdAt": "2026-07-29T14:50:09+08:00",
+      "dependencies": [],
+      "description": "地猛星①采集PA27 ADC与PB6-PB9地址，通过UART1向地猛星②发送带CRC和序号的数据帧；两端OLED显示同一已确认帧，并为后续透明无线串口模块保留接口。",
+      "id": "T-20260729-TT02",
+      "module": "地猛星双机通信",
+      "owner": "37chengshan",
+      "participants": [],
+      "priority": "high",
+      "recordType": "task",
+      "relatedCommits": [
+        "4ba7d8650de086c08838f9ed35a0cf84001d7afb",
+        "5cb10c346c381f5d824870d4e01b080485348283"
+      ],
+      "schemaVersion": 1,
+      "status": "done",
+      "title": "完成双地猛星UART同步采集显示",
+      "updatedAt": "2026-07-29T14:52:19+08:00"
+    },
+    {
+      "acceptanceCriteria": [
+        "11 个中轴距离全部使用结构化 distanceM/angleDeg/pointId 元数据采集，每点至少两次独立复测，每路至少 100 组同步有效数据",
+        "每点输出两路中位数、MAD、P95 范围、SNR、丢帧率和大于 0.2 m 跳变次数，不稳定帧有明确降权或剔除原因",
+        "训练与验证按独立采集分组，0.5～3.0 m 独立验证距离 P95 误差不超过 0.15 m、最大误差不超过 0.20 m",
+        "0.5、1.0、1.5、2.0、3.0 m 各进行至少 30 秒静止实时显示，滤波后滚动 P95 波动不超过 0.10 m且不持续出现超过 0.20 m跳变",
+        "0.95/1.00/1.05 m 与 1.95/2.00/2.05 m 边界点通过三帧确认和滞回验证，状态不反复闪烁"
+      ],
+      "blockingIssueIds": [],
+      "completedAcceptanceCriteria": [],
+      "createdAt": "2026-07-30T22:05:17+00:00",
+      "dependencies": [
+        "T-20260729-6H2Q"
+      ],
+      "description": "使用当前两基站 250 mm 间距，按中轴 0° 采集 0.5、0.8、0.95、1.00、1.05、1.5、1.95、2.00、2.05、2.5、3.0 m。每点至少两次独立摆放和采集，不能把同一次长采集切片冒充复测。每次丢弃前 2 秒，保存完整原始帧、基站地址、keyId、SNR、时间戳和真实位置元数据。重点解决当前距离误差可接受但实时显示波动的问题。",
+      "id": "T-20260730-11Y3",
+      "module": "C题UWB标定",
+      "owner": "37chengshan",
+      "participants": [],
+      "priority": "critical",
+      "recordType": "task",
+      "relatedCommits": [],
+      "schemaVersion": 1,
+      "status": "todo",
+      "title": "扩展 UWB 距离标定到 0.5～3.0 m 并加密 1 m/2 m 边界",
+      "updatedAt": "2026-07-30T22:05:17+00:00"
+    },
+    {
+      "acceptanceCriteria": [
+        "所有角度点用激光/卷尺核对 x、y 坐标并写入结构化真值，正前方为 0°、左负右正，禁止仅靠 d1/d2 或手写标签推断角度",
+        "1.0 m 与 2.0 m 的 13 个角度各至少两次独立采集，每路至少 100 组同步有效数据并记录 SNR、MAD、丢帧和 NLOS 标记",
+        "使用按采集批次分组的独立验证，左右方向符号正确率为 100%，角度 P95 误差不超过 8°、最大误差不超过 10°",
+        "输出两基站 250 mm 基线的可观测性报告；若差分距离信号小于噪声或指标失败，明确判定两基站角度不可用并给出第三基站坐标方案",
+        "角度质量不足、任一路异常或超出已标定角度范围时，实时界面显示角度无效，固件不得用该角度参与开锁"
+      ],
+      "blockingIssueIds": [],
+      "completedAcceptanceCriteria": [],
+      "createdAt": "2026-07-30T22:05:42+00:00",
+      "dependencies": [
+        "T-20260729-6H2Q",
+        "T-20260730-11Y3"
+      ],
+      "description": "当前 -15°/0°/+15° 少量训练点只能让网页显示角度，实测方向不正确，角度能力判定为不可用。本任务使用实测坐标而不是文字标签，在 1.0 m 和 2.0 m 两个半径上采集 -45、-30、-20、-15、-10、-5、0、+5、+10、+15、+20、+30、+45°，每点至少两次独立复测。先验证 250 mm 两基站基线是否具备足够角度可观测性；若达不到指标，不继续用查表硬拟合，转入第三基站三角布置。",
+      "id": "T-20260730-75QP",
+      "module": "C题UWB角度定位",
+      "owner": "37chengshan",
+      "participants": [],
+      "priority": "critical",
+      "recordType": "task",
+      "relatedCommits": [],
+      "schemaVersion": 1,
+      "status": "todo",
+      "title": "完成 UWB 多角度标定并验证两基站角度可观测性",
+      "updatedAt": "2026-07-30T22:05:42+00:00"
+    },
+    {
+      "acceptanceCriteria": [
+        "独立重采至少 35 个验证点，覆盖 0.5～3.0 m、左右角度、1 m/2 m 边界以及训练网格之间的位置，验证数据不参与重新训练",
+        "径向距离最大误差不超过 0.20 m、P95 不超过 0.15 m；角度仅在可用方案下验收，P95 不超过 8°、最大不超过 10°",
+        "覆盖丢帧、地址混杂、低 SNR、单基站 NLOS、镜像位置、模型 CRC 损坏和边界抖动，任一不安全情况立即禁止开锁",
+        "导出模型通过 CRC、版本、Flash/SRAM 和单次定位时间检查，并用同一黄金向量验证电脑与 C 固件结果",
+        "完成目标板构建、烧录和实机连续运行记录；未连接硬件时只能写构建通过，不能写上板通过"
+      ],
+      "blockingIssueIds": [],
+      "completedAcceptanceCriteria": [],
+      "createdAt": "2026-07-30T22:06:26+00:00",
+      "dependencies": [
+        "T-20260730-11Y3",
+        "T-20260730-75QP",
+        "T-20260730-CA0K",
+        "T-20260729-4GQN"
+      ],
+      "description": "距离扩展、角度可观测性和实时稳定性任务通过后，使用未参与训练的新摆放位置做最终验收，再导出并烧录 MSPM0 模型。若角度任务判定两基站不可用，本任务必须使用第三基站方案或明确将角度功能保持无效，不能把训练点拟合结果当作比赛验收。",
+      "id": "T-20260730-B5J4",
+      "module": "C题UWB系统验收",
+      "owner": "37chengshan",
+      "participants": [],
+      "priority": "critical",
+      "recordType": "task",
+      "relatedCommits": [],
+      "schemaVersion": 1,
+      "status": "todo",
+      "title": "独立验证 UWB 模型并冻结 MSPM0 比赛版本",
+      "updatedAt": "2026-07-30T22:06:26+00:00"
+    },
+    {
+      "acceptanceCriteria": [
+        "固定 0.5、1.0、1.5、2.0、3.0 m 以及 -30、-15、0、+15、+30° 各连续运行至少 60 秒并保存原始与滤波后轨迹",
+        "静止距离滤波后滚动 P95 波动不超过 0.10 m，单帧超过 0.20 m 的异常不会直接改变开锁/迎宾状态",
+        "从 3 m 匀速接近并离开时，实时距离额外延迟不超过 500 ms，1 m/2 m 状态只按既定滞回和连续三帧确认变化",
+        "第二路低 SNR、高 MAD、丢帧或 NLOS 时自动降级为仅距离有效；恢复后至少连续三帧稳定才重新启用角度",
+        "网页回放、实时串口和 MSPM0 使用同一组滤波参数与黄金测试向量，距离差不超过 2 mm、角度差不超过 0.1°"
+      ],
+      "blockingIssueIds": [],
+      "completedAcceptanceCriteria": [],
+      "createdAt": "2026-07-30T22:06:04+00:00",
+      "dependencies": [
+        "T-20260730-11Y3",
+        "T-20260730-75QP"
+      ],
+      "description": "在距离和角度标定数据齐全后，专门解决当前静态测量值可接受但实时显示不稳定的问题。分别验证 Hampel、中值、质量权重、限速器和 Kalman 参数，不用增加过度延迟来掩盖跳变；距离与角度分别维护有效状态，角度失败不得拖累距离输出。",
+      "id": "T-20260730-CA0K",
+      "module": "C题UWB实时定位",
+      "owner": "37chengshan",
+      "participants": [],
+      "priority": "high",
+      "recordType": "task",
+      "relatedCommits": [],
+      "schemaVersion": 1,
+      "status": "todo",
+      "title": "整定 UWB 实时滤波、坏链路降级与区域防抖",
+      "updatedAt": "2026-07-30T22:06:04+00:00"
+    }
+  ]
 }

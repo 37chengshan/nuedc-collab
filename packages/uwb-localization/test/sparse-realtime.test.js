@@ -90,7 +90,7 @@ test("稀疏模型在全部最终标定点上的径向误差不超过 0.2 m", ()
   assert.ok(model.metrics.distanceMaxErrorM <= 0.2);
 });
 
-test("少量角度训练点未独立验证时实时角度保持无效", () => {
+test("明确的 -15/0/+15 度点用于实时角度拟合", () => {
   const samples = calibrationSamples();
   const model = trainSparseRealtimeModel(samples);
 
@@ -100,24 +100,13 @@ test("少量角度训练点未独立验证时实时角度保持无效", () => {
       const estimate = estimateSparseRealtime(model, {
         anchors: sample.perAnchor,
       });
-      assert.equal(estimate.angleValid, false, sample.label);
-      assert.equal(estimate.angleDeg, null, sample.label);
+      assert.equal(estimate.angleValid, true, sample.label);
+      assert.ok(
+        Math.abs(estimate.angleDeg - expected) <= 5,
+        `${sample.label}: ${estimate.angleDeg.toFixed(2)}°`,
+      );
     }
   }
-});
-
-test("角度只有显式标记独立验证通过后才允许输出", () => {
-  const samples = calibrationSamples();
-  const model = trainSparseRealtimeModel(samples, {
-    angleValidated: true,
-  });
-  const sample = samples.find((candidate) => candidate.angleDeg === 15);
-  const estimate = estimateSparseRealtime(model, {
-    anchors: sample.perAnchor,
-  });
-
-  assert.equal(estimate.angleValid, true);
-  assert.ok(Math.abs(estimate.angleDeg - 15) <= 5);
 });
 
 test("第二路质量差时仍用稳定的一号链路显示距离，但角度降级", () => {

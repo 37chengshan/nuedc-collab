@@ -57,6 +57,7 @@ export class GitFixture {
     run(seed, ['commit', '-m', 'init']);
     run(seed, ['branch', '-M', 'main']);
     run(seed, ['push', 'origin', 'HEAD:main']);
+    run(this.remote, ['symbolic-ref', 'HEAD', 'refs/heads/main']);
 
     for (const name of Object.keys(this.clones) as CloneName[]) {
       run(this.root, ['clone', this.remote, this.clones[name]]);
@@ -253,6 +254,8 @@ export class GitFixture {
     // clone from real remote first then repoint origin
     run(this.root, ['clone', this.remote, dir]);
     this.configIdentity(dir, 'auth');
+    run(dir, ['config', 'credential.helper', '']);
+    run(dir, ['config', 'credential.interactive', 'never']);
     run(dir, ['remote', 'set-url', 'origin', `http://127.0.0.1:${this.authPort}/repo.git`]);
     return createGitCore({ repoRoot: dir });
   }

@@ -269,12 +269,24 @@ describe("NUEDC 本地 API 服务", () => {
     await expect(diff.json()).resolves.toMatchObject({ code: "GIT_DIFF_REQUEST_TOO_LARGE" });
   });
 
-  test("资料内容接口拒绝通过符号链接逃出白名单", async () => {
+  test("资料内容接口拒绝通过符号链接逃出白名单", async ({ skip }) => {
     const token = await getToken();
     const outside = path.join(ctx.remoteRoot, "outside-secret.txt");
     const link = path.join(ctx.repoRoot, "参考资料/硬件资料/outside-link.txt");
     await writeFile(outside, "not-for-preview\n");
-    await symlink(outside, link);
+    try {
+      await symlink(outside, link);
+    } catch (error) {
+      const code =
+        error instanceof Error && "code" in error
+          ? (error as NodeJS.ErrnoException).code
+          : undefined;
+      if (code === "EPERM" || code === "EACCES") {
+        skip("当前 Windows 环境没有创建文件符号链接的权限");
+        return;
+      }
+      throw error;
+    }
 
     const response = await fetch(
       `${ctx.baseUrl}/api/materials/content?path=${encodeURIComponent("参考资料/硬件资料/outside-link.txt")}`,

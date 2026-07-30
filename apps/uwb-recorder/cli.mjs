@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-import { mkdir, writeFile } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { dirname, extname, join, parse, resolve } from "node:path";
 
 import {
   AppError,
@@ -25,6 +25,7 @@ UWB Lab Agent CLI
   capture measurements --id CAPTURE_ID
   parameters get
   schema [resource.action]
+  calibration plan
 
 状态变更：
   capture start --label "双路-中轴-1m" [--duration 45]
@@ -39,10 +40,22 @@ UWB Lab Agent CLI
   export --session ID --output path.csv
   capture export --id CAPTURE_ID --output path.csv
   delete-session --session ID --yes
+  calibration capture --distance 1 --angle 0 --anchors 2
+    [--capture-id CAPTURE_ID] [--idempotency-key KEY] [--dry-run]
+  calibration train [--input JSON|--input-file FILE]
+    [--idempotency-key KEY] [--dry-run]
+  calibration validate [--input JSON|--input-file FILE]
+    [--idempotency-key KEY] [--dry-run]
+  calibration export [--input JSON|--input-file FILE]
+    [--name calibration_model_data] [--output DIR]
+    [--idempotency-key KEY] [--dry-run]
 
 公共参数：
-  --format json|table
   --api-url http://127.0.0.1:4173
+
+退出码：
+  0成功  1运行错误  2参数错误  3服务不可用  4串口错误
+  5标定数据不足  6需要确认  7幂等冲突  8算法引擎不可用
 `;
 
 function parseArguments(argv) {
@@ -95,9 +108,10 @@ async function apiRequest(apiUrl, path, options = {}) {
   try {
     response = await fetch(`${apiUrl}${path}`, {
       method: options.method ?? "GET",
-      headers: options.body
-        ? { "Content-Type": "application/json" }
-        : undefined,
+      headers: {
+        ...(options.body ? { "Content-Type": "application/json" } : {}),
+        ...(options.headers ?? {}),
+      },
       body: options.body ? JSON.stringify(options.body) : undefined,
     });
   } catch (error) {
@@ -139,19 +153,50 @@ async function apiRequest(apiUrl, path, options = {}) {
   return envelope;
 }
 
-function tableValue(data) {
-  if (Array.isArray(data)) {
-    return data.length === 0 ? "[]" : JSON.stringify(data, null, 2);
-  }
-  return JSON.stringify(data, null, 2);
+function writeEnvelope(envelope) {
+  process.stdout.write(`${JSON.stringify(envelope)}\n`);
 }
 
-function writeEnvelope(envelope, format) {
-  if (format === "table" && envelope.ok) {
-    process.stdout.write(`${tableValue(envelope.data)}\n`);
-    return;
+function writeProgress(phase, state, extra = {}) {
+  process.stderr.write(
+    `${JSON.stringify({
+      type: "progress",
+      phase,
+      state,
+      timestamp: new Date().toISOString(),
+      ...extra,
+    })}\n`,
+  );
+}
+
+async function inputObject(flags) {
+  let text = null;
+  if (flags.input !== undefined) {
+    text = requireFlag(flags, "input");
+  } else if (flags["input-file"] !== undefined) {
+    text = await readFile(resolve(requireFlag(flags, "input-file")), "utf8");
   }
-  process.stdout.write(`${JSON.stringify(envelope)}\n`);
+  if (text === null) {
+    return {};
+  }
+  try {
+    const value = JSON.parse(text);
+    if (!value || Array.isArray(value) || typeof value !== "object") {
+      throw new Error("input must be an object");
+    }
+    return value;
+  } catch (error) {
+    throw new AppError(
+      "CLI_VALIDATION_ERROR",
+      `--input/--input-file必须包含JSON对象：${error.message}`,
+      { details: { inputFile: flags["input-file"] ?? null } },
+    );
+  }
+}
+
+function idempotencyHeaders(flags) {
+  const key = flags["idempotency-key"];
+  return key && key !== true ? { "Idempotency-Key": String(key) } : {};
 }
 
 function exitCodeFor(error) {
@@ -170,6 +215,21 @@ function exitCodeFor(error) {
   if (String(error.code).startsWith("SERIAL_")) {
     return 4;
   }
+  if (
+    String(error.code).includes("INSUFFICIENT") ||
+    String(error.code).includes("RECAPTURE")
+  ) {
+    return 5;
+  }
+  if (error.code === "IDEMPOTENCY_CONFLICT") {
+    return 7;
+  }
+  if (
+    error.code === "CALIBRATION_ENGINE_UNAVAILABLE" ||
+    error.code === "CALIBRATION_UNAVAILABLE"
+  ) {
+    return 8;
+  }
   return 1;
 }
 
@@ -177,12 +237,19 @@ async function main() {
   const { positionals, flags } = parseArguments(process.argv.slice(2));
   const [command, subcommand] = positionals;
   if (!command || command === "help" || flags.help) {
-    process.stdout.write(HELP.trimStart());
+    writeEnvelope(
+      successEnvelope({
+        command: "help",
+        text: HELP.trim(),
+        outputContract: {
+          stdout: "single-json-envelope",
+          stderr: "structured-progress",
+        },
+      }),
+    );
     return;
   }
 
-  const format =
-    flags.format ?? (process.stdout.isTTY ? "table" : "json");
   const apiUrl = flags["api-url"] ?? DEFAULT_API_URL;
   const dryRun = flags["dry-run"] === true;
   let envelope;
@@ -266,6 +333,86 @@ async function main() {
         "CLI_VALIDATION_ERROR",
         "capture只支持 start、status、measurements 或 export",
       );
+    case "calibration": {
+      if (subcommand === "plan") {
+        envelope = await apiRequest(apiUrl, "/api/calibration/plan");
+        break;
+      }
+      if (!["capture", "train", "validate", "export"].includes(subcommand)) {
+        throw new AppError(
+          "CLI_VALIDATION_ERROR",
+          "calibration只支持 plan、capture、train、validate 或 export",
+        );
+      }
+      const common = {
+        ...(await inputObject(flags)),
+        dryRun,
+      };
+      if (subcommand === "capture") {
+        Object.assign(common, {
+          distanceM: numberFlag(flags, "distance"),
+          angleDeg: numberFlag(flags, "angle"),
+          anchorCount: numberFlag(flags, "anchors", 2),
+          boundaryOffsetMm: numberFlag(flags, "boundary-offset-mm", 300),
+          durationSeconds: numberFlag(flags, "duration", 15),
+          warmupSeconds: numberFlag(flags, "warmup", 2),
+          minimumSynchronizedGroups: numberFlag(flags, "minimum-groups", 100),
+          synchronizationWindowMs: numberFlag(flags, "sync-window-ms", 120),
+          captureId:
+            flags["capture-id"] === undefined
+              ? undefined
+              : requireFlag(flags, "capture-id"),
+        });
+      }
+      if (subcommand === "export") {
+        common.name =
+          flags.name === undefined
+            ? common.name
+            : requireFlag(flags, "name");
+      }
+      writeProgress(subcommand, "started", { dryRun });
+      envelope = await apiRequest(
+        apiUrl,
+        `/api/calibration/${subcommand}`,
+        {
+          method: "POST",
+          headers: idempotencyHeaders(flags),
+          body: common,
+        },
+      );
+      if (
+        subcommand === "export" &&
+        !dryRun &&
+        flags.output &&
+        envelope.data?.header &&
+        envelope.data?.source
+      ) {
+        const output = resolve(requireFlag(flags, "output"));
+        const requestedName =
+          common.name ?? envelope.data.name ?? "calibration_model_data";
+        let outputDirectory = output;
+        let sourceName =
+          envelope.data.sourceFileName ?? `${requestedName}.c`;
+        let headerName =
+          envelope.data.headerFileName ?? `${requestedName}.h`;
+        if (extname(output).toLowerCase() === ".c") {
+          outputDirectory = dirname(output);
+          sourceName = parse(output).base;
+          headerName = `${parse(output).name}.h`;
+        }
+        await mkdir(outputDirectory, { recursive: true });
+        await Promise.all([
+          writeFile(join(outputDirectory, headerName), envelope.data.header, "utf8"),
+          writeFile(join(outputDirectory, sourceName), envelope.data.source, "utf8"),
+        ]);
+        envelope.data.files = {
+          header: join(outputDirectory, headerName),
+          source: join(outputDirectory, sourceName),
+        };
+      }
+      writeProgress(subcommand, "completed", { ok: true });
+      break;
+    }
     case "schema":
       envelope = await apiRequest(
         apiUrl,
@@ -402,7 +549,7 @@ async function main() {
       });
   }
 
-  writeEnvelope(envelope, format);
+  writeEnvelope(envelope);
 }
 
 try {
@@ -414,6 +561,6 @@ try {
       : new AppError("CLI_INTERNAL_ERROR", error.message ?? String(error), {
           status: 500,
         });
-  writeEnvelope(errorEnvelope(normalized), "json");
+  writeEnvelope(errorEnvelope(normalized));
   process.exitCode = exitCodeFor(normalized);
 }

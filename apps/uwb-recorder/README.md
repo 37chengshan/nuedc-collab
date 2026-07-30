@@ -30,6 +30,55 @@ start.cmd
 - 角色 `0/1/2`、CH5/CH9、波特率、功率、从机数量、源地址和五个目标地址。
 - 自定义 AT 指令终端。
 - 服务端 JSONL 自动保存、历史会话、CSV 导出和删除。
+- 2～4 基站自动标定向导：77 个距离/角度测点、15 秒采集、前 2 秒丢弃。
+- 同一 `keyId` 按链路和 120 ms 时间窗同步（允许完整地址不同）、Hampel/MAD 清洗、每路至少 100 组数据门槛。
+- 测距模型自动选择、距离/角度补偿、独立验证和最差点重采提示。
+- 固定偏差、P95 热力图、真实/滤波轨迹、动态误差、1 m/2 m 边界图。
+- PNG、CSV、JSON 和 MSPM0 C 模型导出。
+
+## 自动标定流程
+
+默认两基站天线中心坐标为：
+
+```text
+A1 = (-125, +40) mm
+A2 = (+125, +40) mm
+圆柱外边界零点偏移 = 300 mm
+```
+
+网页中选择“标定”后按以下顺序操作：
+
+1. 选择启用基站数 `2`、`3` 或 `4`，填写实测天线中心坐标。
+2. 按扇区图把钥匙放到当前边界距离和角度。
+3. 点击“开始当前点”，保持不动 15 秒；程序自动丢弃前 2 秒。
+4. 每路获得至少 100 组同地址同步数据且波动合格后，进入下一点。
+5. 完成 77 点后点击“迭代训练”，再用独立重采数据点击“独立验证”。
+6. 验证通过后导出 `calibration_model_data.c/.h/.json`。
+
+比赛距离指钥匙到圆柱外边界的距离。定位坐标半径按：
+
+```text
+位置半径 = 比赛边界距离 + 300 mm
+```
+
+正前方为 `+y`，右侧为正角，标定范围为 `-45°～+45°`。
+
+## 2026-07-30 实测状态
+
+当前最终采集目录包含 18 组两基站真实数据。现有稀疏实时模型的状态必须按以下方式理解：
+
+- 训练数据覆盖距离 `0.5～1.5 m`，明确角度只覆盖 `-15°、0°、+15°`。
+- 训练标定点最大距离误差约 `0.112 m`，P95 约 `0.103 m`，测量误差基本可接受。
+- 实时距离仍有明显波动，尚未通过长时间静止和动态接近稳定性验收。
+- 当前角度显示与真实方向不一致，角度能力判定为不可用；页面显示数值不代表通过标定。
+- 第二路数据低 SNR、高 MAD 或跳变时，只允许保留距离结果，角度必须降级为无效。
+- 当前结果不能直接作为最终比赛模型，需要完成扩展距离、多角度、稳定性和独立验证任务。
+
+下一阶段正式采集与验收计划见：
+
+```text
+比赛文档/实验记录/C题/UWB/2026-07-30_下一阶段标定与验收计划.md
+```
 
 ## Agent CLI
 
@@ -48,6 +97,7 @@ node cli.mjs measurements --limit 100 --device 1 --since-ms 30000
 node cli.mjs sessions
 node cli.mjs parameters get
 node cli.mjs schema
+node cli.mjs schema calibration.train
 ```
 
 连接和控制：
@@ -92,10 +142,39 @@ node cli.mjs delete-session --session <ID> --yes
 node cli.mjs export --session <ID> --output D:\CCCCC\uwb-data.csv
 ```
 
+自动标定 CLI：
+
+```powershell
+node cli.mjs calibration plan
+
+node cli.mjs calibration capture `
+  --distance 1 `
+  --angle 0 `
+  --anchors 2 `
+  --dry-run `
+  --idempotency-key capture-preview-1
+
+node cli.mjs calibration train `
+  --input-file D:\CCCCC\calibration-input.json `
+  --idempotency-key train-1
+
+node cli.mjs calibration validate `
+  --input-file D:\CCCCC\validation-input.json `
+  --idempotency-key validate-1
+
+node cli.mjs calibration export `
+  --input-file D:\CCCCC\trained-model.json `
+  --output D:\CCCCC\firmware-model `
+  --idempotency-key export-1
+```
+
+长时间训练进度输出到 `stderr`，最终只有一个 JSON envelope 输出到
+`stdout`。同一幂等键重复执行会返回同一结果，不会重复训练或重复写入。
+
 ## Agent Native 契约
 
 - `stdout`：稳定 JSON envelope。
-- Schema 版本：`1.0.0`。
+- Schema 版本：`1.2.0`。
 - 自描述：`node cli.mjs schema [resource.action]`。
 - 预执行：状态变更命令支持 `--dry-run`。
 - 危险操作：恢复出厂和删除会话要求 `--yes`。
@@ -111,7 +190,10 @@ node cli.mjs export --session <ID> --output D:\CCCCC\uwb-data.csv
 | `2` | 参数校验失败 |
 | `3` | 本地服务不可用 |
 | `4` | 串口连接或占用错误 |
+| `5` | 标定数据不足或需要补采 |
 | `6` | 缺少危险操作确认 |
+| `7` | 幂等键冲突 |
+| `8` | 标定算法引擎不可用 |
 
 ## 数据保存
 
@@ -131,9 +213,26 @@ timestamp,elapsed_ms,device,link_index,address,distance_cm,snr_db,raw
 
 `raw` 是原始报文，后续更换滤波、标定或角度算法时可以重新计算。
 
+## 模型部署到 MSPM0
+
+网页或 CLI 导出的模型与
+`code/c_digital_key_lock/calibration_model.h` 使用同一 900 字节
+`CalibrationModelV1` ABI。部署步骤：
+
+1. 用导出的 `calibration_model_data.c` 和
+   `calibration_model_data.h` 替换固件目录中的同名文件。
+2. 不要修改 `generated/ti_msp_dl_config.c/.h`。
+3. 在固件目录运行 `build.ps1`。
+4. 烧录生成的 `build/c_digital_key_lock.hex`。
+
+固件上电会检查模型版本、尺寸和 CRC32；任何一项失败都会保持闭锁并显示标定
+错误。审计 JSON 单独保存，不会作为字符串写入单片机 Flash。
+
 ## 验证
 
 ```powershell
 npm run typecheck --workspace=@nuedc/uwb-recorder
 npm test --workspace=@nuedc/uwb-recorder
+node --test tests/uwb-session-replay.test.mjs
+npm test --workspace=@nuedc/uwb-localization
 ```

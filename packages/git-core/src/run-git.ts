@@ -145,6 +145,7 @@ function classifyAuthOrNetwork(stderr: string, stdout: string, err?: NodeJS.Errn
     /Authentication failed/i.test(blob) ||
     /HTTP\s*401/i.test(blob) ||
     /could not read Username/i.test(blob) ||
+    /unable to get (?:username|password) from user/i.test(blob) ||
     /terminal prompts disabled/i.test(blob) ||
     /Invalid username or password/i.test(blob) ||
     /Permission denied \(publickey\)/i.test(blob) ||

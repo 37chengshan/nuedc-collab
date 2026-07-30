@@ -4,6 +4,16 @@
 #include <stdlib.h>
 #include <string.h>
 
+static size_t bounded_string_length(const char *text, size_t capacity)
+{
+    size_t length = 0U;
+
+    while ((length < capacity) && (text[length] != '\0')) {
+        length++;
+    }
+    return length;
+}
+
 static char *trim_in_place(char *text)
 {
     char *end;
@@ -204,7 +214,8 @@ bool uwb_text_parse_line(const char *line, uint32_t timestamp_ms,
     measurement->distance_mm = distance_mm;
     measurement->timestamp_ms = timestamp_ms;
     measurement->raw_length =
-        (uint8_t)strnlen(line, LOCK_UWB_RAW_LINE_CAPACITY - 1U);
+        (uint8_t)bounded_string_length(line,
+                                       LOCK_UWB_RAW_LINE_CAPACITY - 1U);
     memcpy(measurement->raw_line, line, measurement->raw_length);
     measurement->raw_line[measurement->raw_length] = '\0';
     return true;

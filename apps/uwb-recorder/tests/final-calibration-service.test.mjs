@@ -24,10 +24,9 @@ test("最终采集目录可自动训练为实时模型且标定误差不超过 0
     minimum: -15,
     maximum: 15,
   });
-  assert.equal(status.angleValidated, false);
 });
 
-test("最终模型可实时输出距离，但未独立验证的角度保持无效", async () => {
+test("最终模型可从近期串口帧实时输出距离和角度", async () => {
   const service = await createFinalCalibrationService({
     capturesDirectory,
   });
@@ -57,7 +56,7 @@ test("最终模型可实时输出距离，但未独立验证的角度保持无�
   const estimate = service.estimate(measurements);
   assert.equal(estimate.valid, true);
   assert.ok(Math.abs(estimate.distanceM - 1) <= 0.2);
-  assert.equal(estimate.angleValid, false);
-  assert.equal(estimate.angleDeg, null);
+  assert.equal(estimate.angleValid, true);
+  assert.ok(Math.abs(estimate.angleDeg - 15) <= 5);
   assert.equal(estimate.source, "final-captures");
 });

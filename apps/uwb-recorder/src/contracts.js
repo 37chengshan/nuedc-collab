@@ -1,4 +1,4 @@
-export const SCHEMA_VERSION = "1.1.0";
+export const SCHEMA_VERSION = "1.2.0";
 
 export class AppError extends Error {
   constructor(code, message, options = {}) {
@@ -147,6 +147,83 @@ export const agentSchema = {
           method: "GET",
           path: "/api/captures/{id}/export.csv",
           safety: "read",
+        },
+      },
+    },
+    calibration: {
+      description:
+        "生成77点计划、自动读取串口采样、训练/验证距离与角度模型并导出MSPM0 C模型",
+      actions: {
+        plan: {
+          since: "1.2.0",
+          method: "GET",
+          path: "/api/calibration/plan",
+          safety: "read",
+          query: {
+            boundaryOffsetMm: { type: "number", default: 300 },
+          },
+        },
+        capture: {
+          since: "1.2.0",
+          method: "POST",
+          path: "/api/calibration/capture",
+          safety: "mutating",
+          idempotent: true,
+          input: {
+            distanceM: { type: "number", min: 0.3, max: 3.5, required: true },
+            angleDeg: { type: "number", min: -45, max: 45, required: true },
+            anchorCount: { type: "integer", min: 2, max: 4, default: 2 },
+            boundaryOffsetMm: { type: "number", default: 300 },
+            durationSeconds: { type: "integer", default: 15 },
+            warmupSeconds: { type: "integer", default: 2 },
+            minimumSynchronizedGroups: { type: "integer", default: 100 },
+            synchronizationWindowMs: { type: "integer", default: 120 },
+            idempotencyKey: { type: "string" },
+            dryRun: { type: "boolean", default: false },
+          },
+        },
+        train: {
+          since: "1.2.0",
+          method: "POST",
+          path: "/api/calibration/train",
+          safety: "mutating",
+          idempotent: true,
+          longRunning: true,
+          input: {
+            plan: { type: "object" },
+            captures: { type: "array" },
+            anchors: { type: "array", minItems: 2, maxItems: 4 },
+            idempotencyKey: { type: "string" },
+            dryRun: { type: "boolean", default: false },
+          },
+        },
+        validate: {
+          since: "1.2.0",
+          method: "POST",
+          path: "/api/calibration/validate",
+          safety: "read",
+          idempotent: true,
+          longRunning: true,
+          input: {
+            model: { type: "object" },
+            validationPoints: { type: "array" },
+            idempotencyKey: { type: "string" },
+            dryRun: { type: "boolean", default: false },
+          },
+        },
+        export: {
+          since: "1.2.0",
+          method: "POST",
+          path: "/api/calibration/export",
+          safety: "read",
+          idempotent: true,
+          input: {
+            model: { type: "object" },
+            name: { type: "string", default: "uwb_calibration_model" },
+            target: { type: "string", default: "MSPM0G3507" },
+            idempotencyKey: { type: "string" },
+            dryRun: { type: "boolean", default: false },
+          },
         },
       },
     },

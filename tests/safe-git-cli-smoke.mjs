@@ -34,6 +34,7 @@ try {
   run('git', ['commit', '-m', 'init'], seed);
   run('git', ['branch', '-M', 'main'], seed);
   run('git', ['push', 'origin', 'HEAD:main'], seed);
+  run('git', ['symbolic-ref', 'HEAD', 'refs/heads/main'], remote);
   run('git', ['clone', remote, clone]);
   run('git', ['config', 'user.name', 'teammate'], clone);
   run('git', ['config', 'user.email', 'teammate@example.test'], clone);

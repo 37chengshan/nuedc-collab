@@ -5,6 +5,8 @@
 
 typedef struct {
     LockState state;
+    LockState candidate_state;
+    uint8_t candidate_count;
     uint32_t denied_hold_until_ms;
 } LockStateMachine;
 

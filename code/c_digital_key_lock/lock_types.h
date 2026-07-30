@@ -4,7 +4,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define LOCK_UWB_CHANNEL_COUNT 3U
+#define LOCK_UWB_MIN_CHANNEL_COUNT 2U
+#define LOCK_UWB_CHANNEL_COUNT 4U
 #define LOCK_UWB_RAW_LINE_CAPACITY 96U
 #define LOCK_ID_BIT_COUNT 4U
 
@@ -32,7 +33,8 @@ typedef enum {
     LOCK_LOCALIZATION_NONE = 0,
     LOCK_LOCALIZATION_HOLD,
     LOCK_LOCALIZATION_TWO_ANCHOR,
-    LOCK_LOCALIZATION_THREE_ANCHOR
+    LOCK_LOCALIZATION_THREE_ANCHOR,
+    LOCK_LOCALIZATION_FOUR_ANCHOR
 } LockLocalizationMode;
 
 typedef struct {
@@ -40,14 +42,21 @@ typedef struct {
     uint16_t key_addr;
     uint8_t key_id;
     uint8_t valid_mask;
+    uint8_t rejected_mask;
     uint8_t anchor_count;
     uint32_t updated_ms;
+    float raw_x_mm;
+    float raw_y_mm;
     float x_mm;
     float y_mm;
     float radius_from_origin_mm;
+    float boundary_distance_mm;
     float radial_mm;
     float bearing_deg;
+    float radial_correction_mm;
+    float bearing_correction_deg;
     float residual_mm;
+    uint8_t solver_iterations;
     LockLocalizationMode mode;
 } LockPositionSolution;
 
@@ -63,7 +72,8 @@ typedef enum {
     LOCK_STATE_LOCKED = 0,
     LOCK_STATE_WELCOME,
     LOCK_STATE_UNLOCKED,
-    LOCK_STATE_DENIED
+    LOCK_STATE_DENIED,
+    LOCK_STATE_CALIBRATION_ERROR
 } LockState;
 
 typedef struct {
@@ -75,6 +85,7 @@ typedef struct {
     bool green_led;
     bool red_led;
     bool buzzer_alarm;
+    bool calibration_error;
 } LockOutputSnapshot;
 
 typedef struct {
@@ -86,6 +97,7 @@ typedef struct {
     LockZone zone;
     LockState state;
     bool authorized;
+    uint8_t calibration_status;
     LockPositionSolution position;
 } LockDisplayModel;
 

@@ -93,6 +93,14 @@ static void store_channel_position(LockUwbFusion *fusion,
     uwb_fusion_store_measurement(fusion, channel, &item);
 }
 
+static void enable_three_anchor_fixture(LockAppConfig *config)
+{
+    config->anchor_count = 3U;
+    config->enabled_anchor_mask = 0x07U;
+    config->anchors[2].x_mm = 0.0f;
+    config->anchors[2].y_mm = -100.0f;
+}
+
 static bool test_toggle_input_debounce_and_release(void)
 {
     LockIdInput input;
@@ -256,6 +264,7 @@ static bool test_fusion_three_two_one_and_timeout(void)
     LockPositionSolution solution;
     LockAppConfig config = g_lock_app_default_config;
 
+    enable_three_anchor_fixture(&config);
     uwb_fusion_init(&fusion);
     store_channel_position(&fusion, &config, 0U, 7U, 0.0f, 1300.0f, 100U);
     store_channel_position(&fusion, &config, 1U, 7U, 0.0f, 1300.0f, 101U);
@@ -293,6 +302,7 @@ static bool test_fusion_does_not_mix_ids_or_stale_samples(void)
     LockAppConfig config = g_lock_app_default_config;
     LockUwbMeasurement item;
 
+    enable_three_anchor_fixture(&config);
     uwb_fusion_init(&fusion);
     store_position(&fusion, &config, 2U, 0.0f, 1300.0f, 100U, 0x03U);
     item = measurement(9U,
@@ -330,28 +340,28 @@ static bool test_localization_bearings_and_radial_distances(void)
     LockAppConfig config = g_lock_app_default_config;
 
     uwb_fusion_init(&fusion);
-    store_position(&fusion, &config, 1U, 0.0f, 1300.0f, 100U, 0x07U);
+    store_position(&fusion, &config, 1U, 0.0f, 1300.0f, 100U, 0x03U);
     uwb_fusion_solve(&fusion, &config, 100U, &solution);
     TEST_ASSERT_NEAR(solution.bearing_deg, 0.0f, 0.5f);
     TEST_ASSERT_NEAR(solution.radial_mm, 1000.0f, 10.0f);
 
     uwb_fusion_init(&fusion);
-    store_position(&fusion, &config, 1U, 1300.0f, 1300.0f, 101U, 0x07U);
+    store_position(&fusion, &config, 1U, 1300.0f, 1300.0f, 101U, 0x03U);
     uwb_fusion_solve(&fusion, &config, 101U, &solution);
     TEST_ASSERT_NEAR(solution.bearing_deg, 45.0f, 0.5f);
 
     uwb_fusion_init(&fusion);
-    store_position(&fusion, &config, 1U, -1300.0f, 1300.0f, 102U, 0x07U);
+    store_position(&fusion, &config, 1U, -1300.0f, 1300.0f, 102U, 0x03U);
     uwb_fusion_solve(&fusion, &config, 102U, &solution);
     TEST_ASSERT_NEAR(solution.bearing_deg, -45.0f, 0.5f);
 
     uwb_fusion_init(&fusion);
-    store_position(&fusion, &config, 1U, 0.0f, 2300.0f, 103U, 0x07U);
+    store_position(&fusion, &config, 1U, 0.0f, 2300.0f, 103U, 0x03U);
     uwb_fusion_solve(&fusion, &config, 103U, &solution);
     TEST_ASSERT_NEAR(solution.radial_mm, 2000.0f, 10.0f);
 
     uwb_fusion_init(&fusion);
-    store_position(&fusion, &config, 1U, 0.0f, 3300.0f, 104U, 0x07U);
+    store_position(&fusion, &config, 1U, 0.0f, 3300.0f, 104U, 0x03U);
     uwb_fusion_solve(&fusion, &config, 104U, &solution);
     TEST_ASSERT_NEAR(solution.radial_mm, 3000.0f, 10.0f);
     return true;
@@ -393,6 +403,10 @@ static bool test_fsm_authorization_and_dropout(void)
     lock_fsm_init(&state_machine);
     output = lock_fsm_update(&state_machine, &valid_id, 3U, &config, 100U);
     TEST_ASSERT(output.authorized);
+    TEST_ASSERT(output.state == LOCK_STATE_LOCKED);
+    output = lock_fsm_update(&state_machine, &valid_id, 3U, &config, 101U);
+    TEST_ASSERT(output.state == LOCK_STATE_LOCKED);
+    output = lock_fsm_update(&state_machine, &valid_id, 3U, &config, 102U);
     TEST_ASSERT(output.state == LOCK_STATE_UNLOCKED);
     TEST_ASSERT(output.unlock_output);
 
@@ -415,7 +429,7 @@ static bool test_fsm_authorization_and_dropout(void)
     TEST_ASSERT(output.buzzer_alarm);
 
     output = lock_fsm_update(&state_machine, &dropped, 3U, &config, 1100U);
-    TEST_ASSERT(output.state == LOCK_STATE_DENIED);
+    TEST_ASSERT(output.state == LOCK_STATE_LOCKED);
     output = lock_fsm_update(&state_machine, &dropped, 3U, &config, 1201U);
     TEST_ASSERT(output.state == LOCK_STATE_LOCKED);
     return true;
@@ -453,6 +467,10 @@ static bool test_app_uart_and_direct_id_integration(void)
     TEST_ASSERT(lock_app_display(&app)->observed_id_valid);
     TEST_ASSERT(lock_app_display(&app)->observed_id == 10U);
     TEST_ASSERT(lock_app_outputs(&app)->authorized);
+    TEST_ASSERT(lock_app_outputs(&app)->state == LOCK_STATE_LOCKED);
+    lock_app_update(&app, 101U, 10U);
+    TEST_ASSERT(lock_app_outputs(&app)->state == LOCK_STATE_LOCKED);
+    lock_app_update(&app, 102U, 10U);
     TEST_ASSERT(lock_app_outputs(&app)->state == LOCK_STATE_UNLOCKED);
     return true;
 }

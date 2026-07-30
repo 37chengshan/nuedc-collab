@@ -3,6 +3,7 @@ dist/
 playwright-report/
 test-results/
 build/
+code/c_digital_key_lock/generated/
 coverage/
 .DS_Store
 *.log

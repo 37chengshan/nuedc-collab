@@ -15,24 +15,175 @@ static bool sample_is_fresh(const LockUwbMeasurement *measurement,
            (elapsed_ms(measurement->timestamp_ms, now_ms) <= window_ms);
 }
 
+static float clamp_nonnegative(float value)
+{
+    return (value < 0.0f) ? 0.0f : value;
+}
+
+static float wrap_bearing(float bearing_deg)
+{
+    while (bearing_deg > 180.0f) {
+        bearing_deg -= 360.0f;
+    }
+    while (bearing_deg < -180.0f) {
+        bearing_deg += 360.0f;
+    }
+    return bearing_deg;
+}
+
 static void fill_solution_metrics(LockPositionSolution *solution,
                                   const LockAppConfig *config)
 {
     solution->radius_from_origin_mm =
         sqrtf((solution->x_mm * solution->x_mm) +
               (solution->y_mm * solution->y_mm));
-    solution->radial_mm =
-        solution->radius_from_origin_mm - config->radial_zero_offset_mm;
-    if (solution->radial_mm < 0.0f) {
-        solution->radial_mm = 0.0f;
-    }
+    solution->boundary_distance_mm = clamp_nonnegative(
+        solution->radius_from_origin_mm - config->radial_zero_offset_mm);
+    solution->radial_mm = solution->boundary_distance_mm;
     solution->bearing_deg =
         atan2f(solution->x_mm, solution->y_mm) * (180.0f / 3.14159265358979323846f);
 }
 
+static void kalman_initialize(LockKalman2d *kalman,
+                              const CalibrationKalmanParametersV1 *parameters,
+                              float x_mm, float y_mm, uint32_t now_ms)
+{
+    memset(kalman, 0, sizeof(*kalman));
+    kalman->initialized = true;
+    kalman->timestamp_ms = now_ms;
+    kalman->state[0] = x_mm;
+    kalman->state[1] = y_mm;
+    kalman->covariance[0][0] = parameters->initial_position_variance;
+    kalman->covariance[1][1] = parameters->initial_position_variance;
+    kalman->covariance[2][2] = parameters->initial_velocity_variance;
+    kalman->covariance[3][3] = parameters->initial_velocity_variance;
+}
+
+static void kalman_update(LockKalman2d *kalman,
+                          const CalibrationKalmanParametersV1 *parameters,
+                          float measured_x_mm, float measured_y_mm,
+                          uint32_t now_ms, LockPoint2f *filtered)
+{
+    float dt_s;
+    float fp[4][4];
+    float predicted_covariance[4][4];
+    float kalman_gain[4][2];
+    float updated_covariance[4][4];
+    float innovation_x;
+    float innovation_y;
+    float s00;
+    float s01;
+    float s10;
+    float s11;
+    float determinant;
+    uint8_t row;
+    uint8_t column;
+
+    if (!kalman->initialized) {
+        kalman_initialize(kalman, parameters, measured_x_mm, measured_y_mm,
+                          now_ms);
+        filtered->x_mm = measured_x_mm;
+        filtered->y_mm = measured_y_mm;
+        return;
+    }
+
+    dt_s = (float)elapsed_ms(kalman->timestamp_ms, now_ms) / 1000.0f;
+    if (dt_s > parameters->max_dt_s) {
+        dt_s = parameters->max_dt_s;
+    }
+    kalman->timestamp_ms = now_ms;
+    kalman->state[0] += kalman->state[2] * dt_s;
+    kalman->state[1] += kalman->state[3] * dt_s;
+
+    for (column = 0U; column < 4U; column++) {
+        fp[0][column] =
+            kalman->covariance[0][column] +
+            dt_s * kalman->covariance[2][column];
+        fp[1][column] =
+            kalman->covariance[1][column] +
+            dt_s * kalman->covariance[3][column];
+        fp[2][column] = kalman->covariance[2][column];
+        fp[3][column] = kalman->covariance[3][column];
+    }
+    for (row = 0U; row < 4U; row++) {
+        predicted_covariance[row][0] =
+            fp[row][0] + dt_s * fp[row][2];
+        predicted_covariance[row][1] =
+            fp[row][1] + dt_s * fp[row][3];
+        predicted_covariance[row][2] = fp[row][2];
+        predicted_covariance[row][3] = fp[row][3];
+    }
+    predicted_covariance[0][0] +=
+        parameters->process_noise_position * (dt_s + 1.0e-3f);
+    predicted_covariance[1][1] +=
+        parameters->process_noise_position * (dt_s + 1.0e-3f);
+    predicted_covariance[2][2] +=
+        parameters->process_noise_velocity * (dt_s + 1.0e-3f);
+    predicted_covariance[3][3] +=
+        parameters->process_noise_velocity * (dt_s + 1.0e-3f);
+
+    s00 = predicted_covariance[0][0] +
+          parameters->measurement_noise_position;
+    s01 = predicted_covariance[0][1];
+    s10 = predicted_covariance[1][0];
+    s11 = predicted_covariance[1][1] +
+          parameters->measurement_noise_position;
+    determinant = (s00 * s11) - (s01 * s10);
+    if (fabsf(determinant) < 1.0e-6f) {
+        filtered->x_mm = kalman->state[0];
+        filtered->y_mm = kalman->state[1];
+        return;
+    }
+
+    for (row = 0U; row < 4U; row++) {
+        kalman_gain[row][0] =
+            ((predicted_covariance[row][0] * s11) -
+             (predicted_covariance[row][1] * s10)) /
+            determinant;
+        kalman_gain[row][1] =
+            ((-predicted_covariance[row][0] * s01) +
+             (predicted_covariance[row][1] * s00)) /
+            determinant;
+    }
+
+    innovation_x = measured_x_mm - kalman->state[0];
+    innovation_y = measured_y_mm - kalman->state[1];
+    for (row = 0U; row < 4U; row++) {
+        kalman->state[row] += kalman_gain[row][0] * innovation_x +
+                              kalman_gain[row][1] * innovation_y;
+    }
+
+    for (row = 0U; row < 4U; row++) {
+        for (column = 0U; column < 4U; column++) {
+            updated_covariance[row][column] =
+                predicted_covariance[row][column] -
+                kalman_gain[row][0] * predicted_covariance[0][column] -
+                kalman_gain[row][1] * predicted_covariance[1][column];
+        }
+    }
+    memcpy(kalman->covariance, updated_covariance,
+           sizeof(kalman->covariance));
+    filtered->x_mm = kalman->state[0];
+    filtered->y_mm = kalman->state[1];
+}
+
+static bool same_key(const LockUwbMeasurement *left,
+                     const LockUwbMeasurement *right)
+{
+    return (left->key_addr == right->key_addr) &&
+           (left->key_id == right->key_id);
+}
+
 void uwb_fusion_init(LockUwbFusion *fusion)
 {
+    uwb_fusion_init_with_model(fusion, &g_calibration_model_v1);
+}
+
+void uwb_fusion_init_with_model(LockUwbFusion *fusion,
+                                const CalibrationModelV1 *model)
+{
     memset(fusion, 0, sizeof(*fusion));
+    fusion->calibration_model = model;
 }
 
 void uwb_fusion_store_measurement(LockUwbFusion *fusion, uint8_t channel,
@@ -49,100 +200,196 @@ void uwb_fusion_store_measurement(LockUwbFusion *fusion, uint8_t channel,
 void uwb_fusion_solve(LockUwbFusion *fusion, const LockAppConfig *config,
                       uint32_t now_ms, LockPositionSolution *solution)
 {
-    const LockUwbMeasurement *newest = NULL;
+    const LockUwbMeasurement *identity = NULL;
     LockAnchor2d anchors[LOCK_UWB_CHANNEL_COUNT];
     float distances_mm[LOCK_UWB_CHANNEL_COUNT];
+    uint8_t source_channels[LOCK_UWB_CHANNEL_COUNT];
     LockPoint2f hint;
     uint8_t valid_mask = 0U;
     uint8_t count = 0U;
     uint8_t channel;
     TrilaterationResult result;
+    uint8_t used_channel_mask = 0U;
+    uint8_t rejected_channel_mask = 0U;
+    LockPoint2f corrected_point;
+    float raw_radius;
+    float raw_boundary;
+    float raw_bearing;
+    float corrected_boundary;
+    float corrected_bearing;
+    float corrected_radius;
 
     memset(solution, 0, sizeof(*solution));
-
-    for (channel = 0U; channel < LOCK_UWB_CHANNEL_COUNT; channel++) {
-        const LockUwbChannelCache *cache = &fusion->channels[channel];
-
-        if (!cache->occupied) {
-            continue;
+    if ((fusion == NULL) || !lock_app_config_validate(config) ||
+        (calibration_model_validate(fusion->calibration_model) !=
+         CALIBRATION_MODEL_OK)) {
+        if (fusion != NULL) {
+            fusion->last_solution.valid = false;
+            fusion->kalman.initialized = false;
         }
-        if (!sample_is_fresh(&cache->measurement, now_ms,
-                             config->sample_window_ms)) {
-            continue;
-        }
-        if ((newest == NULL) ||
-            (cache->measurement.timestamp_ms > newest->timestamp_ms)) {
-            newest = &cache->measurement;
-        }
-    }
-
-    if (newest == NULL) {
         return;
     }
 
     for (channel = 0U; channel < LOCK_UWB_CHANNEL_COUNT; channel++) {
         const LockUwbChannelCache *cache = &fusion->channels[channel];
 
-        if (!cache->occupied) {
+        if ((config->enabled_anchor_mask & (uint8_t)(1U << channel)) == 0U) {
             continue;
         }
-        if (!sample_is_fresh(&cache->measurement, now_ms,
+        if (!cache->occupied ||
+            !sample_is_fresh(&cache->measurement, now_ms,
                              config->sample_window_ms)) {
             continue;
         }
-        if (cache->measurement.key_addr != newest->key_addr) {
+        if (identity == NULL) {
+            identity = &cache->measurement;
+        } else if (!same_key(identity, &cache->measurement)) {
+            fusion->last_solution.valid = false;
+            fusion->kalman.initialized = false;
+            return;
+        }
+    }
+
+    if (identity == NULL) {
+        if (fusion->last_solution.valid &&
+            (elapsed_ms(fusion->last_solution.updated_ms, now_ms) <=
+             config->solution_hold_ms)) {
+            *solution = fusion->last_solution;
+            solution->valid_mask = 0U;
+            solution->rejected_mask = 0U;
+            solution->anchor_count = 0U;
+            solution->mode = LOCK_LOCALIZATION_HOLD;
+        } else {
+            fusion->last_solution.valid = false;
+            fusion->kalman.initialized = false;
+        }
+        return;
+    }
+
+    for (channel = 0U; channel < LOCK_UWB_CHANNEL_COUNT; channel++) {
+        const LockUwbChannelCache *cache = &fusion->channels[channel];
+
+        float corrected_distance;
+
+        if ((config->enabled_anchor_mask & (uint8_t)(1U << channel)) == 0U) {
             continue;
+        }
+        if (!cache->occupied ||
+            !sample_is_fresh(&cache->measurement, now_ms,
+                             config->sample_window_ms)) {
+            continue;
+        }
+        if (!same_key(identity, &cache->measurement) ||
+            !calibration_model_correct_range(
+                fusion->calibration_model, channel,
+                (float)cache->measurement.distance_mm,
+                &corrected_distance)) {
+            fusion->last_solution.valid = false;
+            fusion->kalman.initialized = false;
+            return;
         }
 
         anchors[count] = config->anchors[channel];
-        distances_mm[count] = (float)cache->measurement.distance_mm;
+        distances_mm[count] = corrected_distance;
+        source_channels[count] = channel;
         valid_mask |= (uint8_t)(1U << channel);
         count++;
     }
 
-    if (count >= 3U) {
-        if (!trilateration_solve_three(anchors, distances_mm, &result)) {
-            return;
-        }
-        solution->mode = LOCK_LOCALIZATION_THREE_ANCHOR;
-    } else if (count == 2U) {
-        LockPoint2f *hint_ptr = NULL;
-
+    if (count < 2U) {
         if (fusion->last_solution.valid &&
-            (fusion->last_solution.key_addr == newest->key_addr)) {
-            hint.x_mm = fusion->last_solution.x_mm;
-            hint.y_mm = fusion->last_solution.y_mm;
-            hint_ptr = &hint;
+            (identity->key_addr == fusion->last_solution.key_addr) &&
+            (identity->key_id == fusion->last_solution.key_id) &&
+            (elapsed_ms(fusion->last_solution.updated_ms, now_ms) <=
+             config->solution_hold_ms)) {
+            *solution = fusion->last_solution;
+            solution->valid_mask = valid_mask;
+            solution->rejected_mask = 0U;
+            solution->anchor_count = count;
+            solution->mode = LOCK_LOCALIZATION_HOLD;
         }
-        if (!trilateration_solve_two(anchors, distances_mm, hint_ptr,
-                                     &result)) {
-            return;
-        }
-        solution->mode = LOCK_LOCALIZATION_TWO_ANCHOR;
-    } else if ((count == 1U) && fusion->last_solution.valid &&
-               (fusion->last_solution.key_addr == newest->key_addr) &&
-               (elapsed_ms(fusion->last_solution.updated_ms, now_ms) <=
-                config->solution_hold_ms)) {
-        *solution = fusion->last_solution;
-        solution->valid_mask = valid_mask;
-        solution->anchor_count = 1U;
-        solution->mode = LOCK_LOCALIZATION_HOLD;
-        solution->updated_ms = now_ms;
-        fusion->last_solution = *solution;
-        return;
-    } else {
         return;
     }
 
+    if (fusion->last_solution.valid &&
+        (fusion->last_solution.key_addr == identity->key_addr) &&
+        (fusion->last_solution.key_id == identity->key_id)) {
+        hint.x_mm = fusion->last_solution.raw_x_mm;
+        hint.y_mm = fusion->last_solution.raw_y_mm;
+    } else {
+        hint.x_mm = 0.0f;
+        hint.y_mm = config->radial_zero_offset_mm + config->welcome_radius_mm;
+    }
+    if (!trilateration_solve_robust(
+            anchors, distances_mm, count, &hint,
+            config->nlos_residual_threshold_mm, &result)) {
+        return;
+    }
+
+    for (channel = 0U; channel < count; channel++) {
+        uint8_t source_bit = (uint8_t)(1U << source_channels[channel]);
+
+        if ((result.used_mask & (uint8_t)(1U << channel)) != 0U) {
+            used_channel_mask |= source_bit;
+        }
+        if ((result.rejected_mask & (uint8_t)(1U << channel)) != 0U) {
+            rejected_channel_mask |= source_bit;
+        }
+    }
+
     solution->valid = true;
-    solution->key_addr = newest->key_addr;
-    solution->key_id = newest->key_id;
-    solution->valid_mask = valid_mask;
-    solution->anchor_count = count;
+    solution->key_addr = identity->key_addr;
+    solution->key_id = identity->key_id;
+    solution->valid_mask = used_channel_mask;
+    solution->rejected_mask = rejected_channel_mask;
+    solution->anchor_count = result.used_count;
     solution->updated_ms = now_ms;
-    solution->x_mm = result.point.x_mm;
-    solution->y_mm = result.point.y_mm;
+    solution->raw_x_mm = result.point.x_mm;
+    solution->raw_y_mm = result.point.y_mm;
     solution->residual_mm = result.residual_mm;
+    solution->solver_iterations = result.iterations;
+
+    raw_radius = sqrtf((result.point.x_mm * result.point.x_mm) +
+                       (result.point.y_mm * result.point.y_mm));
+    raw_boundary =
+        clamp_nonnegative(raw_radius - config->radial_zero_offset_mm);
+    raw_bearing =
+        atan2f(result.point.x_mm, result.point.y_mm) *
+        (180.0f / 3.14159265358979323846f);
+    if (!calibration_model_lookup_compensation(
+            fusion->calibration_model, raw_boundary, raw_bearing,
+            &solution->radial_correction_mm,
+            &solution->bearing_correction_deg)) {
+        memset(solution, 0, sizeof(*solution));
+        fusion->last_solution.valid = false;
+        fusion->kalman.initialized = false;
+        return;
+    }
+    corrected_boundary =
+        clamp_nonnegative(raw_boundary + solution->radial_correction_mm);
+    corrected_bearing =
+        wrap_bearing(raw_bearing + solution->bearing_correction_deg);
+    corrected_radius =
+        corrected_boundary + config->radial_zero_offset_mm;
+    corrected_point.x_mm =
+        corrected_radius *
+        sinf(corrected_bearing * (3.14159265358979323846f / 180.0f));
+    corrected_point.y_mm =
+        corrected_radius *
+        cosf(corrected_bearing * (3.14159265358979323846f / 180.0f));
+    kalman_update(&fusion->kalman, &fusion->calibration_model->kalman,
+                  corrected_point.x_mm, corrected_point.y_mm, now_ms,
+                  &corrected_point);
+    solution->x_mm = corrected_point.x_mm;
+    solution->y_mm = corrected_point.y_mm;
     fill_solution_metrics(solution, config);
+
+    if (solution->anchor_count >= 4U) {
+        solution->mode = LOCK_LOCALIZATION_FOUR_ANCHOR;
+    } else if (solution->anchor_count == 3U) {
+        solution->mode = LOCK_LOCALIZATION_THREE_ANCHOR;
+    } else {
+        solution->mode = LOCK_LOCALIZATION_TWO_ANCHOR;
+    }
     fusion->last_solution = *solution;
 }

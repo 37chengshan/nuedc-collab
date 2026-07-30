@@ -86,8 +86,6 @@ static bool test_default_two_anchor_configuration(void)
     TEST_ASSERT_NEAR(g_lock_app_default_config.anchors[1].y_mm, 40.0f, 0.01f);
     TEST_ASSERT_NEAR(g_lock_app_default_config.radial_zero_offset_mm, 300.0f,
                      0.01f);
-    TEST_ASSERT((g_calibration_model_v1.flags &
-                 CALIBRATION_MODEL_FLAG_BEARING_VALIDATED) == 0U);
     return true;
 }
 
@@ -322,29 +320,9 @@ static LockPositionSolution position(uint8_t key_id, bool valid,
     value.boundary_distance_mm = boundary_distance_mm;
     value.radial_mm = boundary_distance_mm;
     value.bearing_deg = bearing_deg;
-    value.bearing_valid = true;
     value.mode = mode;
     value.anchor_count = anchor_count;
     return value;
-}
-
-static bool test_unvalidated_bearing_keeps_lock_closed(void)
-{
-    LockAppConfig config = g_lock_app_default_config;
-    LockStateMachine fsm;
-    LockOutputSnapshot output;
-    LockPositionSolution unlock =
-        position(3U, true, 800.0f, 0.0f, LOCK_LOCALIZATION_TWO_ANCHOR, 2U);
-
-    unlock.bearing_valid = false;
-    lock_fsm_init(&fsm);
-    output = lock_fsm_update(&fsm, &unlock, 3U, &config, 10U);
-    output = lock_fsm_update(&fsm, &unlock, 3U, &config, 20U);
-    output = lock_fsm_update(&fsm, &unlock, 3U, &config, 30U);
-
-    TEST_ASSERT(output.state == LOCK_STATE_LOCKED);
-    TEST_ASSERT(!output.unlock_output);
-    return true;
 }
 
 static bool test_three_frame_hysteresis_and_immediate_safety(void)
@@ -454,8 +432,6 @@ int main(void)
          test_fusion_rejects_mixed_key_addresses},
         {"3-frame hysteresis and immediate safety",
          test_three_frame_hysteresis_and_immediate_safety},
-        {"unvalidated bearing keeps lock closed",
-         test_unvalidated_bearing_keeps_lock_closed},
         {"invalid calibration model closes lock",
          test_invalid_model_forces_calibration_error_lock},
     };
