@@ -1,0 +1,86 @@
+/**
+ * @cliArgs --device "MSPM0G350X" --part "Default" --package "LQFP-64(PM)" --product "mspm0_sdk@2.10.00.04"
+ * @v2CliArgs --device "MSPM0G3507" --package "LQFP-64(PM)" --product "mspm0_sdk@2.10.00.04"
+ * @versions {"tool":"1.28.0+4712"}
+ */
+
+const I2C    = scripting.addModule("/ti/driverlib/I2C", {}, false);
+const OLED   = I2C.addInstance();
+const UART   = scripting.addModule("/ti/driverlib/UART", {}, false);
+const UWB1   = UART.addInstance();
+const UWB2   = UART.addInstance();
+const SYSCTL = scripting.addModule("/ti/driverlib/SYSCTL");
+const Board  = scripting.addModule("/ti/driverlib/Board", {}, false);
+
+const divider9       = system.clockTree["UDIV"];
+divider9.divideValue = 2;
+
+const multiplier2         = system.clockTree["PLL_QDIV"];
+multiplier2.multiplyValue = 5;
+
+const mux4       = system.clockTree["EXHFMUX"];
+mux4.inputSelect = "EXHFMUX_XTAL";
+
+const mux8       = system.clockTree["HSCLKMUX"];
+mux8.inputSelect = "HSCLKMUX_SYSPLL0";
+
+const pinFunction4     = system.clockTree["HFXT"];
+pinFunction4.inputFreq = 40;
+pinFunction4.enable    = true;
+
+SYSCTL.forceDefaultClkConfig = true;
+SYSCTL.clockTreeEn           = true;
+
+OLED.$name                             = "OLED";
+OLED.basicEnableController             = true;
+OLED.advDigitalGlitchFilter            = "CLOCKS_1";
+OLED.advControllerRXFIFOTRIG           = "BYTES_8";
+OLED.advControllerTXFIFOTRIG           = "BYTES_7";
+OLED.enableDMAEvent1                   = false;
+OLED.enableDMAEvent2                   = false;
+OLED.peripheral.$assign                = "I2C1";
+OLED.peripheral.sdaPin.$assign         = "PB3";
+OLED.peripheral.sclPin.$assign         = "PB2";
+OLED.sdaPinConfig.$name                = "OLED_SDA";
+OLED.sdaPinConfig.hideOutputInversion  = scripting.forceWrite(false);
+OLED.sdaPinConfig.onlyInternalResistor = scripting.forceWrite(false);
+OLED.sdaPinConfig.passedPeripheralType = scripting.forceWrite("Digital");
+OLED.sdaPinConfig.enableConfig         = true;
+OLED.sdaPinConfig.internalResistor     = "PULL_UP";
+OLED.sclPinConfig.$name                = "OLED_SCL";
+OLED.sclPinConfig.hideOutputInversion  = scripting.forceWrite(false);
+OLED.sclPinConfig.onlyInternalResistor = scripting.forceWrite(false);
+OLED.sclPinConfig.passedPeripheralType = scripting.forceWrite("Digital");
+OLED.sclPinConfig.enableConfig         = true;
+OLED.sclPinConfig.internalResistor     = "PULL_UP";
+
+UWB1.$name                            = "UWB_CH1";
+UWB1.targetBaudRate                   = 115200;
+UWB1.enableFIFO                       = true;
+UWB1.rxFifoThreshold                  = "DL_UART_RX_FIFO_LEVEL_ONE_ENTRY";
+UWB1.enabledInterrupts                = ["RX"];
+UWB1.peripheral.$assign               = "UART1";
+UWB1.peripheral.txPin.$assign         = "PA8";
+UWB1.peripheral.rxPin.$assign         = "PA9";
+UWB1.txPinConfig.$name                = "UWB_CH1_TX";
+UWB1.txPinConfig.direction            = scripting.forceWrite("OUTPUT");
+UWB1.rxPinConfig.$name                = "UWB_CH1_RX";
+
+UWB2.$name                            = "UWB_CH2";
+UWB2.targetBaudRate                   = 115200;
+UWB2.enableFIFO                       = true;
+UWB2.rxFifoThreshold                  = "DL_UART_RX_FIFO_LEVEL_ONE_ENTRY";
+UWB2.enabledInterrupts                = ["RX"];
+UWB2.peripheral.$assign               = "UART3";
+UWB2.peripheral.txPin.$assign         = "PA26";
+UWB2.peripheral.rxPin.$assign         = "PA25";
+UWB2.txPinConfig.$name                = "UWB_CH2_TX";
+UWB2.txPinConfig.direction            = scripting.forceWrite("OUTPUT");
+UWB2.rxPinConfig.$name                = "UWB_CH2_RX";
+
+pinFunction4.peripheral.$suggestSolution           = "SYSCTL";
+pinFunction4.peripheral.hfxInPin.$suggestSolution  = "PA5";
+pinFunction4.peripheral.hfxOutPin.$suggestSolution = "PA6";
+Board.peripheral.$suggestSolution                  = "DEBUGSS";
+Board.peripheral.swclkPin.$suggestSolution         = "PA20";
+Board.peripheral.swdioPin.$suggestSolution         = "PA19";

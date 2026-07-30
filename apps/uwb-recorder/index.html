@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light" />
+    <title>UWB Lab · 数据与配置</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">U</div>
+          <div>
+            <strong>UWB Lab</strong>
+            <span>NUEDC C题工具</span>
+          </div>
+        </div>
+
+        <nav aria-label="页面导航">
+          <a class="nav-link active" href="#monitor">
+            <span>◉</span>实时监控
+          </a>
+          <a class="nav-link" href="#configuration">
+            <span>⌘</span>参数设置
+          </a>
+          <a class="nav-link" href="#records">
+            <span>▤</span>数据记录
+          </a>
+          <a class="nav-link" href="#console">
+            <span>›_</span>串口终端
+          </a>
+        </nav>
+
+        <div class="sidebar-note">
+          <strong>数据不会只存在曲线上</strong>
+          <p>每一帧原始报文都会由本地服务保存，网页和 Agent 读取同一份数据。</p>
+        </div>
+        <button id="language-button" class="ghost-button full-width">
+          中文 / English
+        </button>
+      </aside>
+
+      <div class="workspace">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">EWM550 / EWT550 工作台</p>
+            <h1>测距实验台</h1>
+          </div>
+          <div class="serial-toolbar" aria-label="串口控制">
+            <label>
+              <span>串口</span>
+              <select id="port-select">
+                <option value="">正在读取…</option>
+              </select>
+            </label>
+            <button id="refresh-ports-button">刷新</button>
+            <label>
+              <span>连接波特率</span>
+              <select id="baud-rate">
+                <option value="921600">921600</option>
+                <option value="115200" selected>115200</option>
+                <option value="460800">460800</option>
+                <option value="230400">230400</option>
+                <option value="9600">9600</option>
+              </select>
+            </label>
+            <button id="connect-button" class="primary-button">选择串口</button>
+            <button id="disconnect-button" disabled>断开</button>
+          </div>
+        </header>
+
+        <section class="status-strip" aria-live="polite">
+          <div>
+            <span class="status-dot" id="status-dot"></span>
+            <strong id="connection-status">等待连接</strong>
+          </div>
+          <span id="mode-status">数据模式</span>
+          <span id="save-status">本地自动保存已启用</span>
+          <span id="frame-count">0 帧</span>
+        </section>
+
+        <main>
+          <section id="monitor" class="page-section">
+            <div class="section-heading">
+              <div>
+                <p class="section-kicker">距离监控</p>
+                <h2>两路实时数据</h2>
+              </div>
+              <p>重点观察距离范围和 SNR；数值能显示不等于数据稳定。</p>
+            </div>
+
+            <div class="channel-grid" aria-label="实时测距">
+              <article class="channel-card channel-one">
+                <div class="channel-heading">
+                  <div>
+                    <span class="trace-chip"></span>
+                    <span>设备 1 · P0</span>
+                  </div>
+                  <span class="quality-tag waiting" id="quality-1">等待</span>
+                </div>
+                <div class="distance-reading">
+                  <strong id="distance-1">--</strong><span>cm</span>
+                </div>
+                <dl>
+                  <div><dt>SNR</dt><dd id="snr-1">-- dB</dd></div>
+                  <div><dt>最近20帧范围</dt><dd id="range-1">-- cm</dd></div>
+                  <div><dt>中位数</dt><dd id="median-1">-- cm</dd></div>
+                  <div><dt>地址</dt><dd id="address-1">----</dd></div>
+                </dl>
+              </article>
+
+              <article class="channel-card channel-two">
+                <div class="channel-heading">
+                  <div>
+                    <span class="trace-chip"></span>
+                    <span>设备 2 · P1</span>
+                  </div>
+                  <span class="quality-tag waiting" id="quality-2">等待</span>
+                </div>
+                <div class="distance-reading">
+                  <strong id="distance-2">--</strong><span>cm</span>
+                </div>
+                <dl>
+                  <div><dt>SNR</dt><dd id="snr-2">-- dB</dd></div>
+                  <div><dt>最近20帧范围</dt><dd id="range-2">-- cm</dd></div>
+                  <div><dt>中位数</dt><dd id="median-2">-- cm</dd></div>
+                  <div><dt>地址</dt><dd id="address-2">----</dd></div>
+                </dl>
+              </article>
+
+              <article class="difference-card">
+                <p>两路差值</p>
+                <strong id="distance-difference">-- cm</strong>
+                <span id="sync-status">等待两路同步数据</span>
+              </article>
+            </div>
+
+            <div class="extra-channel-grid" aria-label="扩展设备状态">
+              <article>
+                <div><span>D3 · P2</span><span class="quality-tag waiting" id="quality-3">等待</span></div>
+                <strong id="distance-3">--</strong>
+                <small><span id="snr-3">-- dB</span> · <span id="range-3">-- cm</span></small>
+                <span class="hidden-metric" id="median-3">-- cm</span>
+                <span class="hidden-metric" id="address-3">----</span>
+              </article>
+              <article>
+                <div><span>D4 · P3</span><span class="quality-tag waiting" id="quality-4">等待</span></div>
+                <strong id="distance-4">--</strong>
+                <small><span id="snr-4">-- dB</span> · <span id="range-4">-- cm</span></small>
+                <span class="hidden-metric" id="median-4">-- cm</span>
+                <span class="hidden-metric" id="address-4">----</span>
+              </article>
+              <article>
+                <div><span>D5 · P4</span><span class="quality-tag waiting" id="quality-5">等待</span></div>
+                <strong id="distance-5">--</strong>
+                <small><span id="snr-5">-- dB</span> · <span id="range-5">-- cm</span></small>
+                <span class="hidden-metric" id="median-5">-- cm</span>
+                <span class="hidden-metric" id="address-5">----</span>
+              </article>
+            </div>
+
+            <article class="surface chart-panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="section-label">实时距离轨迹</p>
+                  <h3>最近 300 帧</h3>
+                </div>
+                <div class="chart-actions">
+                  <div class="legend" aria-label="曲线图例">
+                    <span><i class="legend-one"></i>设备1</span>
+                    <span><i class="legend-two"></i>设备2</span>
+                    <span><i class="legend-three"></i>设备3～5</span>
+                  </div>
+                  <button id="clear-live-button">清空图表</button>
+                  <button id="reset-view-button">恢复全部</button>
+                </div>
+              </div>
+              <div class="chart-wrap">
+                <canvas id="distance-chart" aria-label="两路距离实时曲线"></canvas>
+                <div class="empty-chart" id="empty-chart">
+                  连接钥匙基站串口后开始记录
+                </div>
+              </div>
+            </article>
+          </section>
+
+          <section id="configuration" class="page-section">
+            <div class="section-heading">
+              <div>
+                <p class="section-kicker">模块设置</p>
+                <h2>参数与功能控制</h2>
+              </div>
+              <p>写入前先进入配置模式。参数通常需要模块复位后生效。</p>
+            </div>
+
+            <article class="surface command-panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="section-label">官方功能按钮</p>
+                  <h3>模块控制</h3>
+                </div>
+                <span class="inline-note" id="command-progress">等待操作</span>
+              </div>
+              <div class="command-grid">
+                <button data-command-action="enter">进入配置模式</button>
+                <button data-command-action="exit">退出配置模式</button>
+                <button data-command-action="read">读取参数</button>
+                <button data-command-action="write" class="primary-button">
+                  写入参数
+                </button>
+                <button data-command-action="reset">模块复位</button>
+                <button data-command-action="version">查询版本</button>
+                <button data-command-action="sleep">休眠模式</button>
+                <button data-command-action="powerdown">掉电模式</button>
+                <button data-command-action="restore" class="danger-text">
+                  恢复出厂
+                </button>
+              </div>
+            </article>
+
+            <article class="surface parameter-panel">
+              <div class="panel-heading">
+                <div>
+                  <p class="section-label">参数设置与查询</p>
+                  <h3>基本参数</h3>
+                </div>
+                <span class="version-badge" id="module-version">版本：--</span>
+              </div>
+
+              <div class="parameter-grid">
+                <label>
+                  <span>打印间隔</span>
+                  <div class="input-unit">
+                    <input id="param-interval" type="number" min="20" max="2000" value="100" />
+                    <i>ms</i>
+                  </div>
+                </label>
+                <label>
+                  <span>配置角色</span>
+                  <select id="param-role">
+                    <option value="0">标签 / Responder</option>
+                    <option value="1">基站 / Initiator</option>
+                    <option value="2">透传 / Transparent</option>
+                  </select>
+                </label>
+                <label>
+                  <span>配置信道</span>
+                  <select id="param-channel">
+                    <option value="9" selected>CH9</option>
+                    <option value="5">CH5</option>
+                  </select>
+                </label>
+                <label>
+                  <span>模块波特率</span>
+                  <select id="param-baud">
+                    <option value="0">9600</option>
+                    <option value="1">19200</option>
+                    <option value="2">38400</option>
+                    <option value="3">57600</option>
+                    <option value="4" selected>115200</option>
+                    <option value="5">230400</option>
+                    <option value="6">460800</option>
+                    <option value="7">921600</option>
+                    <option value="8">1000000</option>
+                    <option value="9">2000000</option>
+                  </select>
+                </label>
+                <label>
+                  <span>功率分档</span>
+                  <select id="param-power">
+                    <option value="0">0</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3" selected>3（最大）</option>
+                  </select>
+                </label>
+                <label>
+                  <span>从机数量</span>
+                  <select id="param-responders">
+                    <option value="1">1</option>
+                    <option value="2" selected>2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                  </select>
+                </label>
+              </div>
+
+              <div class="address-section">
+                <label class="source-address">
+                  <span>源地址</span>
+                  <input id="param-source" maxlength="4" value="0A00" />
+                </label>
+                <div class="destination-grid">
+                  <label><span>目标地址 1</span><input id="param-dst-1" maxlength="4" value="0100" /></label>
+                  <label><span>目标地址 2</span><input id="param-dst-2" maxlength="4" value="0200" /></label>
+                  <label><span>目标地址 3</span><input id="param-dst-3" maxlength="4" value="0000" /></label>
+                  <label><span>目标地址 4</span><input id="param-dst-4" maxlength="4" value="0000" /></label>
+                  <label><span>目标地址 5</span><input id="param-dst-5" maxlength="4" value="0000" /></label>
+                </div>
+              </div>
+              <p class="form-help">
+                五个目标地址会按手册合并为一个 20 位参数发送，例如
+                <code>01000200000000000000</code>。
+              </p>
+            </article>
+          </section>
+
+          <section id="records" class="page-section">
+            <div class="section-heading">
+              <div>
+                <p class="section-kicker">自动保存</p>
+                <h2>采集记录</h2>
+              </div>
+              <p>切换历史记录可以重新查看图表；导出的 CSV 保留原始报文。</p>
+            </div>
+
+            <article class="surface data-panel">
+              <div class="panel-heading controls-heading">
+                <select id="session-select" aria-label="历史记录">
+                  <option value="">暂无历史记录</option>
+                </select>
+                <div class="action-row">
+                  <button id="pause-button" disabled>暂停记录</button>
+                  <button id="export-button" disabled>导出 CSV</button>
+                  <button id="clear-button" class="danger-button" disabled>
+                    删除本次数据
+                  </button>
+                </div>
+              </div>
+
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>时间</th>
+                      <th>设备</th>
+                      <th>地址</th>
+                      <th>距离</th>
+                      <th>SNR</th>
+                      <th>原始报文</th>
+                    </tr>
+                  </thead>
+                  <tbody id="data-table-body">
+                    <tr class="empty-row"><td colspan="6">尚未收到数据</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </article>
+          </section>
+
+          <section id="console" class="page-section">
+            <div class="section-heading">
+              <div>
+                <p class="section-kicker">串口通信</p>
+                <h2>终端与自定义指令</h2>
+              </div>
+              <p>自动控制和手动发送的内容都会显示在同一个日志中。</p>
+            </div>
+
+            <article class="surface console-panel">
+              <div class="panel-heading console-heading">
+                <div class="send-box">
+                  <input
+                    id="command-input"
+                    type="text"
+                    placeholder="输入 +++、AT+VERSION 或其他指令"
+                    autocomplete="off"
+                  />
+                  <button id="send-button" disabled>发送</button>
+                </div>
+                <button id="clear-console-button">清空显示</button>
+              </div>
+              <pre id="raw-console">等待串口数据…</pre>
+            </article>
+          </section>
+        </main>
+
+        <footer>
+          数据由本地采集服务自动保存为 JSONL；网页和 Agent CLI 读取同一份记录。
+        </footer>
+      </div>
+    </div>
+
+    <dialog id="clear-dialog">
+      <form method="dialog">
+        <h2>删除本次采集？</h2>
+        <p>浏览器中保存的本次原始帧会被删除。已经导出的 CSV 不受影响。</p>
+        <div>
+          <button value="cancel">取消</button>
+          <button value="confirm" class="danger-button">确认删除</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="restore-dialog">
+      <form method="dialog">
+        <h2>恢复出厂设置？</h2>
+        <p>这会发送 <code>AT+RESTORE</code>。当前模块参数将被重置，之后需要重新配置并复位。</p>
+        <div>
+          <button value="cancel">取消</button>
+          <button value="confirm" class="danger-button">确认恢复</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script type="module" src="./src/app.js"></script>
+  </body>
+</html>
