@@ -22,6 +22,9 @@
           <a class="nav-link active" href="#monitor">
             <span>◉</span>实时监控
           </a>
+          <a class="nav-link" href="#calibration">
+            <span>◎</span>自动标定
+          </a>
           <a class="nav-link" href="#configuration">
             <span>⌘</span>参数设置
           </a>
@@ -82,7 +85,7 @@
         </section>
 
         <main>
-          <section id="monitor" class="page-section">
+          <section id="monitor" class="page-section active-page">
             <div class="section-heading">
               <div>
                 <p class="section-kicker">距离监控</p>
@@ -90,6 +93,41 @@
               </div>
               <p>重点观察距离范围和 SNR；数值能显示不等于数据稳定。</p>
             </div>
+
+            <article class="calibrated-position-panel" aria-live="polite">
+              <div class="position-primary">
+                <div>
+                  <p class="position-kicker">最终数据 · 实时拟合</p>
+                  <h3>钥匙离标定边界的距离</h3>
+                </div>
+                <div class="calibrated-distance-reading">
+                  <strong id="calibrated-distance">--</strong>
+                  <span>m</span>
+                </div>
+                <span id="calibrated-quality" class="position-quality waiting">
+                  等待串口数据
+                </span>
+              </div>
+              <div class="position-bearing">
+                <span>方位角</span>
+                <strong id="calibrated-angle">--°</strong>
+                <small>已实测范围 -15° ～ +15°</small>
+              </div>
+              <dl class="position-facts">
+                <div>
+                  <dt>所在区域</dt>
+                  <dd id="calibrated-zone">等待定位</dd>
+                </div>
+                <div>
+                  <dt>标定保证</dt>
+                  <dd id="calibration-error-bound">正在载入最终模型</dd>
+                </div>
+                <div>
+                  <dt>当前策略</dt>
+                  <dd>1 号链路测距，2 号链路辅助判角</dd>
+                </div>
+              </dl>
+            </article>
 
             <div class="channel-grid" aria-label="实时测距">
               <article class="channel-card channel-one">
@@ -182,6 +220,194 @@
                 <div class="empty-chart" id="empty-chart">
                   连接钥匙基站串口后开始记录
                 </div>
+              </div>
+            </article>
+          </section>
+
+          <section id="calibration" class="page-section">
+            <div class="section-heading">
+              <div>
+                <p class="section-kicker">77 点自动标定</p>
+                <h2>距离与角度拟合向导</h2>
+              </div>
+              <p>
+                题目径向距离指钥匙到圆柱外边界距离；位置半径 =
+                圆柱外边界距离 + 300 mm。正前方为 +y，右侧为正角，范围 ±45°。
+              </p>
+            </div>
+
+            <div class="calibration-overview">
+              <article class="surface calibration-geometry-panel">
+                <div class="panel-heading">
+                  <div>
+                    <p class="section-label">标定几何</p>
+                    <h3>圆柱边界、基站与钥匙位置</h3>
+                  </div>
+                  <span class="version-badge">边界偏移 300 mm</span>
+                </div>
+                <div class="geometry-wrap">
+                  <canvas
+                    id="calibration-geometry-chart"
+                    aria-label="圆柱边界距离与位置半径几何图"
+                  ></canvas>
+                </div>
+                <div class="geometry-legend">
+                  <span><i class="geometry-cylinder"></i>圆柱外边界</span>
+                  <span><i class="geometry-radius"></i>位置半径</span>
+                  <span><i class="geometry-anchor"></i>基站（圆柱附近）</span>
+                </div>
+              </article>
+
+              <article class="surface calibration-config-panel">
+                <div class="panel-heading">
+                  <div>
+                    <p class="section-label">坐标与区域</p>
+                    <h3>2～4 基站统一配置</h3>
+                  </div>
+                  <span id="calibration-plan-summary" class="inline-note">
+                    正在生成 77 点计划
+                  </span>
+                </div>
+                <div class="calibration-config-grid">
+                  <label>
+                    <span>启用基站数</span>
+                    <select id="calibration-anchor-count">
+                      <option value="2" selected>2 个</option>
+                      <option value="3">3 个</option>
+                      <option value="4">4 个</option>
+                    </select>
+                  </label>
+                  <label>
+                    <span>圆柱边界偏移</span>
+                    <div class="input-unit">
+                      <input id="calibration-boundary-offset" type="number" value="300" min="0" />
+                      <i>mm</i>
+                    </div>
+                  </label>
+                  <label class="anchor-coordinate-field">
+                    <span>天线中心坐标（x,y mm；分号分隔）</span>
+                    <input
+                      id="calibration-anchor-coordinates"
+                      value="-125,40; 125,40; -125,-40; 125,-40"
+                    />
+                  </label>
+                </div>
+                <div class="zone-strip" aria-label="题目三区">
+                  <div class="zone-unlock"><strong>≤ 1 m</strong><span>开锁区</span></div>
+                  <div class="zone-welcome"><strong>1 ～ 2 m</strong><span>迎宾区</span></div>
+                  <div class="zone-sense"><strong>2 ～ 3 m</strong><span>感应区</span></div>
+                </div>
+                <div class="limit-strip">
+                  <span>距离限值 ±0.30 m</span>
+                  <span>角度限值 ±10°</span>
+                  <span>边界 1 m / 2 m</span>
+                </div>
+              </article>
+            </div>
+
+            <article class="surface calibration-wizard">
+              <div class="panel-heading">
+                <div>
+                  <p class="section-label">逐点采集</p>
+                  <h3 id="calibration-current-point">请选择第 1 个测点</h3>
+                </div>
+                <span id="calibration-status" class="capture-status">
+                  每点采集 15 秒，前 2 秒自动丢弃
+                </span>
+              </div>
+              <div class="calibration-actions">
+                <button id="calibration-start-button" class="primary-button">
+                  开始当前点
+                </button>
+                <button id="calibration-recapture-button">重采当前点</button>
+                <select id="calibration-history-capture" aria-label="历史采集质量核对">
+                  <option value="">现场采集（15 秒）</option>
+                </select>
+                <button id="calibration-train-button">迭代训练</button>
+                <button id="calibration-validate-button">独立验证</button>
+              </div>
+              <div
+                id="calibration-progress"
+                class="calibration-progress"
+                role="progressbar"
+                aria-valuemin="0"
+                aria-valuemax="77"
+                aria-valuenow="0"
+              >
+                <span></span>
+              </div>
+              <div id="calibration-plan" class="calibration-plan" aria-label="77点标定计划"></div>
+
+              <div class="quality-review">
+                <div>
+                  <p class="section-label">当前点质量</p>
+                  <h3>逐路同步样本与残差</h3>
+                </div>
+                <div class="table-wrap">
+                  <table id="calibration-quality-table">
+                    <thead>
+                      <tr>
+                        <th>基站</th>
+                        <th>样本数</th>
+                        <th>中位数</th>
+                        <th>spread (MAD)</th>
+                        <th>SNR</th>
+                        <th>理论距离</th>
+                        <th>残差</th>
+                      </tr>
+                    </thead>
+                    <tbody id="calibration-quality-body">
+                      <tr class="empty-row"><td colspan="7">尚未采集当前点</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+                <div class="rejection-box">
+                  <strong>拒绝原因</strong>
+                  <ul id="calibration-rejection-reasons">
+                    <li>稳定点会在这里显示“通过，可进入训练”。</li>
+                  </ul>
+                </div>
+              </div>
+            </article>
+
+            <article class="surface calibration-report">
+              <div class="panel-heading">
+                <div>
+                  <p class="section-label">验证报告</p>
+                  <h3>距离、角度、轨迹与边界状态</h3>
+                </div>
+                <div class="report-actions">
+                  <button id="calibration-export-c-button">导出 MSPM0 C</button>
+                  <button id="calibration-export-png-button">PNG</button>
+                  <button id="calibration-export-csv-button">CSV</button>
+                  <button id="calibration-export-json-button">JSON</button>
+                </div>
+              </div>
+              <div class="report-grid" id="calibration-report-grid">
+                <figure>
+                  <figcaption>各基站固定偏差</figcaption>
+                  <canvas id="calibration-bias-chart"></canvas>
+                </figure>
+                <figure>
+                  <figcaption>径向距离 P95 热力图（±0.30 m）</figcaption>
+                  <canvas id="calibration-distance-heatmap"></canvas>
+                </figure>
+                <figure>
+                  <figcaption>方位角 P95 热力图（±10°）</figcaption>
+                  <canvas id="calibration-angle-heatmap"></canvas>
+                </figure>
+                <figure>
+                  <figcaption>真实轨迹与滤波轨迹</figcaption>
+                  <canvas id="calibration-trajectory-chart"></canvas>
+                </figure>
+                <figure>
+                  <figcaption>距离和角度动态误差</figcaption>
+                  <canvas id="calibration-dynamic-error-chart"></canvas>
+                </figure>
+                <figure>
+                  <figcaption>1 m / 2 m 边界与开锁状态时序</figcaption>
+                  <canvas id="calibration-boundary-chart"></canvas>
+                </figure>
               </div>
             </article>
           </section>
