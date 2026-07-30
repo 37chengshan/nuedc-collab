@@ -2,6 +2,11 @@ import { createServer } from "node:http";
 import { join } from "node:path";
 
 import { createApiServer } from "./src/api-server.js";
+import {
+  CalibrationService,
+  createSerialCalibrationCaptureSource,
+} from "./src/calibration-service.js";
+import { createFinalCalibrationService } from "./src/final-calibration-service.js";
 import { UwbSerialService } from "./src/serial-service.js";
 
 const host = process.env.UWB_HOST ?? "127.0.0.1";
@@ -12,9 +17,33 @@ const dataDirectory = join(root, "data");
 const service = new UwbSerialService({ dataDirectory });
 await service.initialize();
 
+let calibrationEngine = {};
+try {
+  calibrationEngine = await import(
+    "../../packages/uwb-localization/src/index.js"
+  );
+} catch (error) {
+  if (error.code !== "ERR_MODULE_NOT_FOUND") {
+    throw error;
+  }
+  console.warn(
+    "标定算法包尚未接入：采集质量检查可用，训练/验证/导出会返回明确错误。",
+  );
+}
+const calibration = new CalibrationService({
+  captureSource: createSerialCalibrationCaptureSource(service),
+  engine: calibrationEngine,
+});
+const finalCalibration = await createFinalCalibrationService({
+  capturesDirectory: service.capturesDirectory,
+  measurementSource: (options) => service.getMeasurements(options),
+});
+
 const server = createApiServer({
   http: { createServer },
   service,
+  calibration,
+  finalCalibration,
   root,
 });
 

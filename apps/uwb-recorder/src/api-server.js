@@ -102,11 +102,17 @@ async function serveStatic(root, pathname, response) {
   }
 }
 
-export function createApiServer({ http, service, root }) {
+export function createApiServer({
+  http,
+  service,
+  calibration = null,
+  finalCalibration = null,
+  root,
+}) {
   return http.createServer(async (request, response) => {
     if (request.method === "OPTIONS") {
       response.writeHead(204, {
-        "Access-Control-Allow-Headers": "Content-Type",
+        "Access-Control-Allow-Headers": "Content-Type,Idempotency-Key",
         "Access-Control-Allow-Methods": "GET,POST,DELETE,OPTIONS",
         "Access-Control-Allow-Origin": "*",
       });
@@ -146,6 +152,35 @@ export function createApiServer({ http, service, root }) {
       }
       if (request.method === "GET" && pathname === "/api/status") {
         writeJson(response, 200, successEnvelope(service.status()));
+        return;
+      }
+      if (
+        request.method === "GET" &&
+        pathname === "/api/calibration/final"
+      ) {
+        if (!finalCalibration) {
+          throw new AppError(
+            "FINAL_CALIBRATION_UNAVAILABLE",
+            "最终标定模型尚未载入",
+            { status: 503 },
+          );
+        }
+        writeJson(response, 200, successEnvelope(finalCalibration.status()));
+        return;
+      }
+      if (request.method === "GET" && pathname === "/api/position") {
+        if (!finalCalibration) {
+          throw new AppError(
+            "FINAL_CALIBRATION_UNAVAILABLE",
+            "最终标定模型尚未载入",
+            { status: 503 },
+          );
+        }
+        writeJson(
+          response,
+          200,
+          successEnvelope(await finalCalibration.estimateLatest()),
+        );
         return;
       }
       if (request.method === "GET" && pathname === "/api/ports") {
@@ -220,6 +255,58 @@ export function createApiServer({ http, service, root }) {
               sessionId: requestUrl.searchParams.get("session_id"),
             }),
           ),
+        );
+        return;
+      }
+      if (request.method === "GET" && pathname === "/api/calibration/plan") {
+        if (!calibration) {
+          throw new AppError(
+            "CALIBRATION_UNAVAILABLE",
+            "标定服务尚未初始化",
+            { status: 503 },
+          );
+        }
+        writeJson(
+          response,
+          200,
+          successEnvelope(
+            calibration.plan({
+              boundaryOffsetMm: numberQuery(
+                requestUrl.searchParams.get("boundary_offset_mm"),
+                300,
+              ),
+            }),
+          ),
+        );
+        return;
+      }
+      if (
+        request.method === "POST" &&
+        parts[1] === "calibration" &&
+        ["capture", "train", "validate", "export"].includes(parts[2]) &&
+        parts.length === 3
+      ) {
+        if (!calibration) {
+          throw new AppError(
+            "CALIBRATION_UNAVAILABLE",
+            "标定服务尚未初始化",
+            { status: 503 },
+          );
+        }
+        const action = parts[2];
+        const input = {
+          ...body,
+          idempotencyKey:
+            request.headers["idempotency-key"] ??
+            body.idempotencyKey ??
+            null,
+        };
+        writeJson(
+          response,
+          200,
+          successEnvelope(await calibration[action](input), {
+            idempotencyKey: input.idempotencyKey,
+          }),
         );
         return;
       }
