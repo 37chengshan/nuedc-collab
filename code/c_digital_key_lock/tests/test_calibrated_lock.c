@@ -1,4 +1,5 @@
 #include "calibration_model.h"
+#include "empirical_model.h"
 #include "lock_app.h"
 #include "lock_app_config.h"
 #include "lock_fsm.h"
@@ -126,6 +127,80 @@ static bool test_model_crc_and_range_models(void)
     range.corrected_knots_mm[2] = 1600.0f;
     TEST_ASSERT(calibration_range_apply(&range, 1250.0f, &corrected));
     TEST_ASSERT_NEAR(corrected, 1325.0f, 0.01f);
+    return true;
+}
+
+static bool test_empirical_model_distance_angle_and_crc(void)
+{
+    static const EmpiricalPrototypeV1 prototypes[] = {
+        {700U, 620U, 1000U, -1000, EMPIRICAL_PROTOTYPE_ANGLE_VALID, 0U},
+        {720U, 600U, 1000U, 0, EMPIRICAL_PROTOTYPE_ANGLE_VALID, 0U},
+        {740U, 580U, 1000U, 1000, EMPIRICAL_PROTOTYPE_ANGLE_VALID, 0U},
+        {1680U, 1600U, 2000U, -1000, EMPIRICAL_PROTOTYPE_ANGLE_VALID, 0U},
+        {1700U, 1580U, 2000U, 0, EMPIRICAL_PROTOTYPE_ANGLE_VALID, 0U},
+        {1720U, 1560U, 2000U, 1000, EMPIRICAL_PROTOTYPE_ANGLE_VALID, 0U},
+    };
+    EmpiricalModelV1 model = {
+        .magic = EMPIRICAL_MODEL_V1_MAGIC,
+        .version = EMPIRICAL_MODEL_V1_VERSION,
+        .prototype_count =
+            (uint16_t)(sizeof(prototypes) / sizeof(prototypes[0])),
+        .distance_neighbor_count = 4U,
+        .angle_neighbor_count = 2U,
+        .distance1_scale_mm = 600.0f,
+        .distance2_scale_mm = 600.0f,
+        .angle_max_neighbor_distance = 0.5f,
+        .angle_max_spread_deg = 20.0f,
+        .prototypes = prototypes,
+    };
+    EmpiricalEstimate estimate;
+
+    empirical_model_refresh_crc(&model);
+    TEST_ASSERT(empirical_model_validate(&model) == EMPIRICAL_MODEL_OK);
+    TEST_ASSERT(empirical_model_predict(&model, 740U, 580U, &estimate));
+    TEST_ASSERT(estimate.valid);
+    TEST_ASSERT_NEAR(estimate.distance_mm, 1000.0f, 0.1f);
+    TEST_ASSERT(estimate.angle_valid);
+    TEST_ASSERT_NEAR(estimate.bearing_deg, 10.0f, 0.1f);
+
+    TEST_ASSERT(empirical_model_predict(&model, 1710U, 1570U, &estimate));
+    TEST_ASSERT_NEAR(estimate.distance_mm, 2000.0f, 30.0f);
+    TEST_ASSERT(estimate.angle_valid);
+
+    model.crc32 ^= 0x00000001UL;
+    TEST_ASSERT(empirical_model_validate(&model) == EMPIRICAL_MODEL_CRC_ERROR);
+    TEST_ASSERT(!empirical_model_predict(&model, 740U, 580U, &estimate));
+    return true;
+}
+
+static bool test_empirical_model_rejects_ambiguous_angle(void)
+{
+    static const EmpiricalPrototypeV1 prototypes[] = {
+        {1000U, 900U, 1500U, -4500, EMPIRICAL_PROTOTYPE_ANGLE_VALID, 0U},
+        {1002U, 902U, 1500U, 4500, EMPIRICAL_PROTOTYPE_ANGLE_VALID, 0U},
+        {900U, 800U, 1400U, 0, EMPIRICAL_PROTOTYPE_ANGLE_VALID, 0U},
+        {1100U, 1000U, 1600U, 0, EMPIRICAL_PROTOTYPE_ANGLE_VALID, 0U},
+    };
+    EmpiricalModelV1 model = {
+        .magic = EMPIRICAL_MODEL_V1_MAGIC,
+        .version = EMPIRICAL_MODEL_V1_VERSION,
+        .prototype_count =
+            (uint16_t)(sizeof(prototypes) / sizeof(prototypes[0])),
+        .distance_neighbor_count = 4U,
+        .angle_neighbor_count = 2U,
+        .distance1_scale_mm = 500.0f,
+        .distance2_scale_mm = 500.0f,
+        .angle_max_neighbor_distance = 0.5f,
+        .angle_max_spread_deg = 20.0f,
+        .prototypes = prototypes,
+    };
+    EmpiricalEstimate estimate;
+
+    empirical_model_refresh_crc(&model);
+    TEST_ASSERT(empirical_model_predict(&model, 1001U, 901U, &estimate));
+    TEST_ASSERT(estimate.valid);
+    TEST_ASSERT_NEAR(estimate.distance_mm, 1500.0f, 0.1f);
+    TEST_ASSERT(!estimate.angle_valid);
     return true;
 }
 
@@ -418,6 +493,10 @@ int main(void)
     static const TestCase tests[] = {
         {"default 2-anchor configuration", test_default_two_anchor_configuration},
         {"model CRC and three range model types", test_model_crc_and_range_models},
+        {"empirical model distance, angle, and CRC",
+         test_empirical_model_distance_angle_and_crc},
+        {"empirical model rejects ambiguous angle",
+         test_empirical_model_rejects_ambiguous_angle},
         {"bilinear distance/angle compensation",
          test_bilinear_distance_and_angle_compensation},
         {"2-anchor front mirror resolution",
