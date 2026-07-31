@@ -48,6 +48,7 @@ if ($syscfg -notmatch 'OLED\.peripheral\.sclPin\.\$assign\s*=\s*"PB2"') {
     (Join-Path $testDir "test_uwb_monitor.c") `
     (Join-Path $projectDir "uwb_monitor.c") `
     (Join-Path $projectDir "uwb_calibration.c") `
+    (Join-Path $projectDir "oled_recovery.c") `
     (Join-Path $projectDir "uwb_position.c") `
     -lm `
     -o $binary

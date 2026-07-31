@@ -1,5 +1,6 @@
 #include "../uwb_monitor.h"
 #include "../uwb_calibration.h"
+#include "../oled_recovery.h"
 #include "../uwb_position.h"
 
 #include <assert.h>
@@ -387,6 +388,48 @@ static void test_per_channel_distance_calibration_math(void)
     assert(uwb_calibration_apply_mm(80U, &enlarged) == 1000U);
 }
 
+static void test_oled_recovery_after_repeated_refresh_failures(void)
+{
+    OledRecoveryState state;
+
+    oled_recovery_init(&state, true, 0U);
+    assert(oled_recovery_is_ready(&state));
+
+    oled_recovery_record_refresh(&state, false, 100U);
+    oled_recovery_record_refresh(&state, false, 200U);
+    assert(oled_recovery_is_ready(&state));
+
+    oled_recovery_record_refresh(&state, false, 300U);
+    assert(!oled_recovery_is_ready(&state));
+    assert(!oled_recovery_reinit_due(&state, 1299U));
+    assert(oled_recovery_reinit_due(&state, 1300U));
+
+    oled_recovery_record_reinit(&state, false, 1300U);
+    assert(!oled_recovery_reinit_due(&state, 2299U));
+    assert(oled_recovery_reinit_due(&state, 2300U));
+
+    oled_recovery_record_reinit(&state, true, 2300U);
+    assert(oled_recovery_is_ready(&state));
+    assert(state.consecutive_failures == 0U);
+}
+
+static void test_oled_success_clears_failure_count(void)
+{
+    OledRecoveryState state;
+
+    oled_recovery_init(&state, false, 500U);
+    assert(!oled_recovery_is_ready(&state));
+    assert(!oled_recovery_reinit_due(&state, 1499U));
+    assert(oled_recovery_reinit_due(&state, 1500U));
+
+    oled_recovery_record_reinit(&state, true, 1500U);
+    oled_recovery_record_refresh(&state, false, 1600U);
+    assert(state.consecutive_failures == 1U);
+    oled_recovery_record_refresh(&state, true, 1700U);
+    assert(state.consecutive_failures == 0U);
+    assert(oled_recovery_is_ready(&state));
+}
+
 int main(void)
 {
     test_real_frame();
@@ -406,6 +449,8 @@ int main(void)
     test_position_matches_address_low_nibble();
     test_four_line_position_screen();
     test_per_channel_distance_calibration_math();
+    test_oled_recovery_after_repeated_refresh_failures();
+    test_oled_success_clears_failure_count();
     puts("uwb_monitor tests passed");
     return 0;
 }
