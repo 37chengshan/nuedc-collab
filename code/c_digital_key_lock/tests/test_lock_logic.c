@@ -323,11 +323,11 @@ static bool test_fusion_does_not_mix_ids_or_stale_samples(void)
     store_position(&fusion, &config, 1U, 0.0f, 1300.0f, 100U, 0x03U);
     fusion.channels[0].measurement.key_addr = 0x1111U;
     fusion.channels[1].measurement.key_addr = 0x1111U;
-    item = measurement(1U,
+    item = measurement(2U,
                        (uint32_t)lroundf(
                            distance_mm(config.anchors[2], 0.0f, 1300.0f)),
                        101U);
-    item.key_addr = 0x2221U;
+    item.key_addr = 0x2222U;
     uwb_fusion_store_measurement(&fusion, 2U, &item);
     uwb_fusion_solve(&fusion, &config, 101U, &solution);
     TEST_ASSERT(!solution.valid);

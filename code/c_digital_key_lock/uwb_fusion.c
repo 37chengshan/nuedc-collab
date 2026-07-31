@@ -170,8 +170,14 @@ static void kalman_update(LockKalman2d *kalman,
 static bool same_key(const LockUwbMeasurement *left,
                      const LockUwbMeasurement *right)
 {
-    return (left->key_addr == right->key_addr) &&
-           (left->key_id == right->key_id);
+    /*
+     * Each UART is wired to one anchor. Real modules report an
+     * anchor-specific address (for example 0x0100 and 0x0200) while the
+     * low nibble identifies the same key. Fusion and authorization therefore
+     * use the configured 4-bit key ID instead of requiring identical full
+     * addresses from different anchors.
+     */
+    return left->key_id == right->key_id;
 }
 
 static uint32_t filtered_distance_mm(const LockUwbChannelCache *cache)
@@ -332,7 +338,6 @@ void uwb_fusion_solve(LockUwbFusion *fusion, const LockAppConfig *config,
 
     can_hold_angle =
         fusion->last_solution.valid &&
-        (fusion->last_solution.key_addr == identity->key_addr) &&
         (fusion->last_solution.key_id == identity->key_id);
     if (can_hold_angle) {
         held_bearing = fusion->last_solution.bearing_deg;
@@ -375,7 +380,6 @@ void uwb_fusion_solve(LockUwbFusion *fusion, const LockAppConfig *config,
 
     if (count < 2U) {
         if (fusion->last_solution.valid &&
-            (identity->key_addr == fusion->last_solution.key_addr) &&
             (identity->key_id == fusion->last_solution.key_id) &&
             (elapsed_ms(fusion->last_solution.updated_ms, now_ms) <=
              config->solution_hold_ms)) {
@@ -392,7 +396,6 @@ void uwb_fusion_solve(LockUwbFusion *fusion, const LockAppConfig *config,
     }
 
     if (fusion->last_solution.valid &&
-        (fusion->last_solution.key_addr == identity->key_addr) &&
         (fusion->last_solution.key_id == identity->key_id) &&
         fusion->has_solve_time &&
         (elapsed_ms(fusion->last_solve_ms, now_ms) <
@@ -479,7 +482,6 @@ void uwb_fusion_solve(LockUwbFusion *fusion, const LockAppConfig *config,
     }
 
     if (fusion->last_solution.valid &&
-        (fusion->last_solution.key_addr == identity->key_addr) &&
         (fusion->last_solution.key_id == identity->key_id)) {
         hint.x_mm = fusion->last_solution.raw_x_mm;
         hint.y_mm = fusion->last_solution.raw_y_mm;
