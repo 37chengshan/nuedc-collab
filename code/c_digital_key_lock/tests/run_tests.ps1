@@ -26,7 +26,7 @@ if (-not $ResolvedBuildDir.StartsWith(
     throw "Refusing to create test output outside the temporary directory"
 }
 
-$CommonSources = @(
+$LogicSources = @(
     (Join-Path $ModuleDir "id_input.c"),
     (Join-Path $ModuleDir "uwb_text_protocol.c"),
     (Join-Path $ModuleDir "uwb_fusion.c"),
@@ -54,14 +54,53 @@ try {
         @{
             Name = "legacy"
             TestSource = Join-Path $TestDir "test_lock_logic.c"
+            Sources = $LogicSources
         },
         @{
             Name = "calibrated"
             TestSource = Join-Path $TestDir "test_calibrated_lock.c"
+            Sources = $LogicSources
+        },
+        @{
+            Name = "display_format"
+            TestSource = Join-Path $TestDir "test_lock_display_format.c"
+            Sources = @(
+                (Join-Path $ModuleDir "lock_display_format.c")
+            )
+        },
+        @{
+            Name = "st7735s"
+            TestSource = Join-Path $TestDir "test_st7735s.c"
+            Sources = @(
+                (Join-Path $ModuleDir "st7735s.c")
+            )
+        },
+        @{
+            Name = "display_ui"
+            TestSource = Join-Path $TestDir "test_lock_display_ui.c"
+            Sources = @(
+                (Join-Path $ModuleDir "st7735s.c"),
+                (Join-Path $ModuleDir "lock_display_format.c"),
+                (Join-Path $ModuleDir "lock_display_ui.c")
+            )
+        },
+        @{
+            Name = "output_behavior"
+            TestSource = Join-Path $TestDir "test_lock_output_behavior.c"
+            Sources = @(
+                (Join-Path $ModuleDir "lock_output_behavior.c")
+            )
+        },
+        @{
+            Name = "distance_stabilizer"
+            TestSource = Join-Path $TestDir "test_lock_distance_stabilizer.c"
+            Sources = @(
+                (Join-Path $ModuleDir "lock_distance_stabilizer.c")
+            )
         }
     )) {
         $Executable = Join-Path $ResolvedBuildDir ($Target.Name + ".exe")
-        & $Compiler @CommonFlags $Target.TestSource @CommonSources `
+        & $Compiler @CommonFlags $Target.TestSource @($Target.Sources) `
             "-lm" "-o" $Executable
         Assert-LastExitCode "Compile $($Target.Name) host tests"
 
