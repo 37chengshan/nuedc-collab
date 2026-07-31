@@ -63,3 +63,27 @@ test("最终模型可从近期串口帧实时输出距离和角度", async () =>
   assert.ok(Math.abs(estimate.angleDeg - 30) <= 5);
   assert.equal(estimate.source, "final-captures");
 });
+
+test("最终模型导出到MSPM0时必须包含旧18组和新48组训练数据", async () => {
+  const service = await createFinalCalibrationService({
+    capturesDirectory,
+  });
+
+  const exported = service.exportFirmware({
+    name: "empirical_model_data",
+  });
+
+  assert.equal(exported.name, "empirical_model_data");
+  assert.equal(exported.prototypeCount, 66);
+  assert.equal(exported.legacyTrainingPointCount, 18);
+  assert.equal(exported.structuredTrainingPointCount, 48);
+  assert.equal(exported.headerFileName, "empirical_model_data.h");
+  assert.equal(exported.sourceFileName, "empirical_model_data.c");
+  assert.match(exported.header, /extern const EmpiricalModelV1 g_empirical_model_v1;/);
+  assert.match(exported.source, /旧数据: 18/);
+  assert.match(exported.source, /新结构化数据: 48/);
+  assert.match(exported.source, /\.prototype_count = 66U/);
+  assert.match(exported.source, /\.distance_neighbor_count = 6U/);
+  assert.match(exported.source, /\.angle_neighbor_count = 4U/);
+  assert.match(exported.firmwareCrc32, /^[0-9A-F]{8}$/);
+});

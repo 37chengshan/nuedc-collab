@@ -83,6 +83,14 @@ test("final calibration API exposes model status and realtime estimate", async (
       angleDeg: 14.2,
       angleValid: true,
     }),
+    exportFirmware: (input) => ({
+      name: input.name,
+      prototypeCount: 66,
+      legacyTrainingPointCount: 18,
+      structuredTrainingPointCount: 48,
+      header: "#pragma once",
+      source: "const int empirical = 1;",
+    }),
   };
 
   await withServer(
@@ -100,6 +108,15 @@ test("final calibration API exposes model status and realtime estimate", async (
       assert.equal(position.ok, true);
       assert.equal(position.data.valid, true);
       assert.equal(position.data.distanceM, 1.02);
+
+      const exported = await fetch(`${baseUrl}/api/calibration/export`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: "empirical_model_data" }),
+      }).then((response) => response.json());
+      assert.equal(exported.ok, true);
+      assert.equal(exported.data.prototypeCount, 66);
+      assert.equal(exported.data.legacyTrainingPointCount, 18);
     },
     finalCalibration,
   );
