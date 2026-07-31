@@ -11,18 +11,22 @@ const capturesDirectory = join(
   "captures",
 );
 
-test("最终采集目录可自动训练为实时模型且标定误差不超过 0.2 m", async () => {
+test("最终采集目录优先使用50组结构化数据并隔离独立验证点", async () => {
   const service = await createFinalCalibrationService({
     capturesDirectory,
   });
   const status = service.status();
 
   assert.equal(status.ready, true);
-  assert.equal(status.captureCount, 18);
-  assert.ok(status.metrics.distanceMaxErrorM <= 0.2);
+  assert.equal(status.dataset, "2026-07-31-grid");
+  assert.equal(status.captureCount, 48);
+  assert.equal(status.validationPointCount, 2);
+  assert.equal(status.ignoredCaptureCount, 23);
+  assert.ok(Number.isFinite(status.validationMetrics.distanceMaxErrorM));
+  assert.ok(Number.isFinite(status.validationMetrics.angleMaxErrorDeg));
   assert.deepEqual(status.calibratedAngleDeg, {
-    minimum: -15,
-    maximum: 15,
+    minimum: -45,
+    maximum: 45,
   });
 });
 

@@ -73,6 +73,30 @@ test("最终采集标签可提取径向距离和明确角度", () => {
   });
 });
 
+test("50组结构化标签可区分训练点和独立验证点", () => {
+  assert.deepEqual(parseSparseCalibrationLabel("line_r080cm_ap00_rep1"), {
+    distanceM: 0.8,
+    angleDeg: 0,
+    angleSource: "structured",
+    dataset: "2026-07-31-grid",
+    split: "train",
+  });
+  assert.deepEqual(parseSparseCalibrationLabel("angle_r100cm_am45_rep2"), {
+    distanceM: 1,
+    angleDeg: -45,
+    angleSource: "structured",
+    dataset: "2026-07-31-grid",
+    split: "train",
+  });
+  assert.deepEqual(parseSparseCalibrationLabel("valid_r150cm_ap15_rep1"), {
+    distanceM: 1.5,
+    angleDeg: 15,
+    angleSource: "structured",
+    dataset: "2026-07-31-grid",
+    split: "validation",
+  });
+});
+
 test("稀疏模型在全部最终标定点上的径向误差不超过 0.2 m", () => {
   const samples = calibrationSamples();
   const model = trainSparseRealtimeModel(samples);
