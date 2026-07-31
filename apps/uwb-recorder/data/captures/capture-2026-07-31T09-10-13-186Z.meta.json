@@ -1,0 +1,11 @@
+{
+  "id": "capture-2026-07-31T09-10-13-186Z",
+  "label": "valid_r150cm_am15_rep1",
+  "durationSeconds": 45,
+  "startedAt": "2026-07-31T09:10:13.186Z",
+  "endsAt": "2026-07-31T09:10:58.186Z",
+  "endedAt": "2026-07-31T09:10:58.194Z",
+  "sessionId": "2026-07-31T07-36-44-491Z",
+  "frameCount": 890,
+  "status": "completed"
+}

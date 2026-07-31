@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>UWB 50组距离与角度标定清单</title>
+  <style>
+    :root{--ink:#202123;--muted:#666;--line:#dedbd5;--paper:#f7f5f2;--card:#fff;--orange:#d97732;--green:#2f855a;--blue:#2563a8}
+    *{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.55 "Microsoft YaHei",system-ui,sans-serif}
+    header{background:#25211f;color:#fff;padding:28px max(24px,calc((100% - 1480px)/2));border-bottom:5px solid var(--orange)}
+    h1{margin:0 0 8px;font-size:30px}header p{margin:0;color:#ddd}
+    main{max-width:1480px;margin:auto;padding:24px}.grid{display:grid;grid-template-columns:2fr 1fr;gap:16px}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:0 4px 14px #0000000b}
+    h2{margin:0 0 12px;font-size:20px}ul{margin:8px 0;padding-left:22px}.warn{border-left:5px solid var(--orange)}
+    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.stat{padding:14px;border-radius:10px;background:#f3f0eb;text-align:center}
+    .stat strong{display:block;font-size:25px}.toolbar{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0}
+    button{border:1px solid #bbb;background:#fff;border-radius:9px;padding:9px 14px;cursor:pointer;font-weight:700}
+    button.primary{background:var(--orange);border-color:var(--orange);color:#fff}
+    .table-wrap{overflow:auto;background:#fff;border:1px solid var(--line);border-radius:14px}
+    table{border-collapse:collapse;width:100%;min-width:1250px}th,td{padding:9px 10px;border-bottom:1px solid #eee;text-align:right;white-space:nowrap}
+    th{position:sticky;top:0;background:#2b2826;color:#fff;z-index:2}th:nth-child(-n+4),td:nth-child(-n+4){text-align:left}
+    tr.phase-a{background:#fffaf5}tr.phase-b{background:#f7fbff}tr.phase-c{background:#f5fff8}
+    tr.done{opacity:.55;text-decoration:line-through}code{font:13px Consolas,monospace;color:#8b4513}
+    .copy{padding:4px 8px;font-size:12px}.badge{display:inline-block;border-radius:99px;padding:2px 8px;font-size:12px;font-weight:700}
+    .a{background:#ffedd5;color:#9a3412}.b{background:#dbeafe;color:#1d4ed8}.c{background:#dcfce7;color:#166534}
+    footer{padding:20px;color:var(--muted);text-align:center}.check{width:18px;height:18px;accent-color:var(--green)}
+    @media(max-width:900px){.grid{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr 1fr}}
+    @media print{header{padding:16px;color:#000;background:#fff;border-bottom:2px solid #000}.toolbar,.copy{display:none}.card{box-shadow:none}main{max-width:none;padding:8px}th{position:static;background:#eee;color:#000}body{font-size:11px}}
+  </style>
+</head>
+<body>
+<header>
+  <h1>UWB 距离与角度标定：50 组执行清单</h1>
+  <p>临时标定口径：A1=(-125,40) mm，A2=(125,40) mm；本轮直接令 r=R，均表示原点 O 到钥匙天线中心的距离。</p>
+</header>
+<main>
+  <section class="grid">
+    <article class="card warn">
+      <h2>每组必须保持一致</h2>
+      <ul>
+        <li><b>本轮暂时令 r=R：</b>表中的 r 直接表示圆柱中心（阵列原点 O）到钥匙天线中心的距离，不再加 300 mm。</li>
+        <li>实际摆放时把卷尺零点放在原点 O，钥匙天线中心放到表中 r 对应的读数处。</li>
+        <li>按表中 x/y 在地面定位：x 向右为正，y 朝 FRONT 为正。角度标定是移动钥匙位置，不是原地旋转模块。</li>
+        <li>所有 UWB 天线朝上、同一高度、远离人体和金属；尽量用非金属支架固定，不要手晃。</li>
+        <li>网页进入“数据记录”，复制本行名称，点击“采集45秒”；全过程不移动、不遮挡。</li>
+        <li>两次复测必须重新拿起并重新摆放，不能连续录两段冒充独立复测。</li>
+      </ul>
+    </article>
+    <article class="card">
+      <h2>进度</h2>
+      <div class="stats">
+        <div class="stat"><strong id="doneCount">0</strong>已完成</div>
+        <div class="stat"><strong id="leftCount">50</strong>剩余</div>
+        <div class="stat"><strong id="percent">0%</strong>进度</div>
+      </div>
+      <p><span class="badge a">A</span> 直线扩展 12组　<span class="badge b">B</span> 角度训练 36组　<span class="badge c">C</span> 独立验证 2组</p>
+      <p>建议顺序：先完成 A，再完成 B，最后 C。C 组先不要参与训练，用来检查泛化误差。</p>
+    </article>
+  </section>
+
+  <div class="toolbar">
+    <button class="primary" id="nextBtn">定位到下一组</button>
+    <button id="csvBtn">导出清单 CSV</button>
+    <button onclick="window.print()">打印</button>
+    <button id="resetBtn">清空勾选</button>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>完成</th><th>序号</th><th>阶段</th><th>记录名称</th>
+        <th>实测半径 r=R：原点O→钥匙天线(m)</th><th>角度(°)</th>
+        <th>x(mm)</th><th>y(mm)</th><th>A1理论距离(m)</th><th>A2理论距离(m)</th><th>时长</th>
+      </tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+</main>
+<footer>本页进度保存在当前浏览器 localStorage；本轮采用临时测试口径 r=R，不包含 300 mm 圆柱边界偏移。</footer>
+
+<script>
+const anchors=[{x:-125,y:40},{x:125,y:40}], offset=0, duration=45;
+const plan=[];
+const add=(phase,r,angle,repeat,prefix)=>{
+  const R=r*1000+offset, rad=angle*Math.PI/180;
+  const x=R*Math.sin(rad), y=R*Math.cos(rad);
+  const d1=Math.hypot(x-anchors[0].x,y-anchors[0].y)/1000;
+  const d2=Math.hypot(x-anchors[1].x,y-anchors[1].y)/1000;
+  const sign=angle<0?`m${Math.abs(angle)}`:`p${String(angle).padStart(2,"0")}`;
+  const name=`${prefix}_r${String(Math.round(r*100)).padStart(3,"0")}cm_a${sign}_rep${repeat}`;
+  plan.push({phase,r,R:R/1000,angle,repeat,name,x,y,d1,d2});
+};
+// A：用户指定的 6 个新增直线距离，每点独立摆放两次，共 12 组。
+[0.8,1.2,1.8,2.2,2.5,3.0].forEach(r=>[1,2].forEach(rep=>add("A",r,0,rep,"line")));
+// B：覆盖左右边界、远近两条关键距离；9 个角度×2距离×2复测，共36组。
+[1.0,2.0].forEach(r=>[-45,-30,-20,-10,0,10,20,30,45].forEach(a=>[1,2].forEach(rep=>add("B",r,a,rep,"angle"))));
+// C：未参与上述训练网格的独立验证点，共2组。
+add("C",1.5,-15,1,"valid"); add("C",1.5,15,1,"valid");
+if(plan.length!==50) throw new Error(`计划数量错误: ${plan.length}`);
+
+const key="uwb-50-measurement-plan-v1", done=new Set(JSON.parse(localStorage.getItem(key)||"[]"));
+const tbody=document.getElementById("rows");
+const fmt=n=>Number(n).toFixed(3);
+function render(){
+  tbody.innerHTML=plan.map((p,i)=>`<tr id="row-${i}" class="phase-${p.phase.toLowerCase()} ${done.has(i)?"done":""}">
+    <td><input class="check" type="checkbox" data-i="${i}" ${done.has(i)?"checked":""}></td>
+    <td>${i+1}</td><td><span class="badge ${p.phase.toLowerCase()}">${p.phase}</span></td>
+    <td><code>${p.name}</code> <button class="copy" data-copy="${p.name}">复制</button></td>
+    <td>${p.r.toFixed(2)}</td><td>${p.angle>0?"+":""}${p.angle}</td>
+    <td>${Math.round(p.x)}</td><td>${Math.round(p.y)}</td><td>${fmt(p.d1)}</td><td>${fmt(p.d2)}</td><td>${duration}s</td>
+  </tr>`).join("");
+  const n=done.size; doneCount.textContent=n; leftCount.textContent=50-n; percent.textContent=`${Math.round(n/50*100)}%`;
+  localStorage.setItem(key,JSON.stringify([...done]));
+}
+tbody.addEventListener("change",e=>{if(!e.target.matches(".check"))return;const i=+e.target.dataset.i;e.target.checked?done.add(i):done.delete(i);render()});
+tbody.addEventListener("click",async e=>{const b=e.target.closest("[data-copy]");if(!b)return;await navigator.clipboard.writeText(b.dataset.copy);b.textContent="已复制";setTimeout(()=>b.textContent="复制",800)});
+nextBtn.onclick=()=>{const i=plan.findIndex((_,i)=>!done.has(i));if(i<0)return alert("50 组已全部完成");document.getElementById(`row-${i}`).scrollIntoView({behavior:"smooth",block:"center"})};
+resetBtn.onclick=()=>{if(confirm("确认清空本页全部勾选进度？")){done.clear();render()}};
+csvBtn.onclick=()=>{
+  const head=["index","phase","label","measured_radius_m","angle_deg","x_mm","y_mm","a1_true_m","a2_true_m","duration_s"];
+  const csv=[head.join(","),...plan.map((p,i)=>[i+1,p.phase,p.name,p.r,p.angle,Math.round(p.x),Math.round(p.y),fmt(p.d1),fmt(p.d2),duration].join(","))].join("\r\n");
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8"}));a.download="UWB_50组距离角度标定清单.csv";a.click();URL.revokeObjectURL(a.href);
+};
+render();
+</script>
+</body>
+</html>
