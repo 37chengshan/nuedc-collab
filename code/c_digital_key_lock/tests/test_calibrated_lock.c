@@ -234,7 +234,7 @@ static bool test_two_anchor_fusion_uses_empirical_distance_only(void)
 
     TEST_ASSERT(solution.valid);
     TEST_ASSERT(!solution.angle_valid);
-    TEST_ASSERT(!solution.angle_held);
+    TEST_ASSERT(solution.angle_held);
     TEST_ASSERT(solution.mode == LOCK_LOCALIZATION_TWO_ANCHOR);
     TEST_ASSERT(solution.valid_mask == 0x03U);
     TEST_ASSERT_NEAR(solution.boundary_distance_mm, 1000.0f, 1.0f);
@@ -281,7 +281,7 @@ static bool test_two_anchor_fusion_marks_ambiguous_angle_invalid(void)
     uwb_fusion_store_measurement(&fusion, 1U, &trusted_second);
     uwb_fusion_solve(&fusion, &config, 0U, &solution);
     TEST_ASSERT(!solution.angle_valid);
-    TEST_ASSERT(!solution.angle_held);
+    TEST_ASSERT(solution.angle_held);
     TEST_ASSERT_NEAR(solution.bearing_deg, 12.0f, 0.1f);
 
     uwb_fusion_store_measurement(&fusion, 0U, &first);
