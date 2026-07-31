@@ -301,6 +301,20 @@ export function createApiServer({
             body.idempotencyKey ??
             null,
         };
+        if (
+          action === "export" &&
+          !input.model &&
+          finalCalibration?.exportFirmware
+        ) {
+          writeJson(
+            response,
+            200,
+            successEnvelope(finalCalibration.exportFirmware(input), {
+              idempotencyKey: input.idempotencyKey,
+            }),
+          );
+          return;
+        }
         writeJson(
           response,
           200,
