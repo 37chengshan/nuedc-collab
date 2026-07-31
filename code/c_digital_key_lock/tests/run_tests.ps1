@@ -51,6 +51,10 @@ $CommonFlags = @(
 
 New-Item -ItemType Directory -Path $ResolvedBuildDir | Out-Null
 try {
+    & (Join-Path $TestDir "test_hardware_uart_topology.ps1") `
+        -ModuleDir $ModuleDir
+    Assert-LastExitCode "Run hardware UART topology contract"
+
     foreach ($Target in @(
         @{
             Name = "legacy"
