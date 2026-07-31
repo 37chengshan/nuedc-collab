@@ -19,6 +19,9 @@ test("实时页突出显示最终标定后的距离、角度和误差状态", as
   assert.match(app, /\/api\/position/);
   assert.match(app, /renderCalibratedPosition/);
   assert.match(app, /window\.setInterval\(pollRealtime,\s*500\)/);
+  assert.match(app, /smoothedAngleDeg:\s*0/);
+  assert.match(app, /angleValid[\s\S]*smoothedAngleDeg[\s\S]*toFixed\(1\)/);
+  assert.doesNotMatch(app, /calibrated-angle"\]\.textContent\s*=\s*"暂不可用"/);
 });
 
 test("侧边栏切换为真正分页并支持地址栏 hash", async () => {
