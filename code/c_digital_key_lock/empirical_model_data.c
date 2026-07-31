@@ -77,17 +77,34 @@ static const EmpiricalPrototypeV1 empirical_model_data_prototypes[] = {
     {1620U, 1530U, 1500U, 1500, 1U, 0U},
 };
 
+static const EmpiricalRangeKnotV1 empirical_model_data_primary_knots[] = {
+    {197U, 500U},
+    {620U, 800U},
+    {712U, 1000U},
+    {975U, 1200U},
+    {1226U, 1500U},
+    {1605U, 1800U},
+    {1746U, 2000U},
+    {1980U, 2200U},
+    {2295U, 2500U},
+    {2800U, 3000U},
+};
+
 const EmpiricalModelV1 g_empirical_model_v1 = {
     .magic = EMPIRICAL_MODEL_V1_MAGIC,
     .version = EMPIRICAL_MODEL_V1_VERSION,
     .prototype_count = 68U,
-    .distance_neighbor_count = 6U,
+    .distance_neighbor_count = 2U,
     .angle_neighbor_count = 4U,
+    .primary_knot_count = 10U,
     .reserved = 0U,
     .distance1_scale_mm = 696.822021f,
-    .distance2_scale_mm = 763.539001f,
+    .distance2_scale_mm = 305.415588f,
+    .distance_knn_blend = 0.500000000f,
+    .known_prototype_radius = 0.100000001f,
     .angle_max_neighbor_distance = 0.750000000f,
     .angle_max_spread_deg = 20.0000000f,
     .prototypes = empirical_model_data_prototypes,
-    .crc32 = 0xA912C308UL,
+    .primary_knots = empirical_model_data_primary_knots,
+    .crc32 = 0x1A5428E5UL,
 };

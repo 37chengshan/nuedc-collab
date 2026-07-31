@@ -4,6 +4,10 @@ const MIN_DISTANCE_MM = 300;
 const MAX_DISTANCE_MM = 3500;
 const DEFAULT_SECONDARY_MIN_SNR_DB = 6;
 const DEFAULT_SECONDARY_MAX_MAD_MM = 120;
+const DEFAULT_DISTANCE_NEIGHBOR_COUNT = 6;
+const DEFAULT_DISTANCE_KNN_BLEND = 1;
+const DEFAULT_KNOWN_PROTOTYPE_RADIUS = 0;
+const DEFAULT_SECONDARY_FEATURE_SCALE_RATIO = 1;
 
 export function parseSparseCalibrationLabel(label) {
   const text = String(label ?? "")
@@ -95,7 +99,11 @@ export function trainSparseRealtimeModel(samples, options = {}) {
   const featureScales = buildFeatureScales(pairedSamples, [
     primaryAnchorId,
     secondaryAnchorId,
-  ]);
+  ], {
+    secondaryScaleRatio:
+      options.secondaryFeatureScaleRatio ??
+      DEFAULT_SECONDARY_FEATURE_SCALE_RATIO,
+  });
   const distancePrototypes = pairedSamples.map((sample) => ({
     sampleId: sample.sampleId,
     label: sample.label,
@@ -127,6 +135,12 @@ export function trainSparseRealtimeModel(samples, options = {}) {
     distancePrototypes,
     anglePrototypes,
     featureScales,
+    distanceNeighborCount:
+      options.distanceNeighborCount ?? DEFAULT_DISTANCE_NEIGHBOR_COUNT,
+    distanceKnnBlend:
+      options.distanceKnnBlend ?? DEFAULT_DISTANCE_KNN_BLEND,
+    knownPrototypeRadius:
+      options.knownPrototypeRadius ?? DEFAULT_KNOWN_PROTOTYPE_RADIUS,
     limits: {
       minimumDistanceMm: MIN_DISTANCE_MM,
       maximumDistanceMm: MAX_DISTANCE_MM,
@@ -151,6 +165,10 @@ export function trainSparseRealtimeModel(samples, options = {}) {
     },
     metrics: {},
   };
+
+  if (options.computeMetrics === false) {
+    return model;
+  }
 
   const validationRows = normalized.map((sample) => {
     const estimate = estimateSparseRealtime(model, {
@@ -222,17 +240,34 @@ export function estimateSparseRealtime(model, input = {}) {
           model.distancePrototypes,
           features,
           "distanceM",
-          6,
+          model.distanceNeighborCount ?? DEFAULT_DISTANCE_NEIGHBOR_COUNT,
           input.excludedSampleId,
         )
       : null;
-  const rawDistanceMm =
-    distanceNeighbor !== null
-      ? distanceNeighbor.value * 1000
-      : interpolateRange(
-          model.rangeKnots[model.primaryAnchorId],
-          primary.medianMm,
-        );
+  const primaryDistanceMm = interpolateRange(
+    model.rangeKnots[model.primaryAnchorId],
+    primary.medianMm,
+  );
+  let rawDistanceMm = primaryDistanceMm;
+  if (distanceNeighbor !== null) {
+    const baseBlend = clamp(
+      model.distanceKnnBlend ?? DEFAULT_DISTANCE_KNN_BLEND,
+      0,
+      1,
+    );
+    const knownRadius = Math.max(
+      0,
+      model.knownPrototypeRadius ?? DEFAULT_KNOWN_PROTOTYPE_RADIUS,
+    );
+    const knownBoost =
+      knownRadius > 0
+        ? clamp(1 - distanceNeighbor.nearestDistance / knownRadius, 0, 1)
+        : 0;
+    const effectiveBlend = baseBlend + (1 - baseBlend) * knownBoost;
+    rawDistanceMm =
+      effectiveBlend * distanceNeighbor.value * 1000 +
+      (1 - effectiveBlend) * primaryDistanceMm;
+  }
   const distanceMm = clamp(
     rawDistanceMm,
     model.limits?.minimumDistanceMm ?? MIN_DISTANCE_MM,
@@ -358,8 +393,12 @@ function buildRangeKnots(samples, anchorId) {
     );
 }
 
-function buildFeatureScales(samples, anchorIds) {
-  return anchorIds.map((anchorId) => {
+function buildFeatureScales(
+  samples,
+  anchorIds,
+  { secondaryScaleRatio = DEFAULT_SECONDARY_FEATURE_SCALE_RATIO } = {},
+) {
+  return anchorIds.map((anchorId, index) => {
     const values = samples
       .map((sample) =>
         sample.anchors.find((anchor) => anchor.anchorId === anchorId),
@@ -368,7 +407,8 @@ function buildFeatureScales(samples, anchorIds) {
       .map((anchor) => anchor.medianMm);
     const center = median(values) ?? 0;
     const mad = medianAbsoluteDeviation(values, center) ?? 0;
-    return Math.max(50, 1.4826 * mad);
+    const scale = Math.max(50, 1.4826 * mad);
+    return index === 1 ? scale * secondaryScaleRatio : scale;
   });
 }
 
@@ -477,6 +517,7 @@ function estimateFromPrototypes(
           0,
         ) / exact.length,
       confidence: 1,
+      nearestDistance: 0,
     };
   }
   const selected = neighbors.slice(
@@ -496,6 +537,7 @@ function estimateFromPrototypes(
         0,
       ) / totalWeight,
     confidence: clamp(1 / (1 + selected[0].distance), 0, 1),
+    nearestDistance: selected[0].distance,
   };
 }
 

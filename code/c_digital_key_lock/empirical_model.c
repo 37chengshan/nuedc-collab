@@ -50,7 +50,9 @@ uint32_t empirical_model_compute_crc(const EmpiricalModelV1 *model)
     uint32_t crc = 0xFFFFFFFFUL;
     uint16_t index;
 
-    if ((model == NULL) || (model->prototypes == NULL)) {
+    if ((model == NULL) || (model->prototypes == NULL) ||
+        ((model->primary_knot_count > 0U) &&
+         (model->primary_knots == NULL))) {
         return 0U;
     }
 
@@ -59,9 +61,12 @@ uint32_t empirical_model_compute_crc(const EmpiricalModelV1 *model)
     crc = crc_u16(crc, model->prototype_count);
     crc = crc_byte(crc, model->distance_neighbor_count);
     crc = crc_byte(crc, model->angle_neighbor_count);
-    crc = crc_u16(crc, model->reserved);
+    crc = crc_byte(crc, model->primary_knot_count);
+    crc = crc_byte(crc, model->reserved);
     crc = crc_float(crc, model->distance1_scale_mm);
     crc = crc_float(crc, model->distance2_scale_mm);
+    crc = crc_float(crc, model->distance_knn_blend);
+    crc = crc_float(crc, model->known_prototype_radius);
     crc = crc_float(crc, model->angle_max_neighbor_distance);
     crc = crc_float(crc, model->angle_max_spread_deg);
     for (index = 0U; index < model->prototype_count; index++) {
@@ -73,6 +78,12 @@ uint32_t empirical_model_compute_crc(const EmpiricalModelV1 *model)
         crc = crc_u16(crc, (uint16_t)prototype->bearing_cdeg);
         crc = crc_byte(crc, prototype->flags);
         crc = crc_byte(crc, prototype->reserved);
+    }
+    for (index = 0U; index < model->primary_knot_count; index++) {
+        const EmpiricalRangeKnotV1 *knot = &model->primary_knots[index];
+
+        crc = crc_u16(crc, knot->measured_mm);
+        crc = crc_u16(crc, knot->radial_mm);
     }
     return crc ^ 0xFFFFFFFFUL;
 }
@@ -86,7 +97,13 @@ void empirical_model_refresh_crc(EmpiricalModelV1 *model)
 
 EmpiricalModelStatus empirical_model_validate(const EmpiricalModelV1 *model)
 {
+    uint8_t knot_index;
+
     if ((model == NULL) || (model->prototypes == NULL)) {
+        return EMPIRICAL_MODEL_NULL_ERROR;
+    }
+    if ((model->primary_knot_count > 0U) &&
+        (model->primary_knots == NULL)) {
         return EMPIRICAL_MODEL_NULL_ERROR;
     }
     if (model->magic != EMPIRICAL_MODEL_V1_MAGIC) {
@@ -105,15 +122,33 @@ EmpiricalModelStatus empirical_model_validate(const EmpiricalModelV1 *model)
         (model->angle_neighbor_count > model->prototype_count)) {
         return EMPIRICAL_MODEL_COUNT_ERROR;
     }
+    if ((model->primary_knot_count > EMPIRICAL_MODEL_MAX_PRIMARY_KNOTS) ||
+        ((model->distance_knn_blend < 1.0f) &&
+         ((model->primary_knot_count < 2U) ||
+          (model->primary_knots == NULL)))) {
+        return EMPIRICAL_MODEL_COUNT_ERROR;
+    }
     if (!isfinite(model->distance1_scale_mm) ||
         !isfinite(model->distance2_scale_mm) ||
+        !isfinite(model->distance_knn_blend) ||
+        !isfinite(model->known_prototype_radius) ||
         !isfinite(model->angle_max_neighbor_distance) ||
         !isfinite(model->angle_max_spread_deg) ||
         (model->distance1_scale_mm <= 0.0f) ||
         (model->distance2_scale_mm <= 0.0f) ||
+        (model->distance_knn_blend < 0.0f) ||
+        (model->distance_knn_blend > 1.0f) ||
+        (model->known_prototype_radius < 0.0f) ||
         (model->angle_max_neighbor_distance <= 0.0f) ||
         (model->angle_max_spread_deg <= 0.0f)) {
         return EMPIRICAL_MODEL_PARAMETER_ERROR;
+    }
+    for (knot_index = 1U; knot_index < model->primary_knot_count;
+         knot_index++) {
+        if (model->primary_knots[knot_index].measured_mm <=
+            model->primary_knots[knot_index - 1U].measured_mm) {
+            return EMPIRICAL_MODEL_PARAMETER_ERROR;
+        }
     }
     if (model->crc32 != empirical_model_compute_crc(model)) {
         return EMPIRICAL_MODEL_CRC_ERROR;
@@ -197,6 +232,68 @@ static float weighted_distance(const EmpiricalNeighbor *neighbors,
         total_weight += weight;
     }
     return weighted / total_weight;
+}
+
+static float interpolate_primary_range(const EmpiricalModelV1 *model,
+                                       uint16_t measured_mm)
+{
+    const EmpiricalRangeKnotV1 *left = &model->primary_knots[0];
+    const EmpiricalRangeKnotV1 *right = &model->primary_knots[1];
+    uint8_t index;
+    float span;
+    float ratio;
+
+    if (measured_mm >=
+        model->primary_knots[model->primary_knot_count - 1U].measured_mm) {
+        left = &model->primary_knots[model->primary_knot_count - 2U];
+        right = &model->primary_knots[model->primary_knot_count - 1U];
+    } else if (measured_mm > model->primary_knots[0].measured_mm) {
+        for (index = 1U; index < model->primary_knot_count; index++) {
+            if (measured_mm <= model->primary_knots[index].measured_mm) {
+                left = &model->primary_knots[index - 1U];
+                right = &model->primary_knots[index];
+                break;
+            }
+        }
+    }
+
+    span = (float)right->measured_mm - (float)left->measured_mm;
+    if (fabsf(span) < 1.0e-6f) {
+        return ((float)left->radial_mm + (float)right->radial_mm) * 0.5f;
+    }
+    ratio = ((float)measured_mm - (float)left->measured_mm) / span;
+    return (float)left->radial_mm +
+           ratio * ((float)right->radial_mm - (float)left->radial_mm);
+}
+
+static float blended_distance(const EmpiricalModelV1 *model,
+                              const EmpiricalNeighbor *neighbors,
+                              uint8_t count, uint16_t distance1_mm)
+{
+    float knn_distance = weighted_distance(neighbors, count);
+    float effective_blend = model->distance_knn_blend;
+
+    if ((model->distance_knn_blend >= 1.0f) ||
+        (model->primary_knot_count < 2U) ||
+        (model->primary_knots == NULL)) {
+        return knn_distance;
+    }
+    if (model->known_prototype_radius > 0.0f) {
+        float nearest = sqrtf(neighbors[0].distance_squared);
+        float known_boost =
+            1.0f - (nearest / model->known_prototype_radius);
+
+        if (known_boost < 0.0f) {
+            known_boost = 0.0f;
+        } else if (known_boost > 1.0f) {
+            known_boost = 1.0f;
+        }
+        effective_blend +=
+            (1.0f - effective_blend) * known_boost;
+    }
+    return effective_blend * knn_distance +
+           (1.0f - effective_blend) *
+               interpolate_primary_range(model, distance1_mm);
 }
 
 static bool weighted_angle(const EmpiricalModelV1 *model,
@@ -287,7 +384,8 @@ bool empirical_model_predict(const EmpiricalModelV1 *model,
 
     estimate->valid = true;
     estimate->distance_mm =
-        weighted_distance(distance_neighbors, distance_count);
+        blended_distance(model, distance_neighbors, distance_count,
+                         distance1_mm);
     estimate->distance_confidence =
         1.0f / (1.0f + sqrtf(distance_neighbors[0].distance_squared));
     if (angle_count > 0U) {

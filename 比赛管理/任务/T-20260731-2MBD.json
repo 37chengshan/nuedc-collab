@@ -7,7 +7,9 @@
     "使用 500 ms 输出和三次突变确认回放所有补测会话，1 m/2 m 状态不得因单次异常来回切换"
   ],
   "blockingIssueIds": [],
-  "completedAcceptanceCriteria": [],
+  "completedAcceptanceCriteria": [
+    "现有 66 个训练点按同一物理距离和角度整组留出完成交叉验证：1 m 附近 P95 约 0.135 m、最大误差 0.200 m；2 m 附近 P95 和最大误差约 0.142 m；1 m/2 m 边界跨错数为 0"
+  ],
   "createdAt": "2026-07-31T11:13:53+00:00",
   "dependencies": [
     "T-20260730-11Y3"
@@ -25,7 +27,7 @@
     "b64a441"
   ],
   "schemaVersion": 1,
-  "status": "todo",
+  "status": "doing",
   "title": "补采 UWB 1 m/2 m 边界与 1.5/2 m 重叠区",
-  "updatedAt": "2026-07-31T11:13:53+00:00"
+  "updatedAt": "2026-07-31T19:54:29+08:00"
 }

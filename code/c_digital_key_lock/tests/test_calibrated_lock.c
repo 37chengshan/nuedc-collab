@@ -151,6 +151,8 @@ static bool test_empirical_model_distance_angle_and_crc(void)
         .angle_neighbor_count = 2U,
         .distance1_scale_mm = 600.0f,
         .distance2_scale_mm = 600.0f,
+        .distance_knn_blend = 1.0f,
+        .known_prototype_radius = 0.0f,
         .angle_max_neighbor_distance = 0.5f,
         .angle_max_spread_deg = 20.0f,
         .prototypes = prototypes,
@@ -192,6 +194,8 @@ static bool test_empirical_model_rejects_ambiguous_angle(void)
         .angle_neighbor_count = 2U,
         .distance1_scale_mm = 500.0f,
         .distance2_scale_mm = 500.0f,
+        .distance_knn_blend = 1.0f,
+        .known_prototype_radius = 0.0f,
         .angle_max_neighbor_distance = 0.5f,
         .angle_max_spread_deg = 20.0f,
         .prototypes = prototypes,
@@ -258,6 +262,35 @@ static bool test_empirical_model_blends_knn_with_primary_range(void)
     return true;
 }
 
+static bool test_exported_empirical_model_matches_js_golden_vectors(void)
+{
+    static const struct {
+        uint16_t distance1_mm;
+        uint16_t distance2_mm;
+        float expected_distance_mm;
+    } vectors[] = {
+        {620U, 890U, 1000.0f},
+        {1490U, 1750U, 2000.0f},
+        {1910U, 1630U, 1500.0f},
+        {1620U, 1530U, 1500.0f},
+        {1605U, 1510U, 1869.0574f},
+        {975U, 1000U, 1350.0f},
+    };
+    EmpiricalEstimate estimate;
+    uint8_t index;
+
+    for (index = 0U;
+         index < (uint8_t)(sizeof(vectors) / sizeof(vectors[0]));
+         index++) {
+        TEST_ASSERT(empirical_model_predict(
+            &g_empirical_model_v1, vectors[index].distance1_mm,
+            vectors[index].distance2_mm, &estimate));
+        TEST_ASSERT_NEAR(estimate.distance_mm,
+                         vectors[index].expected_distance_mm, 2.0f);
+    }
+    return true;
+}
+
 static bool test_two_anchor_fusion_uses_empirical_distance_only(void)
 {
     LockAppConfig config = g_lock_app_default_config;
@@ -301,6 +334,8 @@ static bool test_two_anchor_fusion_marks_ambiguous_angle_invalid(void)
         .angle_neighbor_count = 2U,
         .distance1_scale_mm = 500.0f,
         .distance2_scale_mm = 500.0f,
+        .distance_knn_blend = 1.0f,
+        .known_prototype_radius = 0.0f,
         .angle_max_neighbor_distance = 0.5f,
         .angle_max_spread_deg = 20.0f,
         .prototypes = prototypes,
@@ -731,6 +766,8 @@ int main(void)
          test_exported_empirical_model_contains_all_training_points},
         {"empirical model blends kNN with primary range",
          test_empirical_model_blends_knn_with_primary_range},
+        {"exported empirical model matches JS golden vectors",
+         test_exported_empirical_model_matches_js_golden_vectors},
         {"2-anchor fusion uses empirical distance only",
          test_two_anchor_fusion_uses_empirical_distance_only},
         {"2-anchor fusion rejects ambiguous empirical angle",

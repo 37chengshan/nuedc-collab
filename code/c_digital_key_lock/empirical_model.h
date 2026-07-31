@@ -5,9 +5,10 @@
 #include <stdint.h>
 
 #define EMPIRICAL_MODEL_V1_MAGIC 0x314D5045UL
-#define EMPIRICAL_MODEL_V1_VERSION 0x0100U
+#define EMPIRICAL_MODEL_V1_VERSION 0x0101U
 #define EMPIRICAL_MODEL_MAX_PROTOTYPES 96U
 #define EMPIRICAL_MODEL_MAX_NEIGHBORS 8U
+#define EMPIRICAL_MODEL_MAX_PRIMARY_KNOTS 16U
 
 #define EMPIRICAL_PROTOTYPE_ANGLE_VALID 0x01U
 
@@ -21,17 +22,26 @@ typedef struct {
 } EmpiricalPrototypeV1;
 
 typedef struct {
+    uint16_t measured_mm;
+    uint16_t radial_mm;
+} EmpiricalRangeKnotV1;
+
+typedef struct {
     uint32_t magic;
     uint16_t version;
     uint16_t prototype_count;
     uint8_t distance_neighbor_count;
     uint8_t angle_neighbor_count;
-    uint16_t reserved;
+    uint8_t primary_knot_count;
+    uint8_t reserved;
     float distance1_scale_mm;
     float distance2_scale_mm;
+    float distance_knn_blend;
+    float known_prototype_radius;
     float angle_max_neighbor_distance;
     float angle_max_spread_deg;
     const EmpiricalPrototypeV1 *prototypes;
+    const EmpiricalRangeKnotV1 *primary_knots;
     uint32_t crc32;
 } EmpiricalModelV1;
 

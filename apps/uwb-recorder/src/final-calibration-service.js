@@ -9,12 +9,21 @@ import {
 } from "../../../packages/uwb-localization/src/index.js";
 
 const EMPIRICAL_MODEL_V1_MAGIC = 0x314d5045;
-const EMPIRICAL_MODEL_V1_VERSION = 0x0100;
+const EMPIRICAL_MODEL_V1_VERSION = 0x0101;
 const EMPIRICAL_PROTOTYPE_ANGLE_VALID = 0x01;
-const DISTANCE_NEIGHBOR_COUNT = 6;
+const DISTANCE_NEIGHBOR_COUNT = 2;
 const ANGLE_NEIGHBOR_COUNT = 4;
+const SECONDARY_FEATURE_SCALE_RATIO = 0.4;
+const DISTANCE_KNN_BLEND = 0.5;
+const KNOWN_PROTOTYPE_RADIUS = 0.1;
 const ANGLE_MAX_NEIGHBOR_DISTANCE = 0.75;
 const ANGLE_MAX_SPREAD_DEG = 20;
+const REALTIME_MODEL_OPTIONS = Object.freeze({
+  distanceNeighborCount: DISTANCE_NEIGHBOR_COUNT,
+  secondaryFeatureScaleRatio: SECONDARY_FEATURE_SCALE_RATIO,
+  distanceKnnBlend: DISTANCE_KNN_BLEND,
+  knownPrototypeRadius: KNOWN_PROTOTYPE_RADIUS,
+});
 
 export async function createFinalCalibrationService({
   capturesDirectory,
@@ -27,7 +36,14 @@ export async function createFinalCalibrationService({
   const loaded = await loadFinalCaptures(capturesDirectory, {
     warmupSeconds,
   });
-  const evaluationModel = trainSparseRealtimeModel(loaded.samples);
+  const evaluationModel = trainSparseRealtimeModel(
+    loaded.samples,
+    REALTIME_MODEL_OPTIONS,
+  );
+  const groupedMetrics = validateGroupedPhysicalPoints(
+    loaded.samples,
+    REALTIME_MODEL_OPTIONS,
+  );
   const validationMetrics = validateSparseRealtimeModel(
     evaluationModel,
     loaded.validationSamples,
@@ -36,7 +52,10 @@ export async function createFinalCalibrationService({
     ...loaded.samples,
     ...loaded.validationSamples,
   ];
-  const model = trainSparseRealtimeModel(runtimeSamples);
+  const model = trainSparseRealtimeModel(
+    runtimeSamples,
+    REALTIME_MODEL_OPTIONS,
+  );
 
   return {
     status() {
@@ -54,12 +73,8 @@ export async function createFinalCalibrationService({
         calibratedRangeM: model.calibratedRangeM,
         calibratedAngleDeg: model.calibratedAngleDeg,
         metrics: {
-          distanceValidationMode:
-            evaluationModel.metrics.distanceValidationMode,
-          trainingPointCount: evaluationModel.metrics.trainingPointCount,
+          ...groupedMetrics,
           anglePointCount: evaluationModel.metrics.anglePointCount,
-          distanceMaxErrorM: evaluationModel.metrics.distanceMaxErrorM,
-          distanceP95M: evaluationModel.metrics.distanceP95M,
           angleMaxErrorDeg: evaluationModel.metrics.angleMaxErrorDeg,
           angleP95Deg: evaluationModel.metrics.angleP95Deg,
         },
@@ -107,6 +122,7 @@ export async function createFinalCalibrationService({
 function exportEmpiricalFirmware(model, loaded, input = {}) {
   const name = sanitizeCIdentifier(input.name ?? "empirical_model_data");
   const prototypes = buildEmpiricalPrototypes(model);
+  const primaryKnots = buildPrimaryKnots(model);
   if (prototypes.length > 96) {
     throw new RangeError("地猛星经验模型最多支持 96 个训练原型");
   }
@@ -126,11 +142,19 @@ function exportEmpiricalFirmware(model, loaded, input = {}) {
           (prototype.flags & EMPIRICAL_PROTOTYPE_ANGLE_VALID) !== 0,
       ).length,
     ),
+    primaryKnotCount: primaryKnots.length,
     distance1ScaleMm: Math.fround(model.featureScales?.[0] ?? 1),
     distance2ScaleMm: Math.fround(model.featureScales?.[1] ?? 1),
+    distanceKnnBlend: Math.fround(
+      model.distanceKnnBlend ?? DISTANCE_KNN_BLEND,
+    ),
+    knownPrototypeRadius: Math.fround(
+      model.knownPrototypeRadius ?? KNOWN_PROTOTYPE_RADIUS,
+    ),
     angleMaxNeighborDistance: Math.fround(ANGLE_MAX_NEIGHBOR_DISTANCE),
     angleMaxSpreadDeg: Math.fround(ANGLE_MAX_SPREAD_DEG),
     prototypes,
+    primaryKnots,
   };
   if (firmwareModel.angleNeighborCount === 0) {
     throw new RangeError("没有可导出的角度训练点");
@@ -141,6 +165,7 @@ function exportEmpiricalFirmware(model, loaded, input = {}) {
   const headerGuard = `${name.toUpperCase()}_H`;
   const symbolName = "g_empirical_model_v1";
   const prototypeSymbol = `${name}_prototypes`;
+  const primaryKnotSymbol = `${name}_primary_knots`;
 
   const header = [
     `#ifndef ${headerGuard}`,
@@ -159,6 +184,10 @@ function exportEmpiricalFirmware(model, loaded, input = {}) {
       `${prototype.radialMm}U, ${prototype.bearingCdeg}, ` +
       `${prototype.flags}U, 0U},`,
   );
+  const primaryKnotRows = primaryKnots.map(
+    (knot) =>
+      `    {${knot.measuredMm}U, ${knot.radialMm}U},`,
+  );
   const source = [
     `#include "${headerFileName}"`,
     "",
@@ -172,15 +201,24 @@ function exportEmpiricalFirmware(model, loaded, input = {}) {
     ...prototypeRows,
     "};",
     "",
+    `static const EmpiricalRangeKnotV1 ${primaryKnotSymbol}[] = {`,
+    ...primaryKnotRows,
+    "};",
+    "",
     `const EmpiricalModelV1 ${symbolName} = {`,
     "    .magic = EMPIRICAL_MODEL_V1_MAGIC,",
     "    .version = EMPIRICAL_MODEL_V1_VERSION,",
     `    .prototype_count = ${firmwareModel.prototypeCount}U,`,
     `    .distance_neighbor_count = ${firmwareModel.distanceNeighborCount}U,`,
     `    .angle_neighbor_count = ${firmwareModel.angleNeighborCount}U,`,
+    `    .primary_knot_count = ${firmwareModel.primaryKnotCount}U,`,
     "    .reserved = 0U,",
     `    .distance1_scale_mm = ${cFloat(firmwareModel.distance1ScaleMm)},`,
     `    .distance2_scale_mm = ${cFloat(firmwareModel.distance2ScaleMm)},`,
+    `    .distance_knn_blend = ${cFloat(firmwareModel.distanceKnnBlend)},`,
+    `    .known_prototype_radius = ${cFloat(
+      firmwareModel.knownPrototypeRadius,
+    )},`,
     `    .angle_max_neighbor_distance = ${cFloat(
       firmwareModel.angleMaxNeighborDistance,
     )},`,
@@ -188,6 +226,7 @@ function exportEmpiricalFirmware(model, loaded, input = {}) {
       firmwareModel.angleMaxSpreadDeg,
     )},`,
     `    .prototypes = ${prototypeSymbol},`,
+    `    .primary_knots = ${primaryKnotSymbol},`,
     `    .crc32 = 0x${hex32(crc32)}UL,`,
     "};",
     "",
@@ -206,13 +245,28 @@ function exportEmpiricalFirmware(model, loaded, input = {}) {
     structuredTrainingPointCount: loaded.structuredTrainingPointCount,
     distanceNeighborCount: firmwareModel.distanceNeighborCount,
     angleNeighborCount: firmwareModel.angleNeighborCount,
+    primaryKnotCount: firmwareModel.primaryKnotCount,
+    distanceKnnBlend: firmwareModel.distanceKnnBlend,
+    knownPrototypeRadius: firmwareModel.knownPrototypeRadius,
     firmwareCrc32: hex32(crc32),
-    serializedModelBytes: 32 + prototypes.length * 10,
+    serializedModelBytes:
+      40 + prototypes.length * 10 + primaryKnots.length * 4,
     headerFileName,
     sourceFileName,
     header,
     source,
   };
+}
+
+function buildPrimaryKnots(model) {
+  const knots = model.rangeKnots?.[model.primaryAnchorId] ?? [];
+  if (knots.length < 2 || knots.length > 16) {
+    throw new RangeError("涓绘祴璺濇姌绾胯妭鐐规暟蹇呴』鍦?2 鍒?16 涔嬮棿");
+  }
+  return knots.map((knot) => ({
+    measuredMm: uint16(Math.round(Number(knot.measuredMm))),
+    radialMm: uint16(Math.round(Number(knot.distanceMm))),
+  }));
 }
 
 function buildEmpiricalPrototypes(model) {
@@ -269,9 +323,12 @@ function computeEmpiricalModelCrc(model) {
   u16(model.prototypeCount);
   byte(model.distanceNeighborCount);
   byte(model.angleNeighborCount);
-  u16(0);
+  byte(model.primaryKnotCount);
+  byte(0);
   float32(model.distance1ScaleMm);
   float32(model.distance2ScaleMm);
+  float32(model.distanceKnnBlend);
+  float32(model.knownPrototypeRadius);
   float32(model.angleMaxNeighborDistance);
   float32(model.angleMaxSpreadDeg);
   for (const prototype of model.prototypes) {
@@ -281,6 +338,10 @@ function computeEmpiricalModelCrc(model) {
     u16(prototype.bearingCdeg & 0xffff);
     byte(prototype.flags);
     byte(0);
+  }
+  for (const knot of model.primaryKnots) {
+    u16(knot.measuredMm);
+    u16(knot.radialMm);
   }
   return (crc ^ 0xffffffff) >>> 0;
 }
@@ -480,6 +541,110 @@ function validateSparseRealtimeModel(model, samples) {
       angleErrors.length > 0 ? percentile(angleErrors, 0.95) : null,
     rows,
   };
+}
+
+function validateGroupedPhysicalPoints(samples, modelOptions) {
+  const groups = new Map();
+  for (const sample of samples) {
+    const key = physicalPointKey(sample.label);
+    const group = groups.get(key) ?? [];
+    group.push(sample);
+    groups.set(key, group);
+  }
+
+  const rows = [];
+  for (const [heldKey, heldSamples] of groups) {
+    const trainingSamples = samples.filter(
+      (sample) => physicalPointKey(sample.label) !== heldKey,
+    );
+    const foldModel = trainSparseRealtimeModel(trainingSamples, {
+      ...modelOptions,
+      computeMetrics: false,
+    });
+    for (const sample of heldSamples) {
+      const estimate = estimateSparseRealtime(foldModel, {
+        anchors: sample.perAnchor,
+      });
+      rows.push({
+        captureId: sample.captureId,
+        label: sample.label,
+        trueDistanceM: sample.distanceM,
+        estimatedDistanceM: estimate.distanceM,
+        distanceErrorM: estimate.valid
+          ? estimate.distanceM - sample.distanceM
+          : null,
+      });
+    }
+  }
+
+  const validRows = rows.filter((row) =>
+    Number.isFinite(row.distanceErrorM),
+  );
+  const all = summarizeDistanceErrors(validRows);
+  const near1m = summarizeDistanceErrors(
+    validRows.filter(
+      (row) => row.trueDistanceM >= 0.8 && row.trueDistanceM <= 1.2,
+    ),
+  );
+  const near2m = summarizeDistanceErrors(
+    validRows.filter(
+      (row) => row.trueDistanceM >= 1.8 && row.trueDistanceM <= 2.2,
+    ),
+  );
+  const boundaryCrossingErrorCount = validRows.reduce(
+    (count, row) =>
+      count +
+      boundaryCrossed(row.trueDistanceM, row.estimatedDistanceM, 1) +
+      boundaryCrossed(row.trueDistanceM, row.estimatedDistanceM, 2),
+    0,
+  );
+
+  return {
+    distanceValidationMode: "leave-one-physical-point-out",
+    trainingPointCount: samples.length,
+    physicalPointCount: groups.size,
+    distanceMaxErrorM: all.maxErrorM,
+    distanceP95M: all.p95M,
+    distanceMaeM: all.maeM,
+    near1m,
+    near2m,
+    boundaryCrossingErrorCount,
+    validationRows: rows,
+  };
+}
+
+function physicalPointKey(label) {
+  const text = String(label ?? "").trim();
+  if (/^(line|angle|valid)_/i.test(text)) {
+    return text.replace(/_rep\d+$/i, "");
+  }
+  return text
+    .replace(/\s*-\s*[23]\s*$/i, "")
+    .replace(/m\s*-\s*[23]\s*$/i, "m")
+    .trim();
+}
+
+function summarizeDistanceErrors(rows) {
+  const errors = rows
+    .map((row) => Math.abs(row.distanceErrorM))
+    .filter(Number.isFinite);
+  return {
+    pointCount: errors.length,
+    maeM:
+      errors.length > 0
+        ? errors.reduce((sum, error) => sum + error, 0) / errors.length
+        : null,
+    p95M: errors.length > 0 ? percentile(errors, 0.95) : null,
+    maxErrorM: errors.length > 0 ? Math.max(...errors) : null,
+  };
+}
+
+function boundaryCrossed(trueDistanceM, estimatedDistanceM, thresholdM) {
+  if (trueDistanceM === thresholdM) return 0;
+  return Number(
+    (trueDistanceM < thresholdM && estimatedDistanceM >= thresholdM) ||
+      (trueDistanceM > thresholdM && estimatedDistanceM <= thresholdM),
+  );
 }
 
 function percentile(values, ratio) {
