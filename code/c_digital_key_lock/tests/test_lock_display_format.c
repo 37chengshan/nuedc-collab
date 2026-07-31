@@ -117,6 +117,31 @@ static bool test_distance_formats_meters_without_float_printf(void)
     return true;
 }
 
+static bool test_raw_channels_show_each_uart_before_fusion(void)
+{
+    LockDisplayModel model;
+    char text[LOCK_DISPLAY_CHANNEL_TEXT_CAPACITY];
+
+    memset(&model, 0, sizeof(model));
+    lock_display_format_channels(&model, text);
+    TEST_ASSERT_TEXT(text, "1:--- 2:---");
+
+    model.channel_valid_mask = 0x01U;
+    model.channel_distance_mm[0] = 0U;
+    lock_display_format_channels(&model, text);
+    TEST_ASSERT_TEXT(text, "1:000 2:---");
+
+    model.channel_valid_mask = 0x03U;
+    model.channel_distance_mm[0] = 259U;
+    model.channel_distance_mm[1] = 966U;
+    lock_display_format_channels(&model, text);
+    TEST_ASSERT_TEXT(text, "1:026 2:097");
+
+    lock_display_format_channels(NULL, text);
+    TEST_ASSERT_TEXT(text, "1:--- 2:---");
+    return true;
+}
+
 static bool test_auth_text_has_wait_pass_and_fail_states(void)
 {
     LockDisplayModel model;
@@ -180,6 +205,8 @@ int main(void)
         {"angle positive, negative, and invalid",
          test_angle_formats_positive_negative_and_invalid},
         {"distance formats meters", test_distance_formats_meters_without_float_printf},
+        {"raw channels display before fusion",
+         test_raw_channels_show_each_uart_before_fusion},
         {"AUTH WAIT, PASS, and FAIL",
          test_auth_text_has_wait_pass_and_fail_states},
         {"ZONE text covers every value", test_zone_text_covers_every_zone},

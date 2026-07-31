@@ -253,6 +253,9 @@ static bool test_uwb_parser_units_and_compact_crlf_frame(void)
 
     TEST_ASSERT(uwb_text_parse_line("ID=6,DIST=2m", 105U, &parsed));
     TEST_ASSERT(parsed.distance_mm == 2000U);
+    TEST_ASSERT(uwb_text_parse_line("P1,0200,0cm,15dB", 106U, &parsed));
+    TEST_ASSERT(parsed.key_addr == 0x0200U);
+    TEST_ASSERT(parsed.distance_mm == 0U);
     TEST_ASSERT(!uwb_text_parse_line("ID=6,DIST=10dm", 106U, &parsed));
     TEST_ASSERT(!uwb_text_parse_line("ID=6,DIST=10ft", 107U, &parsed));
     return true;
@@ -528,6 +531,36 @@ static bool test_app_starts_with_held_zero_degree_display(void)
     return true;
 }
 
+static bool test_app_exposes_each_raw_uart_before_position_is_valid(void)
+{
+    LockApp app;
+    const LockDisplayModel *display;
+
+    lock_app_init_with_model(
+        &app, LOCK_ID_INPUT_DIRECT_BITS, &g_calibration_model_v1);
+    app.config.solution_update_interval_ms = 1U;
+
+    app_send_line(&app, 0U, "P0,0100,25cm,15dB", 100U);
+    lock_app_update(&app, 100U, 0U);
+    display = lock_app_display(&app);
+    TEST_ASSERT(!display->position.valid);
+    TEST_ASSERT(display->channel_valid_mask == 0x01U);
+    TEST_ASSERT(display->channel_distance_mm[0] == 250U);
+
+    app_send_line(&app, 1U, "P1,0200,0cm,15dB", 101U);
+    lock_app_update(&app, 101U, 0U);
+    display = lock_app_display(&app);
+    TEST_ASSERT(!display->position.valid);
+    TEST_ASSERT(display->channel_valid_mask == 0x03U);
+    TEST_ASSERT(display->channel_distance_mm[0] == 250U);
+    TEST_ASSERT(display->channel_distance_mm[1] == 0U);
+
+    lock_app_update(&app, 1602U, 0U);
+    display = lock_app_display(&app);
+    TEST_ASSERT(display->channel_valid_mask == 0U);
+    return true;
+}
+
 typedef bool (*TestFunction)(void);
 
 typedef struct {
@@ -552,6 +585,8 @@ int main(void)
         {"app UART and direct-ID integration", test_app_uart_and_direct_id_integration},
         {"app starts with held zero-degree display",
          test_app_starts_with_held_zero_degree_display},
+        {"app exposes raw UART channels before fusion",
+         test_app_exposes_each_raw_uart_before_position_is_valid},
     };
     size_t index;
     unsigned int failures = 0U;
