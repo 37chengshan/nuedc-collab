@@ -96,7 +96,7 @@ static void test_current_ewt_stream_without_line_endings(void)
     push_text(&monitor, 0U,
               "P1,0100,21cm,3dBP1,0100,22cm,4dB");
 
-    state = uwb_monitor_channel(&monitor, 1U);
+    state = uwb_monitor_channel(&monitor, 0U);
     assert(state != NULL);
     assert(state->valid);
     assert(strcmp(state->address, "0100") == 0);
@@ -105,16 +105,15 @@ static void test_current_ewt_stream_without_line_endings(void)
     assert(state->rejected_lines == 0U);
 }
 
-static void test_numbered_frames_share_one_physical_uart(void)
+static void test_numbered_frames_follow_physical_uart(void)
 {
     UwbMonitor monitor;
     const UwbChannelState *first;
     const UwbChannelState *second;
 
     uwb_monitor_init(&monitor);
-    push_text_at(&monitor, 1U,
-                 "re:P0,0100,127cm,18dBP1,0200,127cm,15dB",
-                 100U);
+    push_text_at(&monitor, 0U, "re:P1,0100,127cm,18dB", 100U);
+    push_text_at(&monitor, 1U, "P0,0200,127cm,15dB", 110U);
 
     first = uwb_monitor_channel(&monitor, 0U);
     second = uwb_monitor_channel(&monitor, 1U);
@@ -435,7 +434,7 @@ int main(void)
     test_real_frame();
     test_current_ewt_frame_with_snr();
     test_current_ewt_stream_without_line_endings();
-    test_numbered_frames_share_one_physical_uart();
+    test_numbered_frames_follow_physical_uart();
     test_display_update_waits_for_complete_line();
     test_fragmented_and_back_to_back_frames();
     test_two_channels_are_independent();
