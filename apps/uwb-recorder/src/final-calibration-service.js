@@ -56,22 +56,27 @@ export async function createFinalCalibrationService({
     runtimeSamples,
     REALTIME_MODEL_OPTIONS,
   );
+  let runtimeState = {
+    model,
+    metadata: null,
+  };
 
   return {
     status() {
+      const current = runtimeState;
       return {
         ready: true,
         dataset: loaded.dataset,
         structuredTrainingPointCount: loaded.structuredTrainingPointCount,
         legacyTrainingPointCount: loaded.legacyTrainingPointCount,
-        mode: model.mode,
+        mode: current.model.mode,
         source: "final-captures",
         captureCount: runtimeSamples.length,
         validationPointCount: loaded.validationSamples.length,
         ignoredCaptureCount: loaded.ignored.length,
         ignoredCaptures: loaded.ignored,
-        calibratedRangeM: model.calibratedRangeM,
-        calibratedAngleDeg: model.calibratedAngleDeg,
+        calibratedRangeM: current.model.calibratedRangeM,
+        calibratedAngleDeg: current.model.calibratedAngleDeg,
         metrics: {
           ...groupedMetrics,
           anglePointCount: evaluationModel.metrics.anglePointCount,
@@ -79,22 +84,22 @@ export async function createFinalCalibrationService({
           angleP95Deg: evaluationModel.metrics.angleP95Deg,
         },
         validationMetrics,
-        rangeKnots: model.rangeKnots,
+        rangeKnots: current.model.rangeKnots,
+        runtimeModel: current.metadata
+          ? structuredClone(current.metadata)
+          : null,
       };
     },
 
     estimate(measurements) {
-      const anchors = summarizeRecentMeasurements(measurements);
-      const estimate = estimateSparseRealtime(model, { anchors });
-      return {
-        ...estimate,
-        source: "final-captures",
-        sampleCount: anchors.reduce(
-          (sum, anchor) => sum + anchor.sampleCount,
-          0,
-        ),
-        anchors,
-      };
+      const current = runtimeState;
+      return estimateWithModel(
+        current.model,
+        measurements,
+        current.metadata ?? {
+          source: "final-captures",
+        },
+      );
     },
 
     async estimateLatest() {
@@ -111,11 +116,59 @@ export async function createFinalCalibrationService({
       return this.estimate(measurements);
     },
 
-    exportFirmware(input = {}) {
-      return exportEmpiricalFirmware(model, loaded, input);
+    estimateWithModel(nextModel, measurements, metadata = {}) {
+      return estimateWithModel(nextModel, measurements, metadata);
     },
 
-    model,
+    async estimateLatestWithModel(nextModel, metadata = {}) {
+      if (typeof measurementSource !== "function") {
+        return {
+          valid: false,
+          source: metadata.source ?? "continuous-calibration-candidate",
+          reason: "串口实时数据源尚未接入",
+        };
+      }
+      const measurements = await measurementSource({
+        limit: 80,
+      });
+      return estimateWithModel(nextModel, measurements, metadata);
+    },
+
+    exportFirmware(input = {}) {
+      return exportEmpiricalFirmware(runtimeState.model, loaded, input);
+    },
+
+    installRuntimeModel(nextModel, metadata = {}) {
+      if (!nextModel?.rangeKnots || !nextModel.primaryAnchorId) {
+        throw new TypeError("持续标定运行模型无效");
+      }
+      runtimeState = {
+        model: nextModel,
+        metadata: structuredClone(metadata),
+      };
+      return structuredClone(runtimeState.metadata);
+    },
+
+    get model() {
+      return runtimeState.model;
+    },
+  };
+}
+
+function estimateWithModel(model, measurements, metadata = {}) {
+  const anchors = summarizeRecentMeasurements(measurements);
+  const estimate = estimateSparseRealtime(model, { anchors });
+  return {
+    ...estimate,
+    source: metadata.source ?? "final-captures",
+    modelVersion: metadata.versionId ?? null,
+    candidateId: metadata.candidateId ?? null,
+    setupKey: metadata.setupKey ?? null,
+    sampleCount: anchors.reduce(
+      (sum, anchor) => sum + anchor.sampleCount,
+      0,
+    ),
+    anchors,
   };
 }
 

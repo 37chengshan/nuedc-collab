@@ -45,3 +45,13 @@ export {
   parseSparseCalibrationLabel,
   trainSparseRealtimeModel,
 } from "./sparse-realtime.js";
+export {
+  aggregateContinuousCalibrationRecords,
+  assessContinuousCandidate,
+  buildContinuousCalibrationCandidate,
+  evaluateContinuousCalibrationModel,
+  mapGroundTruthToDoorPolar,
+  normalizeCalibrationSetup,
+  normalizeContinuousCalibrationRecord,
+  setupRevisionKey,
+} from "./continuous-calibration.js";

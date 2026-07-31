@@ -11,9 +11,11 @@ import {
   DigitalKeyScene,
   type ScenePoint,
 } from "./DigitalKeyScene";
+import { CalibrationWorkbench } from "./CalibrationWorkbench";
 
-type WorkbenchMode = "live" | "replay" | "simulation";
+type WorkbenchMode = "live" | "replay" | "simulation" | "calibration";
 type BottomTab = "timeline" | "serial" | "configuration" | "records";
+type ConsolePage = "status" | "link" | "tools" | "events";
 type LockState = "locked" | "welcome" | "unlocked";
 type FaultKind = "none" | "anchor" | "multipath" | "id" | "timeout";
 
@@ -28,6 +30,11 @@ interface AnchorMetric {
   id: "1" | "2" | "3";
   distance: number;
   snr: number;
+}
+
+interface SerialPortOption {
+  path: string;
+  manufacturer?: string;
 }
 
 interface LivePositionFrame {
@@ -111,9 +118,28 @@ function eventList(value: unknown) {
   return Array.isArray(outer?.events) ? outer.events : [];
 }
 
+function serialPortList(value: unknown): SerialPortOption[] {
+  const outer = recordOf(value);
+  const source = Array.isArray(value)
+    ? value
+    : Array.isArray(outer?.data)
+      ? outer.data
+      : [];
+  return source
+    .map((item) => recordOf(item))
+    .filter((item): item is Record<string, unknown> => Boolean(item))
+    .map((item) => ({
+      path: String(item.path ?? ""),
+      manufacturer:
+        typeof item.manufacturer === "string" ? item.manufacturer : undefined,
+    }))
+    .filter((item) => item.path.length > 0);
+}
+
 export function App() {
   const [mode, setMode] = useState<WorkbenchMode>("live");
   const [tab, setTab] = useState<BottomTab>("timeline");
+  const [consolePage, setConsolePage] = useState<ConsolePage>("status");
   const [position, setPosition] = useState<ScenePoint>({ x: 0.18, y: 1.42 });
   const [idBits, setIdBits] = useState(bitsFromId(0x0a));
   const [expectedId, setExpectedId] = useState(0x0a);
@@ -123,6 +149,8 @@ export function App() {
   const [busy, setBusy] = useState<string | null>(null);
   const [port, setPort] = useState("LIVE://UWB-RECORDER");
   const [baudRate, setBaudRate] = useState(115200);
+  const [serialPorts, setSerialPorts] = useState<SerialPortOption[]>([]);
+  const [serialPath, setSerialPath] = useState("");
   const [commandText, setCommandText] = useState("");
   const [announcement, setAnnouncement] = useState(
     "工作台已就绪，等待 Agent 服务",
@@ -343,6 +371,94 @@ export function App() {
     return frame;
   }, []);
 
+  const applyRecorderStatus = useCallback((payload: unknown) => {
+    const status = domainData(payload);
+    if (!status) {
+      return null;
+    }
+    setRecorderStatus(status);
+    if (typeof status.port === "string" && status.port.length > 0) {
+      setSerialPath(status.port);
+    }
+    const statusBaudRate = Number(status.baudRate);
+    if (Number.isFinite(statusBaudRate)) {
+      setBaudRate(statusBaudRate);
+    }
+    return status;
+  }, []);
+
+  const loadSerialPorts = useCallback(async () => {
+    setBusy("device.ports.list");
+    try {
+      const result = await agentClient.query("device.ports.list", {});
+      const ports = serialPortList(result);
+      setSerialPorts(ports);
+      if (ports.length > 0) {
+        setSerialPath((current) =>
+          ports.some((item) => item.path === current)
+            ? current
+            : ports[0].path,
+        );
+      }
+      setAnnouncement(
+        ports.length > 0 ? `发现 ${ports.length} 个串口` : "没有发现可用串口",
+      );
+      return ports;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "串口扫描失败";
+      setAnnouncement(message);
+      appendTimeline("ERR", `device.ports.list · ${message}`);
+      return [];
+    } finally {
+      setBusy(null);
+    }
+  }, [appendTimeline]);
+
+  const connectSerial = useCallback(async () => {
+    if (!serialPath) {
+      setAnnouncement("请先扫描并选择串口");
+      return;
+    }
+    setBusy("device.serial.connect");
+    try {
+      const result = await agentClient.execute("device.serial.connect", {
+        path: serialPath,
+        baudRate,
+      });
+      applyRecorderStatus(result);
+      setAnnouncement(`${serialPath} 已连接`);
+      appendTimeline("SYS", `${serialPath} @ ${baudRate} 已连接`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "串口连接失败";
+      setAnnouncement(message);
+      appendTimeline("ERR", `device.serial.connect · ${message}`);
+    } finally {
+      setBusy(null);
+    }
+  }, [
+    appendTimeline,
+    applyRecorderStatus,
+    baudRate,
+    serialPath,
+  ]);
+
+  const disconnectSerial = useCallback(async () => {
+    setBusy("device.serial.disconnect");
+    try {
+      const result = await agentClient.execute("device.serial.disconnect", {});
+      applyRecorderStatus(result);
+      setLiveFrame(null);
+      setAnnouncement("串口已断开");
+      appendTimeline("SYS", "串口已断开");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "串口断开失败";
+      setAnnouncement(message);
+      appendTimeline("ERR", `device.serial.disconnect · ${message}`);
+    } finally {
+      setBusy(null);
+    }
+  }, [appendTimeline, applyRecorderStatus]);
+
   const refreshLivePosition = useCallback(
     async ({
       silent = false,
@@ -370,14 +486,7 @@ export function App() {
           await Promise.allSettled(requests);
 
         if (statusResult.status === "fulfilled") {
-          const status = domainData(statusResult.value);
-          if (status) {
-            setRecorderStatus(status);
-            const statusBaudRate = Number(status.baudRate);
-            if (Number.isFinite(statusBaudRate)) {
-              setBaudRate(statusBaudRate);
-            }
-          }
+          applyRecorderStatus(statusResult.value);
         }
         if (calibrationResult?.status === "fulfilled") {
           const calibration = domainData(calibrationResult.value);
@@ -418,7 +527,7 @@ export function App() {
         }
       }
     },
-    [appendTimeline, applyLivePosition],
+    [appendTimeline, applyLivePosition, applyRecorderStatus],
   );
 
   useEffect(() => {
@@ -430,6 +539,7 @@ export function App() {
       setConnected(true);
       setAnnouncement("Agent v1 已连接，正在读取电脑拟合结果");
       appendTimeline("SYS", "Agent v1 已连接，实机监看通道就绪");
+      void loadSerialPorts();
       void refreshLivePosition({ includeCalibration: true });
     }).catch(() => {
       if (!cancelled) {
@@ -442,7 +552,7 @@ export function App() {
     return () => {
       cancelled = true;
     };
-  }, [appendTimeline, refreshLivePosition]);
+  }, [appendTimeline, loadSerialPorts, refreshLivePosition]);
 
   useEffect(() => {
     const timer = window.setInterval(() => setClock(Date.now()), 250);
@@ -508,6 +618,7 @@ export function App() {
 
   function setWorkbenchMode(nextMode: WorkbenchMode) {
     setMode(nextMode);
+    setConsolePage("status");
     if (nextMode === "live") {
       setPort("LIVE://UWB-RECORDER");
       setLifecycle("monitoring");
@@ -518,6 +629,13 @@ export function App() {
       return;
     }
     setLiveMonitoring(false);
+    if (nextMode === "calibration") {
+      setPort("CAL://FIELD-AGENT");
+      setLifecycle("paused");
+      setTab("timeline");
+      setAnnouncement("现场标定模式已打开，请先核对基站坐标和钥匙真值");
+      return;
+    }
     if (nextMode === "replay") {
       setPort("REPLAY://LOCAL");
       setLifecycle("paused");
@@ -639,15 +757,14 @@ export function App() {
             <span>K</span>
           </div>
           <div>
-            <p className="instrument-kicker">NUEDC / C · KEYFIELD 3A</p>
             <h1>数字钥匙工作台</h1>
-            <p className="brand-subtitle">电脑拟合位置 · 门锁现场监看</p>
           </div>
         </div>
 
         <div className="mode-switch" aria-label="工作模式">
           {[
             ["live", "实机监看"],
+            ["calibration", "现场标定"],
             ["replay", "历史回放"],
             ["simulation", "仿真调试"],
           ].map(([value, label]) => (
@@ -664,356 +781,449 @@ export function App() {
           ))}
         </div>
 
-        <div className="connection-controls">
-          <label>
-            <span>数据源</span>
-            <select value={port} onChange={(event) => setPort(event.target.value)}>
-              <option>SIM://KEYFIELD</option>
-              <option>LIVE://UWB-RECORDER</option>
-              <option>REPLAY://LOCAL</option>
-            </select>
-          </label>
-          <label>
-            <span>串口速率</span>
-            <select
-              value={baudRate}
-              onChange={(event) => setBaudRate(Number(event.target.value))}
+        {mode === "calibration" ? (
+          <div className="connection-controls calibration-connection-controls">
+            <label>
+              <span>通道</span>
+              <select value="CAL://FIELD-AGENT" disabled>
+                <option>现场</option>
+              </select>
+            </label>
+            <button
+              type="button"
+              className={connected ? "status-button online" : "status-button"}
+              disabled={busy !== null}
+              onClick={() => void runQuery("calibration.candidate.get")}
             >
-              <option value={115200}>115200</option>
-              <option value={460800}>460800</option>
-              <option value={921600}>921600</option>
-            </select>
-          </label>
-          <button
-            type="button"
-            className={connected ? "status-button online" : "status-button"}
-            disabled={busy !== null}
-            onClick={() => {
-              if (port.startsWith("LIVE")) {
-                void refreshLivePosition({ includeCalibration: true });
-              } else {
-                void runQuery("simulation.state.get");
-              }
-            }}
-          >
+              <span className="status-lamp" />
+              刷新标定状态
+            </button>
+          </div>
+        ) : (
+          <div className={connected ? "top-agent-state online" : "top-agent-state"}>
             <span className="status-lamp" />
-            {connected ? "Agent 在线" : "连接 Agent"}
-          </button>
-        </div>
+            <div>
+              <strong>{connected ? "Agent 在线" : "Agent 离线"}</strong>
+              <small>
+                {mode === "live"
+                  ? "实机模式"
+                  : mode === "replay"
+                    ? "回放模式"
+                    : "仿真模式"}
+              </small>
+            </div>
+          </div>
+        )}
       </header>
 
-      <section className="pipeline-rail" aria-label="数据链路">
-        <div className="pipeline-heading">
-          <span className="panel-code">DATA PATH / READ ONLY</span>
-          <strong>数据链路</strong>
-        </div>
-        {[
-          {
-            code: "01",
-            title: "UWB 基站",
-            detail: recorderConnected ? "串口采集中" : "等待串口连接",
-            active: recorderConnected,
-          },
-          {
-            code: "02",
-            title: "电脑拟合",
-            detail: modelReady ? "最终模型已载入" : "等待标定模型",
-            active: modelReady,
-          },
-          {
-            code: "03",
-            title: "门锁数据",
-            detail: dataFresh ? "最终位置实时有效" : "等待新鲜位置",
-            active: dataFresh && Boolean(liveFrame?.valid),
-          },
-          {
-            code: "04",
-            title: "网页监看",
-            detail: liveMonitoring ? "实时监看中" : "监看已暂停",
-            active: mode === "live" && liveMonitoring,
-          },
-        ].map((stage, index) => (
-          <div
-            key={stage.code}
-            className={stage.active ? "pipeline-stage is-active" : "pipeline-stage"}
-          >
-            <span>{stage.code}</span>
-            <div>
-              <strong>{stage.title}</strong>
-              <small>{stage.detail}</small>
-            </div>
-            {index < 3 && <i aria-hidden="true" />}
-          </div>
-        ))}
-        <div className="monitor-controls">
-          <button
-            type="button"
-            className={liveMonitoring ? "monitor-toggle is-running" : "monitor-toggle"}
-            aria-pressed={liveMonitoring}
-            disabled={mode !== "live"}
-            onClick={() => {
-              const next = !liveMonitoring;
-              setLiveMonitoring(next);
-              setLifecycle(next ? "monitoring" : "paused");
-              setAnnouncement(next ? "实时监看已启动" : "实时监看已暂停");
-            }}
-          >
-            {liveMonitoring ? "暂停监看" : "实时监看"}
-          </button>
-          <button
-            type="button"
-            disabled={mode !== "live" || busy !== null}
-            onClick={() => void refreshLivePosition({ includeCalibration: true })}
-          >
-            立即刷新
-          </button>
-        </div>
-      </section>
-
-      <div className="telemetry-strip" aria-label="关键状态">
-        <div>
-          <span>DOOR POLICY</span>
-          <strong data-state={lockState}>
-            {lockState === "unlocked"
-              ? "已解锁"
-              : lockState === "welcome"
-                ? "迎宾"
-                : "锁定"}
-          </strong>
-        </div>
-        <div>
-          <span>KEY ID</span>
-          <strong>
-            {mode === "live" && liveFrame?.keyId === null
-              ? "----"
-              : idBits.map(Number).join("")}
-          </strong>
-        </div>
-        <div>
-          <span>RADIAL</span>
-          <strong>{radialDistance.toFixed(3)} m</strong>
-        </div>
-        <div>
-          <span>BEARING</span>
-          <strong>
-            {bearing === null
-              ? "方向未锁定"
-              : `${bearing >= 0 ? "+" : ""}${bearing.toFixed(2)}°`}
-          </strong>
-        </div>
-        <div>
-          <span>CONFIDENCE</span>
-          <strong>{quality}%</strong>
-        </div>
-        <div>
-          <span>LIFECYCLE</span>
-          <strong>
-            {mode === "live"
-              ? liveMonitoring
-                ? "MONITORING"
-                : "PAUSED"
-              : lifecycle.toUpperCase()}
-          </strong>
-        </div>
-      </div>
-
-      <main className="main-instrument">
-        <DigitalKeyScene
-          position={position}
-          idBits={idBits}
-          status={lockState}
-          faultedAnchor={fault === "anchor" ? "A2" : undefined}
-          interactive={mode === "simulation"}
-          bearingValid={mode !== "live" || Boolean(liveFrame?.angleValid)}
-          stale={mode === "live" && !dataFresh}
-          showRangeLines={mode === "simulation"}
-          title={mode === "live" ? "电脑拟合后的最终位置" : "门锁前向定位场"}
-          sourceLabel={
-            mode === "live"
-              ? "POSITION SOURCE / UWB LAB FINAL CALIBRATION"
-              : mode === "replay"
-                ? "POSITION SOURCE / LOCAL SESSION"
-                : "POSITION SOURCE / SEEDED SIMULATION"
-          }
-          onMove={moveKey}
+      {mode === "calibration" ? (
+        <CalibrationWorkbench
+          serialPorts={serialPorts}
+          serialPath={serialPath}
+          baudRate={baudRate}
+          recorderConnected={recorderConnected}
+          serialBusy={busy?.startsWith("device.") === true}
+          onSerialPathChange={setSerialPath}
+          onBaudRateChange={setBaudRate}
+          onScanPorts={() => void loadSerialPorts()}
+          onConnectSerial={() => void connectSerial()}
+          onDisconnectSerial={() => void disconnectSerial()}
         />
+      ) : (
+        <main className="operator-layout">
+          <DigitalKeyScene
+            position={position}
+            idBits={idBits}
+            status={lockState}
+            faultedAnchor={fault === "anchor" ? "A2" : undefined}
+            interactive={mode === "simulation"}
+            bearingValid={mode !== "live" || Boolean(liveFrame?.angleValid)}
+            stale={mode === "live" && !dataFresh}
+            showRangeLines={mode === "simulation"}
+            title="钥匙位置"
+            sourceLabel={
+              mode === "live"
+                ? "电脑拟合结果"
+                : mode === "replay"
+                  ? "历史记录"
+                  : "仿真定位"
+            }
+            onMove={moveKey}
+          />
 
-        <details className="mobile-fold debug-panel" open>
-          <summary>
-            <span>{mode === "live" ? "实时数据台" : "链路调试台"}</span>
-            <small>LINK / DIAGNOSTICS</small>
-          </summary>
-          <div className="debug-content">
-            {mode === "live" && (
-              <>
-                <section className="debug-section fitted-result">
-                  <header>
-                    <span className="panel-code">FITTED / FINAL POSITION</span>
-                    <h2>最终位置</h2>
-                  </header>
-                  <div className="position-hero">
-                    <div>
-                      <span>径向距离</span>
-                      <strong>
-                        {liveFrame?.valid
-                          ? `${liveFrame.distanceM?.toFixed(3)} m`
-                          : "--"}
-                      </strong>
-                    </div>
-                    <div>
-                      <span>方位角</span>
-                      <strong>
-                        {liveFrame?.angleValid
-                          ? `${Number(liveFrame.angleDeg).toFixed(2)}°`
-                          : "未锁定"}
-                      </strong>
-                    </div>
-                  </div>
-                  <div className="coordinate-grid">
-                    <span>
-                      X
-                      <strong>
-                        {liveFrame?.xM === null || liveFrame?.xM === undefined
-                          ? "--"
-                          : `${liveFrame.xM.toFixed(3)} m`}
-                      </strong>
-                    </span>
-                    <span>
-                      Y
-                      <strong>
-                        {liveFrame?.yM === null || liveFrame?.yM === undefined
-                          ? "--"
-                          : `${liveFrame.yM.toFixed(3)} m`}
-                      </strong>
-                    </span>
-                    <span>
-                      置信度
-                      <strong>{liveFrame?.confidencePercent ?? 0}%</strong>
-                    </span>
-                  </div>
-                  <p className={liveFrame?.angleValid ? "result-note good" : "result-note"}>
-                    {liveFrame?.valid
-                      ? liveFrame.angleValid
-                        ? "电脑拟合的二维位置有效，网页直接显示结果。"
-                        : "当前只能确定距离；网页不会伪造横向位置。"
-                      : liveFrame?.reason ?? "等待电脑输出有效拟合位置。"}
-                  </p>
-                </section>
-
-                <section className="debug-section data-health">
-                  <header>
-                    <span className="panel-code">SOURCE / HEALTH</span>
-                    <h2>数据健康度</h2>
-                  </header>
-                  <dl>
-                    <div>
-                      <dt>串口</dt>
-                      <dd>{recorderConnected ? "已连接" : "未连接"}</dd>
-                    </div>
-                    <div>
-                      <dt>拟合模型</dt>
-                      <dd>{modelReady ? "已就绪" : "未就绪"}</dd>
-                    </div>
-                    <div>
-                      <dt>数据时效</dt>
-                      <dd>
-                        {dataAgeMs === null
-                          ? "--"
-                          : dataAgeMs < 1000
-                            ? `${Math.round(dataAgeMs)} ms`
-                            : `${(dataAgeMs / 1000).toFixed(1)} s`}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt>结果质量</dt>
-                      <dd>{liveFrame?.quality ?? "--"}</dd>
-                    </div>
-                    <div>
-                      <dt>样本数</dt>
-                      <dd>{liveFrame?.sampleCount ?? 0}</dd>
-                    </div>
-                    <div>
-                      <dt>预期最大误差</dt>
-                      <dd>
-                        {liveFrame?.expectedErrorM === null ||
-                        liveFrame?.expectedErrorM === undefined
-                          ? "--"
-                          : `±${liveFrame.expectedErrorM.toFixed(3)} m`}
-                      </dd>
-                    </div>
-                  </dl>
-                  {liveError && <p className="inline-error">{liveError}</p>}
-                  <p className="read-only-note">
-                    只读链路：网页不打开串口、不重新拟合、不向门锁发送危险指令。
-                  </p>
-                </section>
-              </>
-            )}
-
-            {mode === "simulation" && (
-            <section className="debug-section">
-              <header>
-                <span className="panel-code">IDENTITY / 4 BIT</span>
-                <h2>ID 脉冲环</h2>
-              </header>
-              <div className="id-pulse-control">
-                <div className="pulse-orbit" aria-hidden="true">
-                  <i />
-                  <i />
-                  <strong>{selectedId.toString(16).toUpperCase()}</strong>
+          <aside className="operator-console" aria-label="实时控制台">
+            <header className="console-shell-header">
+              <div className="console-heading">
+                <div>
+                  <h2>控制台</h2>
+                  <span>
+                    {mode === "live"
+                      ? "实机监看"
+                      : mode === "replay"
+                        ? "历史回放"
+                        : "仿真调试"}
+                  </span>
                 </div>
-                <div className="bit-switches" aria-label="四位钥匙 ID">
-                  {idBits.map((bit, index) => (
+                <strong data-state={lockState}>
+                  {lockState === "unlocked"
+                    ? "已解锁"
+                    : lockState === "welcome"
+                      ? "迎宾"
+                      : "锁定"}
+                </strong>
+              </div>
+              <nav className="console-page-tabs" aria-label="控制台分页">
+                {[
+                  ["status", "状态"],
+                  ["link", "链路"],
+                  ["tools", "操作"],
+                  ["events", "事件"],
+                ].map(([value, label]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    className={consolePage === value ? "is-active" : ""}
+                    aria-pressed={consolePage === value}
+                    onClick={() => {
+                      const nextPage = value as ConsolePage;
+                      setConsolePage(nextPage);
+                      if (nextPage === "tools" && mode !== "simulation") {
+                        void loadRecords();
+                      }
+                    }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </nav>
+            </header>
+
+            {consolePage === "status" && (
+            <section className="console-overview">
+              <div className="console-connection">
+                {mode === "live" ? (
+                  <>
+                    <label>
+                      <span>串口</span>
+                      <select
+                        value={serialPath}
+                        onChange={(event) => setSerialPath(event.target.value)}
+                        aria-label="串口端口"
+                      >
+                        {serialPorts.length === 0 && (
+                          <option value="">未发现端口</option>
+                        )}
+                        {serialPorts.map((item) => (
+                          <option key={item.path} value={item.path}>
+                            {item.path}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label>
+                      <span>速率</span>
+                      <select
+                        value={baudRate}
+                        onChange={(event) =>
+                          setBaudRate(Number(event.target.value))
+                        }
+                      >
+                        <option value={115200}>115200</option>
+                        <option value={460800}>460800</option>
+                        <option value={921600}>921600</option>
+                      </select>
+                    </label>
                     <button
-                      key={index}
                       type="button"
-                      className={bit ? "bit-active" : ""}
-                      aria-pressed={bit}
                       disabled={busy !== null}
-                      onClick={() => toggleIdBit(index)}
+                      onClick={() => void loadSerialPorts()}
                     >
-                      <span>B{3 - index}</span>
-                      <strong>{Number(bit)}</strong>
+                      扫描
                     </button>
-                  ))}
+                    <button
+                      type="button"
+                      className={
+                        recorderConnected
+                          ? "status-button online"
+                          : "status-button"
+                      }
+                      disabled={
+                        busy !== null || (!recorderConnected && !serialPath)
+                      }
+                      onClick={() =>
+                        recorderConnected
+                          ? void disconnectSerial()
+                          : void connectSerial()
+                      }
+                    >
+                      <span className="status-lamp" />
+                      {recorderConnected ? "断开" : "连接串口"}
+                    </button>
+                  </>
+                ) : (
+                  <>
+                <label>
+                  <span>数据源</span>
+                  <select
+                    value={port}
+                    onChange={(event) => setPort(event.target.value)}
+                  >
+                    <option>SIM://KEYFIELD</option>
+                    <option>LIVE://UWB-RECORDER</option>
+                    <option>REPLAY://LOCAL</option>
+                  </select>
+                </label>
+                <label>
+                  <span>速率</span>
+                  <select
+                    value={baudRate}
+                    onChange={(event) => setBaudRate(Number(event.target.value))}
+                  >
+                    <option value={115200}>115200</option>
+                    <option value={460800}>460800</option>
+                    <option value={921600}>921600</option>
+                  </select>
+                </label>
+                <button
+                  type="button"
+                  className={connected ? "status-button online" : "status-button"}
+                  disabled={busy !== null}
+                  onClick={() => {
+                    if (port.startsWith("LIVE")) {
+                      void refreshLivePosition({ includeCalibration: true });
+                    } else {
+                      void runQuery("simulation.state.get");
+                    }
+                  }}
+                >
+                  <span className="status-lamp" />
+                  {connected ? "已连接" : "连接"}
+                </button>
+                  </>
+                )}
+              </div>
+
+              <div className="console-status-grid" aria-label="关键状态">
+                <div>
+                  <span>钥匙 ID</span>
+                  <strong>
+                    {mode === "live" && liveFrame?.keyId === null
+                      ? "----"
+                      : idBits.map(Number).join("")}
+                  </strong>
+                </div>
+                <div>
+                  <span>距离</span>
+                  <strong>{radialDistance.toFixed(3)} m</strong>
+                </div>
+                <div>
+                  <span>方向</span>
+                  <strong>
+                    {bearing === null
+                      ? "未锁定"
+                      : `${bearing >= 0 ? "+" : ""}${bearing.toFixed(2)}°`}
+                  </strong>
+                </div>
+                <div>
+                  <span>置信度</span>
+                  <strong>{quality}%</strong>
                 </div>
               </div>
-              <p className={idAuthorized ? "auth-line valid" : "auth-line"}>
-                <span />
-                {idAuthorized
-                  ? `ID ${selectedId} 与门锁拨码一致`
-                  : `ID ${selectedId} 与期望 ${expectedId} 不一致`}
-              </p>
-            </section>
-            )}
 
-            <section className="debug-section">
-              <header>
-                <span className="panel-code">ANCHORS / TWR</span>
-                <h2>{mode === "live" ? "拟合输入摘要" : "三路测距"}</h2>
-              </header>
-              <div className="anchor-table">
-                {anchorMetrics.map((anchor) => (
-                  <div
-                    key={anchor.id}
-                    className={
-                      fault === "anchor" && anchor.id === "2"
-                        ? "anchor-row is-fault"
-                        : "anchor-row"
-                    }
-                  >
-                    <span className="anchor-name">A{anchor.id}</span>
-                    <strong>{anchor.distance.toFixed(3)} m</strong>
-                    <span>
-                      {anchor.snr <= -90 ? "LOST" : `${anchor.snr.toFixed(1)} dB`}
-                    </span>
-                    <i style={{ "--level": `${Math.max(4, anchor.snr * 4)}%` } as React.CSSProperties} />
-                  </div>
+              <div className="console-link-grid" aria-label="链路状态">
+                {[
+                  ["基站", recorderConnected],
+                  ["拟合", modelReady],
+                  ["位置", dataFresh && Boolean(liveFrame?.valid)],
+                  ["监看", mode === "live" && liveMonitoring],
+                ].map(([label, active]) => (
+                  <span key={String(label)} className={active ? "is-active" : ""}>
+                    <i />
+                    {String(label)}
+                  </span>
                 ))}
               </div>
             </section>
+            )}
 
-            {mode === "simulation" && (
+            {consolePage !== "events" && (
+            <div className="debug-panel">
+              <div className="debug-content">
+                {consolePage === "status" && mode === "live" && (
+                  <>
+                    <section className="debug-section fitted-result">
+                      <header>
+                        <h2>最终位置</h2>
+                      </header>
+                      <div className="position-hero">
+                        <div>
+                          <span>径向距离</span>
+                          <strong>
+                            {liveFrame?.valid
+                              ? `${liveFrame.distanceM?.toFixed(3)} m`
+                              : "--"}
+                          </strong>
+                        </div>
+                        <div>
+                          <span>方位角</span>
+                          <strong>
+                            {liveFrame?.angleValid
+                              ? `${Number(liveFrame.angleDeg).toFixed(2)}°`
+                              : "未锁定"}
+                          </strong>
+                        </div>
+                      </div>
+                      <div className="coordinate-grid">
+                        <span>
+                          X
+                          <strong>
+                            {liveFrame?.xM === null || liveFrame?.xM === undefined
+                              ? "--"
+                              : `${liveFrame.xM.toFixed(3)} m`}
+                          </strong>
+                        </span>
+                        <span>
+                          Y
+                          <strong>
+                            {liveFrame?.yM === null || liveFrame?.yM === undefined
+                              ? "--"
+                              : `${liveFrame.yM.toFixed(3)} m`}
+                          </strong>
+                        </span>
+                        <span>
+                          置信度
+                          <strong>{liveFrame?.confidencePercent ?? 0}%</strong>
+                        </span>
+                      </div>
+                      <p className={liveFrame?.angleValid ? "result-note good" : "result-note"}>
+                        {liveFrame?.valid
+                          ? liveFrame.angleValid
+                            ? "二维位置有效"
+                            : "仅距离有效"
+                          : liveFrame?.reason ?? "等待有效位置"}
+                      </p>
+                    </section>
+
+                    <section className="debug-section data-health">
+                      <header>
+                        <h2>数据健康</h2>
+                      </header>
+                      <dl>
+                        <div>
+                          <dt>串口</dt>
+                          <dd>{recorderConnected ? "已连接" : "未连接"}</dd>
+                        </div>
+                        <div>
+                          <dt>拟合模型</dt>
+                          <dd>{modelReady ? "已就绪" : "未就绪"}</dd>
+                        </div>
+                        <div>
+                          <dt>数据时效</dt>
+                          <dd>
+                            {dataAgeMs === null
+                              ? "--"
+                              : dataAgeMs < 1000
+                                ? `${Math.round(dataAgeMs)} ms`
+                                : `${(dataAgeMs / 1000).toFixed(1)} s`}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt>结果质量</dt>
+                          <dd>{liveFrame?.quality ?? "--"}</dd>
+                        </div>
+                        <div>
+                          <dt>样本数</dt>
+                          <dd>{liveFrame?.sampleCount ?? 0}</dd>
+                        </div>
+                        <div>
+                          <dt>最大误差</dt>
+                          <dd>
+                            {liveFrame?.expectedErrorM === null ||
+                            liveFrame?.expectedErrorM === undefined
+                              ? "--"
+                              : `±${liveFrame.expectedErrorM.toFixed(3)} m`}
+                          </dd>
+                        </div>
+                      </dl>
+                      {liveError && <p className="inline-error">{liveError}</p>}
+                    </section>
+                  </>
+                )}
+
+                {consolePage === "tools" && mode === "simulation" && (
+                  <section className="debug-section">
+                    <header>
+                      <span className="panel-code">IDENTITY / 4 BIT</span>
+                      <h2>ID 脉冲环</h2>
+                    </header>
+                    <div className="id-pulse-control">
+                      <div className="pulse-orbit" aria-hidden="true">
+                        <i />
+                        <i />
+                        <strong>{selectedId.toString(16).toUpperCase()}</strong>
+                      </div>
+                      <div className="bit-switches" aria-label="四位钥匙 ID">
+                        {idBits.map((bit, index) => (
+                          <button
+                            key={index}
+                            type="button"
+                            className={bit ? "bit-active" : ""}
+                            aria-pressed={bit}
+                            disabled={busy !== null}
+                            onClick={() => toggleIdBit(index)}
+                          >
+                            <span>B{3 - index}</span>
+                            <strong>{Number(bit)}</strong>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <p className={idAuthorized ? "auth-line valid" : "auth-line"}>
+                      <span />
+                      {idAuthorized
+                        ? `ID ${selectedId} 与门锁拨码一致`
+                        : `ID ${selectedId} 与期望 ${expectedId} 不一致`}
+                    </p>
+                  </section>
+                )}
+
+                {consolePage === "link" && (
+                  <section className="debug-section">
+                    <header>
+                      <span className="panel-code">ANCHORS / TWR</span>
+                      <h2>{mode === "live" ? "拟合输入摘要" : "三路测距"}</h2>
+                    </header>
+                    <div className="anchor-table">
+                      {anchorMetrics.map((anchor) => (
+                        <div
+                          key={anchor.id}
+                          className={
+                            fault === "anchor" && anchor.id === "2"
+                              ? "anchor-row is-fault"
+                              : "anchor-row"
+                          }
+                        >
+                          <span className="anchor-name">A{anchor.id}</span>
+                          <strong>{anchor.distance.toFixed(3)} m</strong>
+                          <span>
+                            {anchor.snr <= -90
+                              ? "LOST"
+                              : `${anchor.snr.toFixed(1)} dB`}
+                          </span>
+                          <i
+                            style={
+                              {
+                                "--level": `${Math.max(4, anchor.snr * 4)}%`,
+                              } as React.CSSProperties
+                            }
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+            {consolePage === "tools" && mode === "simulation" && (
             <section className="debug-section compact">
               <header>
                 <span className="panel-code">INJECTION</span>
@@ -1034,7 +1244,7 @@ export function App() {
             </section>
             )}
 
-            {mode === "simulation" && (
+            {consolePage === "tools" && mode === "simulation" && (
             <section className="debug-section compact">
               <header>
                 <span className="panel-code">FAULT MATRIX</span>
@@ -1057,7 +1267,7 @@ export function App() {
             </section>
             )}
 
-            {mode === "replay" && (
+            {consolePage === "tools" && mode === "replay" && (
               <section className="debug-section replay-guide">
                 <header>
                   <span className="panel-code">REPLAY / LOCAL</span>
@@ -1075,41 +1285,48 @@ export function App() {
                 </button>
               </section>
             )}
+
+            {consolePage === "tools" && mode === "live" && (
+              <section className="debug-section live-operations">
+                <header>
+                  <h2>实时监看</h2>
+                </header>
+                <div className="console-actions">
+                  <button
+                    type="button"
+                    className={liveMonitoring ? "monitor-toggle is-running" : "monitor-toggle"}
+                    aria-pressed={liveMonitoring}
+                    onClick={() => {
+                      const next = !liveMonitoring;
+                      setLiveMonitoring(next);
+                      setLifecycle(next ? "monitoring" : "paused");
+                      setAnnouncement(next ? "实时监看已启动" : "实时监看已暂停");
+                    }}
+                  >
+                    {liveMonitoring ? "暂停监看" : "实时监看"}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={busy !== null}
+                    onClick={() =>
+                      void refreshLivePosition({ includeCalibration: true })
+                    }
+                  >
+                    立即刷新
+                  </button>
+                </div>
+                <p className="read-only-note">
+                  网页只读取拟合结果，不直接打开串口或强制控制门锁。
+                </p>
+              </section>
+            )}
           </div>
-        </details>
-      </main>
+        </div>
+            )}
 
-      <section className="bottom-deck" aria-labelledby="timeline-title">
-        <nav className="deck-tabs" aria-label="底部工作区">
-          {[
-            ["timeline", "事件时间轴"],
-            ["serial", "串口"],
-            ["configuration", "配置"],
-            ["records", "记录"],
-          ]
-            .filter(
-              ([value]) =>
-                mode === "simulation" || value !== "configuration",
-            )
-            .map(([value, label]) => (
-            <button
-              key={value}
-              type="button"
-              className={tab === value ? "is-active" : ""}
-              aria-selected={tab === value}
-              onClick={() => {
-                setTab(value as BottomTab);
-                if (value === "records") {
-                  void loadRecords();
-                }
-              }}
-            >
-              {label}
-            </button>
-            ))}
-        </nav>
-
-        {tab === "timeline" && (
+            {consolePage !== "status" && (
+            <section className="bottom-deck" aria-labelledby="timeline-title">
+        {consolePage === "events" && (
           <div className="timeline-view">
             <header className="deck-heading">
               <div>
@@ -1144,7 +1361,7 @@ export function App() {
           </div>
         )}
 
-        {tab === "serial" && (
+        {consolePage === "link" && (
           <div className="utility-view">
             <div>
               <span className="panel-code">LIVE PROXY / READ ONLY</span>
@@ -1172,7 +1389,7 @@ export function App() {
           </div>
         )}
 
-        {tab === "configuration" && mode === "simulation" && (
+        {consolePage === "tools" && mode === "simulation" && (
           <div className="utility-view">
             <div>
               <span className="panel-code">LOCK / DIP SWITCH</span>
@@ -1206,7 +1423,7 @@ export function App() {
           </div>
         )}
 
-        {tab === "records" && (
+        {consolePage === "tools" && mode !== "simulation" && (
           <div className="records-view">
             <header className="deck-heading">
               <div>
@@ -1238,7 +1455,11 @@ export function App() {
             )}
           </div>
         )}
-      </section>
+            </section>
+            )}
+          </aside>
+        </main>
+      )}
 
       <div className="sr-only" aria-live="polite" aria-atomic="true">
         {announcement}

@@ -91,6 +91,55 @@ test("最终模型可从近期串口帧实时输出距离和角度", async () =>
   assert.equal(estimate.source, "final-captures");
 });
 
+test("候选模型可旁路计算实时位置且不会替换正式模型", async () => {
+  const measurements = (
+    await readFile(
+      join(
+        capturesDirectory,
+        "capture-2026-07-31T08-34-50-070Z.jsonl",
+      ),
+      "utf8",
+    )
+  )
+    .split(/\r?\n/)
+    .filter(Boolean)
+    .map((line) => JSON.parse(line));
+  const service = await createFinalCalibrationService({
+    capturesDirectory,
+    measurementSource: async () => measurements,
+  });
+  const formalModel = service.model;
+
+  const estimate = await service.estimateLatestWithModel(formalModel, {
+    candidateId: "candidate-preview",
+    setupKey: "field-site@1",
+    source: "continuous-calibration-candidate",
+  });
+
+  assert.equal(estimate.valid, true);
+  assert.equal(estimate.candidateId, "candidate-preview");
+  assert.equal(estimate.setupKey, "field-site@1");
+  assert.equal(estimate.source, "continuous-calibration-candidate");
+  assert.equal(service.model, formalModel);
+});
+
+test("最终定位服务可用单次引用替换热切换持续标定模型", async () => {
+  const service = await createFinalCalibrationService({
+    capturesDirectory,
+  });
+  const originalModel = service.model;
+
+  service.installRuntimeModel(originalModel, {
+    versionId: "continuous-v1",
+    setupKey: "main-door@3",
+    source: "continuous-calibration",
+  });
+
+  assert.equal(service.model, originalModel);
+  assert.equal(service.status().runtimeModel.versionId, "continuous-v1");
+  assert.equal(service.status().runtimeModel.setupKey, "main-door@3");
+});
+
 test("最终模型导出到MSPM0时必须包含旧18组和新50组全部数据", async () => {
   const service = await createFinalCalibrationService({
     capturesDirectory,

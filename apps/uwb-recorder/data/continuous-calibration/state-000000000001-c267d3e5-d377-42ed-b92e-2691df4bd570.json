@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "sequence": 1,
+  "setup": {
+    "id": "field-site",
+    "revision": 1,
+    "doorLockOrigin": {
+      "xM": 0,
+      "yM": 0,
+      "zM": 0
+    },
+    "anchors": [
+      {
+        "id": "A1",
+        "xM": -0.125,
+        "yM": 0.04,
+        "zM": 0.85
+      },
+      {
+        "id": "A2",
+        "xM": 0.125,
+        "yM": 0.04,
+        "zM": 0.85
+      }
+    ]
+  },
+  "settings": {
+    "autoActivate": false
+  },
+  "records": [],
+  "candidates": [],
+  "active": null,
+  "history": []
+}

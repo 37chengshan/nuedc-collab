@@ -77,7 +77,7 @@ test("主场景包含三区、45度边界、三锚点和可操作钥匙", async 
   assert.match(scene, /方向未锁定/);
 });
 
-test("工作台提供顶部控制、调试台、时间轴和无障碍状态", async () => {
+test("工作台提供左侧全尺寸地图、右侧控制台和无障碍状态", async () => {
   const [app, styles] = await Promise.all([
     readApp("src/ui/App.tsx"),
     readApp("styles.css"),
@@ -99,10 +99,7 @@ test("工作台提供顶部控制、调试台、时间轴和无障碍状态", as
     app,
     /window\.setInterval\(\(\)\s*=>\s*\{\s*void refreshLivePosition\(\{ silent: true \}\);\s*\},\s*500\)/s,
   );
-  assert.match(
-    app,
-    /mode === "simulation"\s*\|\|\s*value !== "configuration"/,
-  );
+  assert.match(app, /consolePage === "tools" && mode === "simulation"/);
   assert.match(app, /应用到仿真门锁/);
   assert.doesNotMatch(app, /写入门锁拨码/);
 
@@ -111,7 +108,7 @@ test("工作台提供顶部控制、调试台、时间轴和无障碍状态", as
     "实机模式",
     "回放模式",
     "仿真模式",
-    "链路调试台",
+    "控制台",
     "场景注入",
     "故障注入",
     "事件时间轴",
@@ -121,11 +118,33 @@ test("工作台提供顶部控制、调试台、时间轴和无障碍状态", as
     "电脑拟合",
     "实时监看",
     "最终位置",
-    "数据链路",
   ]) {
     assert.ok(app.includes(label), `缺少界面文本：${label}`);
   }
 
+  assert.match(app, /className="operator-layout"/);
+  assert.match(app, /className="operator-console"/);
+  assert.match(app, /className="console-status-grid"/);
+  assert.match(app, /type ConsolePage = "status" \| "link" \| "tools" \| "events"/);
+  assert.match(app, /useState<ConsolePage>\("status"\)/);
+  for (const pageLabel of ["状态", "链路", "操作", "事件"]) {
+    assert.ok(app.includes(pageLabel), `控制台缺少分页：${pageLabel}`);
+  }
+  assert.doesNotMatch(app, /className="pipeline-rail"/);
+  assert.doesNotMatch(app, /className="telemetry-strip"/);
+  assert.match(
+    styles,
+    /\.operator-layout\s*\{[\s\S]*grid-template-columns:\s*minmax\(0,\s*1fr\)\s*clamp\(/,
+  );
+  assert.match(
+    styles,
+    /\.operator-layout\s*\{[\s\S]*height:\s*calc\(100vh\s*-\s*108px\)/,
+  );
+  assert.match(styles, /\.operator-console\s*\{[\s\S]*overflow:\s*hidden/);
+  assert.match(
+    styles,
+    /@media\s*\(min-width:\s*901px\)[\s\S]*body[\s\S]*overflow:\s*hidden/,
+  );
   assert.match(app, /aria-live="polite"/);
   assert.match(app, /ID 脉冲环/);
   assert.match(styles, /prefers-reduced-motion:\s*reduce/);

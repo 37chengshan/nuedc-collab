@@ -1,6 +1,6 @@
 export const JSON_SCHEMA_DRAFT =
   "https://json-schema.org/draft/2020-12/schema";
-export const AGENT_SCHEMA_VERSION = "1.0.0";
+export const AGENT_SCHEMA_VERSION = "1.2.0";
 export const AGENT_PROTOCOL_VERSION = "digital-key-agent/v1";
 
 function objectSchema(id, title, properties = {}, required = []) {
@@ -371,6 +371,261 @@ const liveDefinitions = [
       type: "array",
       items: {},
     },
+  },
+  {
+    operation: "device.ports.list",
+    title: "枚举可用串口",
+    description:
+      "只读代理到 127.0.0.1:4173/api/ports；4180 不加载 serialport，也不直接访问 COM。",
+    modes: ["live"],
+    kind: "query",
+    execution: "immediate",
+    safety: "read",
+    changesState: false,
+    requiresIdempotencyKey: false,
+    requiresStateRevision: false,
+    risk: {
+      level: "low",
+      tier: "open",
+      reason: "只读取 4173 枚举出的本机串口列表",
+    },
+    argumentsSchema: objectSchema(
+      "device.ports.list.arguments",
+      "枚举可用串口参数",
+    ),
+    resultSchema: {
+      $schema: JSON_SCHEMA_DRAFT,
+      $id: "urn:nuedc:digital-key:device.ports.list.result",
+      title: "可用串口列表",
+      type: "array",
+      items: {},
+    },
+  },
+  {
+    operation: "device.serial.connect",
+    title: "连接采集串口",
+    description:
+      "通过 4173/api/connect 请求 UWB Recorder 连接串口；4180 仅负责 Agent 契约、revision、dry-run 与幂等控制。",
+    modes: ["live"],
+    kind: "command",
+    execution: "immediate",
+    safety: "mutating",
+    changesState: true,
+    requiresIdempotencyKey: true,
+    requiresStateRevision: true,
+    risk: {
+      level: "medium",
+      tier: "warned",
+      reason: "改变 4173 持有的唯一串口连接状态",
+    },
+    argumentsSchema: objectSchema(
+      "device.serial.connect.arguments",
+      "连接采集串口参数",
+      {
+        path: { type: "string", minLength: 1, maxLength: 260 },
+        baudRate: {
+          type: "integer",
+          enum: [
+            9600, 19200, 38400, 57600, 115200, 230400, 460800, 921600,
+            1000000, 2000000,
+          ],
+        },
+      },
+      ["path", "baudRate"],
+    ),
+    resultSchema: emptyResultSchema,
+  },
+  {
+    operation: "device.serial.disconnect",
+    title: "断开采集串口",
+    description:
+      "通过 4173/api/disconnect 请求 UWB Recorder 断开串口；重复断开由 4173 安全读回当前状态。",
+    modes: ["live"],
+    kind: "command",
+    execution: "immediate",
+    safety: "mutating",
+    changesState: true,
+    requiresIdempotencyKey: true,
+    requiresStateRevision: true,
+    risk: {
+      level: "medium",
+      tier: "warned",
+      reason: "结束 4173 当前持有的串口采集连接",
+    },
+    argumentsSchema: objectSchema(
+      "device.serial.disconnect.arguments",
+      "断开采集串口参数",
+    ),
+    resultSchema: emptyResultSchema,
+  },
+  {
+    operation: "calibration.setup.configure",
+    title: "配置固定标定场地",
+    description:
+      "通过 4173 配置门锁原点与 2～4 个基站的固定三维坐标；4180 不直接访问串口。",
+    modes: ["live"],
+    kind: "command",
+    execution: "immediate",
+    safety: "mutating",
+    changesState: true,
+    requiresIdempotencyKey: true,
+    requiresStateRevision: true,
+    risk: {
+      level: "medium",
+      tier: "warned",
+      reason: "改变持续标定场地 revision，旧场地点将被隔离",
+    },
+    argumentsSchema: objectSchema(
+      "calibration.setup.configure.arguments",
+      "固定标定场地参数",
+      {
+        name: { type: "string", minLength: 1, maxLength: 80 },
+        lock: objectSchema(
+          "calibration.setup.lock",
+          "门锁原点",
+          {
+            xMm: { type: "number" },
+            yMm: { type: "number" },
+            zMm: { type: "number" },
+          },
+          ["xMm", "yMm", "zMm"],
+        ),
+        anchors: {
+          type: "array",
+          minItems: 2,
+          maxItems: 4,
+          items: objectSchema(
+            "calibration.setup.anchor",
+            "基站坐标",
+            {
+              id: { type: "string", minLength: 1, maxLength: 20 },
+              xMm: { type: "number" },
+              yMm: { type: "number" },
+              zMm: { type: "number" },
+            },
+            ["id", "xMm", "yMm", "zMm"],
+          ),
+        },
+        autoActivate: { type: "boolean" },
+      },
+      ["lock", "anchors"],
+    ),
+    resultSchema: emptyResultSchema,
+  },
+  {
+    operation: "calibration.point.capture",
+    title: "采集一个地图标定点",
+    description:
+      "由 4173 使用已连接串口完成稳定等待、15 秒采集、质量检查、候选训练与验证。",
+    modes: ["live"],
+    kind: "command",
+    execution: "async",
+    safety: "mutating",
+    changesState: true,
+    requiresIdempotencyKey: true,
+    requiresStateRevision: true,
+    risk: {
+      level: "medium",
+      tier: "warned",
+      reason: "新增本地标定数据并训练候选模型，但不会绕过验证强制开锁",
+    },
+    argumentsSchema: objectSchema(
+      "calibration.point.capture.arguments",
+      "地图标定点参数",
+      {
+        setupRevision: { type: "string", minLength: 1, maxLength: 128 },
+        xMm: { type: "number" },
+        yMm: { type: "number" },
+        zMm: { type: "number" },
+        durationSeconds: { type: "integer", minimum: 5, maximum: 60 },
+        warmupSeconds: { type: "integer", minimum: 0, maximum: 10 },
+        minimumSynchronizedGroups: {
+          type: "integer",
+          minimum: 20,
+          maximum: 2000,
+        },
+      },
+      ["setupRevision", "xMm", "yMm"],
+    ),
+    resultSchema: emptyResultSchema,
+  },
+  {
+    operation: "calibration.candidate.get",
+    title: "读取持续标定状态",
+    description:
+      "读取场地 revision、采集点、正式/候选模型、验证指标与回退历史。",
+    modes: ["live"],
+    kind: "query",
+    execution: "immediate",
+    safety: "read",
+    changesState: false,
+    requiresIdempotencyKey: false,
+    requiresStateRevision: false,
+    risk: {
+      level: "low",
+      tier: "open",
+      reason: "只读访问 4173 持续标定状态",
+    },
+    argumentsSchema: objectSchema(
+      "calibration.candidate.get.arguments",
+      "读取持续标定状态参数",
+    ),
+    resultSchema: emptyResultSchema,
+  },
+  {
+    operation: "calibration.model.activate",
+    title: "激活已验证候选模型",
+    description:
+      "请求 4173 原子切换已通过安全门槛的候选模型；未通过验证的模型必须拒绝。",
+    modes: ["live"],
+    kind: "command",
+    execution: "immediate",
+    safety: "mutating",
+    changesState: true,
+    requiresIdempotencyKey: true,
+    requiresStateRevision: true,
+    risk: {
+      level: "high",
+      tier: "warned",
+      reason: "改变电脑端正式定位模型，但不提供强制开锁能力",
+    },
+    argumentsSchema: objectSchema(
+      "calibration.model.activate.arguments",
+      "候选模型激活参数",
+      {
+        setupRevision: { type: "string", minLength: 1, maxLength: 128 },
+        candidateVersion: { type: "string", minLength: 1, maxLength: 128 },
+      },
+      ["setupRevision", "candidateVersion"],
+    ),
+    resultSchema: emptyResultSchema,
+  },
+  {
+    operation: "calibration.model.rollback",
+    title: "回退正式标定模型",
+    description:
+      "请求 4173 回退到最近历史模型；不会修改串口参数或直接控制门锁。",
+    modes: ["live"],
+    kind: "command",
+    execution: "immediate",
+    safety: "mutating",
+    changesState: true,
+    requiresIdempotencyKey: true,
+    requiresStateRevision: true,
+    risk: {
+      level: "medium",
+      tier: "warned",
+      reason: "切换电脑端正式定位模型到上一安全版本",
+    },
+    argumentsSchema: objectSchema(
+      "calibration.model.rollback.arguments",
+      "模型回退参数",
+      {
+        setupRevision: { type: "string", minLength: 1, maxLength: 128 },
+      },
+      ["setupRevision"],
+    ),
+    resultSchema: emptyResultSchema,
   },
 ];
 

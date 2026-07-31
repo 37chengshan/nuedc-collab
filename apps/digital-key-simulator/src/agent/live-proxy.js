@@ -1,11 +1,25 @@
 import { DigitalKeyAgentError } from "./errors.js";
 
-const LIVE_PATHS = {
+const LIVE_QUERY_PATHS = {
   "recorder.status.get": "/api/status",
   "recorder.position.get": "/api/position",
   "recorder.calibration.get": "/api/calibration/final",
   "recorder.measurements.list": "/api/measurements",
   "recorder.sessions.list": "/api/sessions",
+  "device.ports.list": "/api/ports",
+  "calibration.candidate.get": "/api/calibration/continuous",
+};
+
+const LIVE_COMMAND_PATHS = {
+  "device.serial.connect": "/api/connect",
+  "device.serial.disconnect": "/api/disconnect",
+  "calibration.setup.configure": "/api/calibration/continuous/setup",
+  "calibration.point.capture":
+    "/api/calibration/continuous/points:capture",
+  "calibration.model.activate":
+    "/api/calibration/continuous/models:activate",
+  "calibration.model.rollback":
+    "/api/calibration/continuous/models:rollback",
 };
 
 function assertLoopback4173(baseUrl) {
@@ -34,7 +48,7 @@ export class UwbRecorderReadOnlyProxy {
   }
 
   async query(operation, argumentsValue = {}) {
-    const path = LIVE_PATHS[operation];
+    const path = LIVE_QUERY_PATHS[operation];
     if (!path) {
       throw new DigitalKeyAgentError(
         "LIVE_MODE_READ_ONLY",
@@ -43,7 +57,7 @@ export class UwbRecorderReadOnlyProxy {
           status: 403,
           details: {
             operation,
-            allowedOperations: Object.keys(LIVE_PATHS),
+            allowedOperations: Object.keys(LIVE_QUERY_PATHS),
           },
         },
       );
@@ -64,13 +78,50 @@ export class UwbRecorderReadOnlyProxy {
       }
     }
 
+    return this.#request(url, {
+      method: "GET",
+      headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(this.timeoutMs),
+    });
+  }
+
+  async execute(operation, argumentsValue = {}) {
+    const path = LIVE_COMMAND_PATHS[operation];
+    if (!path) {
+      throw new DigitalKeyAgentError(
+        "LIVE_MODE_COMMAND_FORBIDDEN",
+        `实机模式禁止写操作：${operation}`,
+        {
+          status: 403,
+          details: {
+            operation,
+            allowedOperations: Object.keys(LIVE_COMMAND_PATHS),
+            serialOwnership: "uwb-recorder:4173",
+            forcedUnlockAllowed: false,
+          },
+        },
+      );
+    }
+    const url = new URL(path, this.baseUrl);
+    return this.#request(url, {
+      method: "POST",
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(argumentsValue),
+      signal: AbortSignal.timeout(
+        operation === "calibration.point.capture"
+          ? Math.max(this.timeoutMs, 30000)
+          : this.timeoutMs,
+      ),
+    });
+  }
+
+  async #request(url, options) {
     let response;
     try {
-      response = await this.fetchImpl(url, {
-        method: "GET",
-        headers: { Accept: "application/json" },
-        signal: AbortSignal.timeout(this.timeoutMs),
-      });
+      response = await this.fetchImpl(url, options);
     } catch (error) {
       throw new DigitalKeyAgentError(
         "RECORDER_UNAVAILABLE",

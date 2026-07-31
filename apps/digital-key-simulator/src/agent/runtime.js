@@ -117,7 +117,7 @@ export class DigitalKeyRuntime {
       request.arguments,
     );
     const data =
-      request.operation.startsWith("recorder.")
+      this.isLiveOperation(request.operation)
         ? await this.liveProxy.query(request.operation, argumentsValue)
         : await (
             await this.resolveDomain()
@@ -133,7 +133,10 @@ export class DigitalKeyRuntime {
 
   async plan(rawRequest = {}) {
     const request = normalizedRequest(rawRequest);
-    if (this.mode === "live") {
+    if (
+      this.mode === "live" &&
+      !this.isLiveCommandOperation(request.operation)
+    ) {
       throw this.liveModeError(request.operation);
     }
     const definition = this.registry.describe(request.operation);
@@ -150,7 +153,7 @@ export class DigitalKeyRuntime {
       request.arguments,
     );
     const currentStateRevision = definition.requiresStateRevision
-      ? await this.currentStateRevision()
+      ? await this.currentStateRevision(request.operation)
       : null;
     if (
       request.expectedStateRevision &&
@@ -184,7 +187,10 @@ export class DigitalKeyRuntime {
 
   async execute(rawRequest = {}) {
     const request = normalizedRequest(rawRequest);
-    if (this.mode === "live") {
+    if (
+      this.mode === "live" &&
+      !this.isLiveCommandOperation(request.operation)
+    ) {
       throw this.liveModeError(request.operation);
     }
     const definition = this.registry.describe(request.operation);
@@ -236,7 +242,7 @@ export class DigitalKeyRuntime {
     }
 
     const previousStateRevision = definition.requiresStateRevision
-      ? await this.currentStateRevision()
+      ? await this.currentStateRevision(request.operation)
       : null;
     if (
       definition.requiresStateRevision &&
@@ -262,14 +268,13 @@ export class DigitalKeyRuntime {
       return accepted;
     }
 
-    const domain = await this.resolveDomain();
-    const data = await domain.execute(
+    const data = await this.executeOperation(
       request.operation,
       argumentsValue,
       this.executionContext(null),
     );
     const stateRevision = definition.changesState
-      ? await this.currentStateRevision()
+      ? await this.currentStateRevision(request.operation)
       : previousStateRevision;
     const result = {
       requestId: request.requestId,
@@ -387,7 +392,44 @@ export class DigitalKeyRuntime {
     });
   }
 
-  async currentStateRevision() {
+  isLiveOperation(operation) {
+    return (
+      String(operation ?? "").startsWith("recorder.") ||
+      String(operation ?? "").startsWith("calibration.") ||
+      String(operation ?? "").startsWith("device.")
+    );
+  }
+
+  isLiveCommandOperation(operation) {
+    return (
+      String(operation ?? "").startsWith("calibration.") ||
+      String(operation ?? "").startsWith("device.serial.")
+    );
+  }
+
+  async executeOperation(operation, argumentsValue, context) {
+    if (this.isLiveCommandOperation(operation)) {
+      return this.liveProxy.execute(operation, argumentsValue, context);
+    }
+    const domain = await this.resolveDomain();
+    return domain.execute(operation, argumentsValue, context);
+  }
+
+  async currentStateRevision(operation = "") {
+    if (String(operation).startsWith("calibration.")) {
+      const state = await this.liveProxy.query(
+        "calibration.candidate.get",
+        {},
+      );
+      return sha256(state);
+    }
+    if (
+      String(operation).startsWith("device.serial.") ||
+      this.mode === "live"
+    ) {
+      const state = await this.liveProxy.query("recorder.status.get", {});
+      return sha256(state);
+    }
     const domain = await this.resolveDomain();
     const state = await domain.query("simulation.state.get", {});
     return sha256(state);
@@ -432,8 +474,7 @@ export class DigitalKeyRuntime {
           { operation: request.operation },
           { operationId: operationRecord.id },
         );
-        const domain = await this.resolveDomain();
-        const result = await domain.execute(
+        const result = await this.executeOperation(
           request.operation,
           argumentsValue,
           this.executionContext(operationRecord.id),
@@ -442,7 +483,7 @@ export class DigitalKeyRuntime {
           return;
         }
         const stateRevision = definition.changesState
-          ? await this.currentStateRevision()
+          ? await this.currentStateRevision(request.operation)
           : previousStateRevision;
         operationRecord.status = "succeeded";
         operationRecord.finishedAt = this.now();
@@ -543,7 +584,7 @@ export class DigitalKeyRuntime {
   liveModeError(operation) {
     return new DigitalKeyAgentError(
       "LIVE_MODE_READ_ONLY",
-      `实机模式只允许查询 status、measurements 和 sessions：${operation}`,
+      `实机模式只允许监看查询和受控持续标定：${operation}`,
       {
         status: 403,
         details: {
@@ -554,6 +595,14 @@ export class DigitalKeyRuntime {
             "recorder.calibration.get",
             "recorder.measurements.list",
             "recorder.sessions.list",
+            "device.ports.list",
+            "device.serial.connect",
+            "device.serial.disconnect",
+            "calibration.candidate.get",
+            "calibration.setup.configure",
+            "calibration.point.capture",
+            "calibration.model.activate",
+            "calibration.model.rollback",
           ],
           serialOwnership: "uwb-recorder:4173",
           forcedUnlockAllowed: false,

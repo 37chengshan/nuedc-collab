@@ -107,13 +107,14 @@ export function createApiServer({
   service,
   calibration = null,
   finalCalibration = null,
+  continuousCalibration = null,
   root,
 }) {
   return http.createServer(async (request, response) => {
     if (request.method === "OPTIONS") {
       response.writeHead(204, {
         "Access-Control-Allow-Headers": "Content-Type,Idempotency-Key",
-        "Access-Control-Allow-Methods": "GET,POST,DELETE,OPTIONS",
+        "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
         "Access-Control-Allow-Origin": "*",
       });
       response.end();
@@ -182,6 +183,50 @@ export function createApiServer({
           successEnvelope(await finalCalibration.estimateLatest()),
         );
         return;
+      }
+      if (
+        request.method === "GET" &&
+        pathname === "/api/calibration/continuous"
+      ) {
+        requireContinuousCalibration(continuousCalibration);
+        writeJson(
+          response,
+          200,
+          successEnvelope(
+            typeof continuousCalibration.snapshot === "function"
+              ? await continuousCalibration.snapshot()
+              : continuousCalibration.status(),
+          ),
+        );
+        return;
+      }
+      if (
+        parts[1] === "calibration" &&
+        parts[2] === "continuous" &&
+        parts.length === 4
+      ) {
+        requireContinuousCalibration(continuousCalibration);
+        const action = parts[3];
+        const handlers = {
+          setup: [["POST", "PUT"], "configureSetup"],
+          "points:capture": [["POST"], "captureCalibrationPoint"],
+          candidates: [["POST"], "trainCandidate"],
+          activate: [["POST"], "activateCandidate"],
+          "models:activate": [["POST"], "activateCandidate"],
+          rollback: [["POST"], "rollback"],
+          "models:rollback": [["POST"], "rollback"],
+        };
+        const handler = handlers[action];
+        if (handler && handler[0].includes(request.method)) {
+          writeJson(
+            response,
+            200,
+            successEnvelope(
+              await continuousCalibration[handler[1]](body),
+            ),
+          );
+          return;
+        }
       }
       if (request.method === "GET" && pathname === "/api/ports") {
         writeJson(response, 200, successEnvelope(await service.listPorts()));
@@ -448,4 +493,14 @@ export function createApiServer({
       writeJson(response, error.status ?? envelope.error?.status ?? 500, envelope);
     }
   });
+}
+
+function requireContinuousCalibration(service) {
+  if (!service) {
+    throw new AppError(
+      "CONTINUOUS_CALIBRATION_UNAVAILABLE",
+      "持续标定服务尚未初始化",
+      { status: 503 },
+    );
+  }
 }

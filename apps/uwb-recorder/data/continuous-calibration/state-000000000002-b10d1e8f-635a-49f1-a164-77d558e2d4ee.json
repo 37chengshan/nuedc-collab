@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "sequence": 2,
+  "setup": {
+    "id": "field-site",
+    "revision": 1,
+    "doorLockOrigin": {
+      "xM": 0,
+      "yM": 0,
+      "zM": 0
+    },
+    "anchors": [
+      {
+        "id": "A1",
+        "xM": -0.125,
+        "yM": 0.04,
+        "zM": 0.85
+      },
+      {
+        "id": "A2",
+        "xM": 0.125,
+        "yM": 0.04,
+        "zM": 0.85
+      }
+    ]
+  },
+  "settings": {
+    "autoActivate": false
+  },
+  "records": [
+    {
+      "id": "capture-2026-07-31T14-24-31-307Z",
+      "capturedAt": "2026-07-31T14:24:31.307Z",
+      "setupId": "field-site",
+      "setupRevision": 1,
+      "setupKey": "field-site@1",
+      "physicalPointId": "0:1000:850",
+      "split": "train",
+      "accepted": false,
+      "truth": {
+        "xM": 0,
+        "yM": 1,
+        "zM": 0.85
+      },
+      "perAnchor": [
+        {
+          "anchorId": "A1",
+          "medianMm": 0,
+          "madMm": 0,
+          "snrDb": null
+        },
+        {
+          "anchorId": "A2",
+          "medianMm": 0,
+          "madMm": 0,
+          "snrDb": null
+        }
+      ]
+    }
+  ],
+  "candidates": [],
+  "active": null,
+  "history": []
+}

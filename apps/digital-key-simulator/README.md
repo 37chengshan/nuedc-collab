@@ -8,7 +8,8 @@
 - 本应用地址：`http://127.0.0.1:4180`
 - 现有 UWB Lab 地址：`http://127.0.0.1:4173`
 - 本应用不打开串口、不修改 UWB 模块参数、不提供强制开锁。
-- 实机模式只通过 HTTP GET 读取 UWB Lab 的状态、测量值和历史会话。
+- 实机监看通过 HTTP GET 读取 UWB Lab 的状态、测量值和历史会话。
+- “现场标定”只通过受控 Agent 命令请求 4173 采集和切换模型，COM 口仍只由 4173 占用。
 - 两个网页可同时运行，拥有各自的入口、进程和界面。
 
 ## 启动
@@ -30,6 +31,7 @@ npm run dev --workspace=@nuedc/digital-key-simulator
 - 实机模式（默认）：只读显示电脑根据串口测距和最终标定模型生成的位置。
 - 仿真模式：拖动钥匙、键盘移动、场景与故障注入。
 - 回放模式：读取本机 UWB Lab 历史会话，不生成虚假的实机误差结论。
+- 现场标定：固定门锁与 2～4 个基站，点选钥匙真值并安全训练候选模型。
 
 ## 实机数据链路
 
@@ -67,6 +69,18 @@ UWB 基站
 - `recorder.sessions.list`
 
 浏览器公开 `window.digitalKeyAgent.v1`，网页按钮与外部 Agent 使用同一套命令注册、Schema、幂等、revision 和事件接口。
+
+现场标定命令：
+
+- `calibration.setup.configure`
+- `calibration.point.capture`
+- `calibration.candidate.get`
+- `calibration.model.activate`
+- `calibration.model.rollback`
+
+`calibration.point.capture` 会先稳定 2 秒，再完整采集 15 秒。每个合格点保存真实坐标、串口原始测量和候选估计；新流程以门锁中心到钥匙中心为真实距离，不增加 300 mm。没有单独验证记录时，候选模型使用逐物理点交叉验证，未通过 0.30 m、10°、边界 0.20 m、P95 和边界跨越门槛时不会替换正式模型。
+
+Agent Schema 版本：`1.1.0`。
 
 CLI 示例：
 

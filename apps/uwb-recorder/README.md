@@ -88,6 +88,31 @@ A2 = (+125, +40) mm
 比赛文档/实验记录/C题/UWB/2026-07-30_下一阶段标定与验收计划.md
 ```
 
+## 固定场地持续标定
+
+4180 的“现场标定”不会直接打开串口，而是调用本服务：
+
+```text
+GET  /api/calibration/continuous
+POST /api/calibration/continuous/setup
+POST /api/calibration/continuous/points:capture
+POST /api/calibration/continuous/models:activate
+POST /api/calibration/continuous/models:rollback
+```
+
+流程约束：
+
+- 门锁中心为场地原点，支持 2～4 个带高度的固定基站。
+- 场地坐标改变时自动递增 revision，旧场地数据不会混入新模型。
+- 每点先等待 2 秒稳定，再完整采集 15 秒，至少需要 100 组同地址同步数据。
+- 新持续标定的真值是门锁中心到钥匙中心的距离，`boundaryOffsetMm` 固定为 `0`。
+- 同一物理点最多使用最近 5 次合格记录，各物理点等权。
+- 没有单独 validation 记录时使用逐物理点交叉验证，禁止直接用训练结果冒充验证。
+- 候选模型只做旁路计算；只有通过距离、角度、1 m/2 m 边界、P95 退化和边界跨越门槛后才能原子热切换。
+- 保留正式模型和最近两个历史版本，重启后恢复 active 模型。
+
+这里与上方 77 点旧标定向导的 300 mm 圆柱外边界定义是两套明确分开的数据语义，旧流程保持兼容。
+
 ## Agent CLI
 
 所有核心功能都有 JSON CLI。默认服务地址：
