@@ -4,6 +4,7 @@ $testDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $projectDir = Split-Path -Parent $testDir
 $binary = Join-Path $env:TEMP "c_three_uwb_oled_test.exe"
 $syscfg = Get-Content -LiteralPath (Join-Path $projectDir "three_uwb_monitor.syscfg") -Raw
+$diagMain = Get-Content -LiteralPath (Join-Path $projectDir "main_two_uart_raw_diag.c") -Raw
 
 if ($syscfg -notmatch 'UWB1\.targetBaudRate\s*=\s*115200') {
     throw "UART1 must use the measured EWT550 baud rate 115200"
@@ -39,6 +40,19 @@ if ($syscfg -notmatch 'OLED\.peripheral\.sdaPin\.\$assign\s*=\s*"PB3"') {
 
 if ($syscfg -notmatch 'OLED\.peripheral\.sclPin\.\$assign\s*=\s*"PB2"') {
     throw "OLED SCL must use PB2"
+}
+
+if ($diagMain -notmatch 'oled_recovery_reinit_due') {
+    throw "Raw UART diagnostic firmware must recover OLED after I2C failures"
+}
+
+if (($diagMain -notmatch 'UWB_CH1_INST_IRQHandler') -or
+    ($diagMain -notmatch 'UWB_CH2_INST_IRQHandler')) {
+    throw "Raw UART diagnostic firmware must buffer both UARTs in interrupts"
+}
+
+if ($diagMain -notmatch 'UART_RX_RING_SIZE') {
+    throw "Raw UART diagnostic firmware must use RX rings during OLED refresh"
 }
 
 & "C:\msys64\mingw64\bin\gcc.exe" `
