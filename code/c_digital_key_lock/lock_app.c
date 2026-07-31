@@ -3,6 +3,7 @@
 #include "empirical_model_data.h"
 #include "lock_app_config.h"
 
+#include <math.h>
 #include <string.h>
 
 void lock_app_init(LockApp *app, LockIdInputBackend backend)
@@ -52,6 +53,7 @@ void lock_app_init_with_models(LockApp *app, LockIdInputBackend backend,
     lock_fsm_init(&app->state_machine);
     app->display.state = LOCK_STATE_LOCKED;
     app->display.zone = LOCK_ZONE_INVALID;
+    app->display_bearing_deg = 0.0f;
 }
 
 void lock_app_process_uart_byte(LockApp *app, uint8_t channel, uint8_t byte,
@@ -100,6 +102,11 @@ void lock_app_update(LockApp *app, uint32_t now_ms,
                                        expected_id, &app->config, now_ms);
     }
 
+    if (app->position.valid && !app->position.angle_held &&
+        isfinite(app->position.bearing_deg)) {
+        app->display_bearing_deg = app->position.bearing_deg;
+    }
+
     memset(&app->display, 0, sizeof(app->display));
     app->display.expected_id = expected_id;
     app->display.observed_id_valid = app->position.valid;
@@ -112,6 +119,10 @@ void lock_app_update(LockApp *app, uint32_t now_ms,
     app->display.calibration_status = (uint8_t)app->calibration_status;
     app->display.empirical_status = (uint8_t)app->empirical_status;
     app->display.position = app->position;
+    if (!app->display.position.angle_valid) {
+        app->display.position.bearing_deg = app->display_bearing_deg;
+        app->display.position.angle_held = true;
+    }
 }
 
 const LockOutputSnapshot *lock_app_outputs(const LockApp *app)
@@ -122,17 +133,4 @@ const LockOutputSnapshot *lock_app_outputs(const LockApp *app)
 const LockDisplayModel *lock_app_display(const LockApp *app)
 {
     return &app->display;
-}
-
-bool lock_app_should_present_display(LockApp *app, uint32_t now_ms)
-{
-    if (!app->display_publish_started ||
-        ((now_ms - app->last_display_publish_ms) >=
-         app->config.solution_update_interval_ms)) {
-        app->display_publish_started = true;
-        app->last_display_publish_ms = now_ms;
-        return true;
-    }
-
-    return false;
 }

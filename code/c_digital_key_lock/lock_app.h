@@ -19,8 +19,7 @@ typedef struct {
     LockPositionSolution position;
     LockOutputSnapshot outputs;
     LockDisplayModel display;
-    bool display_publish_started;
-    uint32_t last_display_publish_ms;
+    float display_bearing_deg;
 } LockApp;
 
 void lock_app_init(LockApp *app, LockIdInputBackend backend);
@@ -35,6 +34,5 @@ void lock_app_update(LockApp *app, uint32_t now_ms,
                      uint8_t raw_id_low_active_bits);
 const LockOutputSnapshot *lock_app_outputs(const LockApp *app);
 const LockDisplayModel *lock_app_display(const LockApp *app);
-bool lock_app_should_present_display(LockApp *app, uint32_t now_ms);
 
 #endif

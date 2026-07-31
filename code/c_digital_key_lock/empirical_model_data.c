@@ -2,9 +2,9 @@
 
 /*
  * 由 UWB Lab 最终标定数据自动生成，请勿手工修改。
- * 训练点总数: 66
+ * 训练点总数: 68
  * 旧数据: 18
- * 新结构化数据: 48
+ * 新结构化数据: 50
  */
 static const EmpiricalPrototypeV1 empirical_model_data_prototypes[] = {
     {620U, 890U, 1000U, 0, 1U, 0U},
@@ -73,19 +73,21 @@ static const EmpiricalPrototypeV1 empirical_model_data_prototypes[] = {
     {1680U, 1600U, 2000U, 3000, 1U, 0U},
     {1660U, 1590U, 2000U, 4500, 1U, 0U},
     {1680U, 1600U, 2000U, 4500, 1U, 0U},
+    {1910U, 1630U, 1500U, -1500, 1U, 0U},
+    {1620U, 1530U, 1500U, 1500, 1U, 0U},
 };
 
 const EmpiricalModelV1 g_empirical_model_v1 = {
     .magic = EMPIRICAL_MODEL_V1_MAGIC,
     .version = EMPIRICAL_MODEL_V1_VERSION,
-    .prototype_count = 66U,
+    .prototype_count = 68U,
     .distance_neighbor_count = 6U,
     .angle_neighbor_count = 4U,
     .reserved = 0U,
-    .distance1_scale_mm = 570.801025f,
-    .distance2_scale_mm = 726.473999f,
+    .distance1_scale_mm = 696.822021f,
+    .distance2_scale_mm = 763.539001f,
     .angle_max_neighbor_distance = 0.750000000f,
     .angle_max_spread_deg = 20.0000000f,
     .prototypes = empirical_model_data_prototypes,
-    .crc32 = 0x9BC3364CUL,
+    .crc32 = 0xA912C308UL,
 };

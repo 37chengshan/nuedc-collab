@@ -438,7 +438,13 @@ static bool test_fsm_authorization_and_dropout(void)
     output = lock_fsm_update(&state_machine, &two_anchor, 3U, &config, 300U);
     TEST_ASSERT(output.state == LOCK_STATE_LOCKED);
     TEST_ASSERT(!output.unlock_output);
+    output = lock_fsm_update(&state_machine, &two_anchor, 3U, &config, 301U);
+    TEST_ASSERT(output.state == LOCK_STATE_LOCKED);
+    output = lock_fsm_update(&state_machine, &two_anchor, 3U, &config, 302U);
+    TEST_ASSERT(output.state == LOCK_STATE_UNLOCKED);
+    TEST_ASSERT(output.unlock_output);
 
+    lock_fsm_init(&state_machine);
     output = lock_fsm_update(&state_machine, &one_anchor, 3U, &config, 400U);
     TEST_ASSERT(output.state == LOCK_STATE_LOCKED);
     TEST_ASSERT(!output.welcome_output);
@@ -470,6 +476,7 @@ static void app_send_line(LockApp *app, uint8_t channel, const char *line,
 static bool test_app_uart_and_direct_id_integration(void)
 {
     LockApp app;
+    float displayed_angle;
     uint8_t channel;
     float x_mm = 0.0f;
     float y_mm = 1300.0f;
@@ -492,23 +499,32 @@ static bool test_app_uart_and_direct_id_integration(void)
     TEST_ASSERT(lock_app_outputs(&app)->authorized);
     TEST_ASSERT(lock_app_outputs(&app)->state == LOCK_STATE_LOCKED);
     TEST_ASSERT(!lock_app_display(&app)->position.angle_valid);
+    TEST_ASSERT(lock_app_display(&app)->position.angle_held);
+    displayed_angle = lock_app_display(&app)->position.bearing_deg;
     lock_app_update(&app, 101U, 10U);
     TEST_ASSERT(lock_app_outputs(&app)->state == LOCK_STATE_LOCKED);
     lock_app_update(&app, 102U, 10U);
-    TEST_ASSERT(lock_app_outputs(&app)->state == LOCK_STATE_LOCKED);
+    TEST_ASSERT(lock_app_outputs(&app)->state == LOCK_STATE_UNLOCKED);
+    lock_app_update(&app, 2000U, 10U);
+    TEST_ASSERT(!lock_app_display(&app)->position.valid);
+    TEST_ASSERT(lock_app_display(&app)->position.angle_held);
+    TEST_ASSERT_NEAR(lock_app_display(&app)->position.bearing_deg,
+                     displayed_angle, 0.01f);
     return true;
 }
 
-static bool test_display_publish_interval_is_500_ms(void)
+static bool test_app_starts_with_held_zero_degree_display(void)
 {
     LockApp app;
 
-    lock_app_init(&app, LOCK_ID_INPUT_DIRECT_BITS);
-    TEST_ASSERT(lock_app_should_present_display(&app, 100U));
-    TEST_ASSERT(!lock_app_should_present_display(&app, 599U));
-    TEST_ASSERT(lock_app_should_present_display(&app, 600U));
-    TEST_ASSERT(!lock_app_should_present_display(&app, 1099U));
-    TEST_ASSERT(lock_app_should_present_display(&app, 1100U));
+    lock_app_init_with_model(
+        &app, LOCK_ID_INPUT_DIRECT_BITS, &g_calibration_model_v1);
+    lock_app_update(&app, 0U, 0U);
+
+    TEST_ASSERT(!lock_app_display(&app)->position.angle_valid);
+    TEST_ASSERT(lock_app_display(&app)->position.angle_held);
+    TEST_ASSERT_NEAR(lock_app_display(&app)->position.bearing_deg,
+                     0.0f, 0.01f);
     return true;
 }
 
@@ -534,7 +550,8 @@ int main(void)
         {"two-anchor angle is never trusted", test_two_anchor_angle_is_never_trusted},
         {"FSM legal ID, illegal ID, and dropout", test_fsm_authorization_and_dropout},
         {"app UART and direct-ID integration", test_app_uart_and_direct_id_integration},
-        {"display publishes every 500 ms", test_display_publish_interval_is_500_ms},
+        {"app starts with held zero-degree display",
+         test_app_starts_with_held_zero_degree_display},
     };
     size_t index;
     unsigned int failures = 0U;

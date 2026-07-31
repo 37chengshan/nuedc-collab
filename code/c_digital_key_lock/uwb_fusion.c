@@ -284,6 +284,8 @@ void uwb_fusion_solve(LockUwbFusion *fusion, const LockAppConfig *config,
         if (fusion != NULL) {
             fusion->last_solution.valid = false;
             fusion->kalman.initialized = false;
+            lock_distance_stabilizer_reset(
+                &fusion->distance_stabilizer);
         }
         return;
     }
@@ -304,6 +306,8 @@ void uwb_fusion_solve(LockUwbFusion *fusion, const LockAppConfig *config,
         } else if (!same_key(identity, &cache->measurement)) {
             fusion->last_solution.valid = false;
             fusion->kalman.initialized = false;
+            lock_distance_stabilizer_reset(
+                &fusion->distance_stabilizer);
             return;
         }
     }
@@ -320,6 +324,8 @@ void uwb_fusion_solve(LockUwbFusion *fusion, const LockAppConfig *config,
         } else {
             fusion->last_solution.valid = false;
             fusion->kalman.initialized = false;
+            lock_distance_stabilizer_reset(
+                &fusion->distance_stabilizer);
         }
         return;
     }
@@ -354,6 +360,8 @@ void uwb_fusion_solve(LockUwbFusion *fusion, const LockAppConfig *config,
                 &corrected_distance)) {
             fusion->last_solution.valid = false;
             fusion->kalman.initialized = false;
+            lock_distance_stabilizer_reset(
+                &fusion->distance_stabilizer);
             return;
         }
 
@@ -376,6 +384,9 @@ void uwb_fusion_solve(LockUwbFusion *fusion, const LockAppConfig *config,
             solution->rejected_mask = 0U;
             solution->anchor_count = count;
             solution->mode = LOCK_LOCALIZATION_HOLD;
+        } else {
+            lock_distance_stabilizer_reset(
+                &fusion->distance_stabilizer);
         }
         return;
     }
@@ -407,7 +418,10 @@ void uwb_fusion_solve(LockUwbFusion *fusion, const LockAppConfig *config,
             (uint16_t)raw_distances_mm[1],
             &empirical_estimate)) {
         corrected_radius =
-            empirical_estimate.distance_mm + config->radial_zero_offset_mm;
+            lock_distance_stabilizer_update(
+                &fusion->distance_stabilizer, identity->key_addr,
+                identity->key_id, empirical_estimate.distance_mm) +
+            config->radial_zero_offset_mm;
         corrected_bearing = empirical_estimate.angle_valid
                                 ? wrap_bearing(empirical_estimate.bearing_deg)
                                 : can_hold_angle

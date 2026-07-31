@@ -37,7 +37,8 @@ $LogicSources = @(
     (Join-Path $ModuleDir "calibration_model.c"),
     (Join-Path $ModuleDir "calibration_model_data.c"),
     (Join-Path $ModuleDir "empirical_model.c"),
-    (Join-Path $ModuleDir "empirical_model_data.c")
+    (Join-Path $ModuleDir "empirical_model_data.c"),
+    (Join-Path $ModuleDir "lock_distance_stabilizer.c")
 )
 $CommonFlags = @(
     "-std=c11",

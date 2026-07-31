@@ -8,9 +8,15 @@
 
 const SYSCTL = scripting.addModule("/ti/driverlib/SYSCTL");
 const UART   = scripting.addModule("/ti/driverlib/UART", {}, false);
+const GPIO  = scripting.addModule("/ti/driverlib/GPIO", {}, false);
+const SPI   = scripting.addModule("/ti/driverlib/SPI", {}, false);
 const Board  = scripting.addModule("/ti/driverlib/Board", {}, false);
 const UWB1   = UART.addInstance();
 const UWB2   = UART.addInstance();
+const LCD_CONTROL = GPIO.addInstance();
+const SET_ID_INPUTS = GPIO.addInstance();
+const LOCK_OUTPUTS = GPIO.addInstance();
+const LCD_SPI = SPI.addInstance();
 
 const divider9       = system.clockTree["UDIV"];
 divider9.divideValue = 2;
@@ -74,6 +80,64 @@ UWB2.rxPinConfig.$name                = "UWB_CH2_RX";
 UWB2.rxPinConfig.hideOutputInversion  = scripting.forceWrite(false);
 UWB2.rxPinConfig.onlyInternalResistor = scripting.forceWrite(false);
 UWB2.rxPinConfig.passedPeripheralType = scripting.forceWrite("Digital");
+
+LCD_SPI.$name                      = "LCD_SPI";
+LCD_SPI.mode                       = "CONTROLLER";
+LCD_SPI.spiClkSrc                  = "BUSCLK";
+LCD_SPI.targetBitRate              = 8000000;
+LCD_SPI.frameFormat                = "MOTO3";
+LCD_SPI.polarity                   = "0";
+LCD_SPI.phase                      = "0";
+LCD_SPI.dataSize                   = 8;
+LCD_SPI.bitOrder                   = "MSB";
+LCD_SPI.direction                  = "PICO";
+LCD_SPI.chipSelect                 = [];
+LCD_SPI.peripheral.$assign         = "SPI1";
+LCD_SPI.peripheral.sclkPin.$assign = "PB9";
+LCD_SPI.peripheral.mosiPin.$assign = "PB8";
+
+LCD_CONTROL.$name = "LCD_CONTROL";
+LCD_CONTROL.associatedPins.create(3);
+LCD_CONTROL.associatedPins[0].$name        = "LCD_CS";
+LCD_CONTROL.associatedPins[0].initialValue = "SET";
+LCD_CONTROL.associatedPins[0].pin.$assign  = "PB14";
+LCD_CONTROL.associatedPins[1].$name        = "LCD_DC";
+LCD_CONTROL.associatedPins[1].initialValue = "SET";
+LCD_CONTROL.associatedPins[1].pin.$assign  = "PB10";
+LCD_CONTROL.associatedPins[2].$name        = "LCD_RESET";
+LCD_CONTROL.associatedPins[2].initialValue = "SET";
+LCD_CONTROL.associatedPins[2].pin.$assign  = "PB11";
+
+SET_ID_INPUTS.$name = "SET_ID_INPUTS";
+SET_ID_INPUTS.associatedPins.create(4);
+SET_ID_INPUTS.associatedPins[0].$name            = "SET_ID_BIT0";
+SET_ID_INPUTS.associatedPins[0].direction        = "INPUT";
+SET_ID_INPUTS.associatedPins[0].internalResistor = "PULL_UP";
+SET_ID_INPUTS.associatedPins[0].pin.$assign      = "PB0";
+SET_ID_INPUTS.associatedPins[1].$name            = "SET_ID_BIT1";
+SET_ID_INPUTS.associatedPins[1].direction        = "INPUT";
+SET_ID_INPUTS.associatedPins[1].internalResistor = "PULL_UP";
+SET_ID_INPUTS.associatedPins[1].pin.$assign      = "PB1";
+SET_ID_INPUTS.associatedPins[2].$name            = "SET_ID_BIT2";
+SET_ID_INPUTS.associatedPins[2].direction        = "INPUT";
+SET_ID_INPUTS.associatedPins[2].internalResistor = "PULL_UP";
+SET_ID_INPUTS.associatedPins[2].pin.$assign      = "PB2";
+SET_ID_INPUTS.associatedPins[3].$name            = "SET_ID_BIT3";
+SET_ID_INPUTS.associatedPins[3].direction        = "INPUT";
+SET_ID_INPUTS.associatedPins[3].internalResistor = "PULL_UP";
+SET_ID_INPUTS.associatedPins[3].pin.$assign      = "PB3";
+
+LOCK_OUTPUTS.$name = "LOCK_OUTPUTS";
+LOCK_OUTPUTS.associatedPins.create(3);
+LOCK_OUTPUTS.associatedPins[0].$name        = "RED_LED";
+LOCK_OUTPUTS.associatedPins[0].initialValue = "CLEARED";
+LOCK_OUTPUTS.associatedPins[0].pin.$assign  = "PA14";
+LOCK_OUTPUTS.associatedPins[1].$name        = "GREEN_LED";
+LOCK_OUTPUTS.associatedPins[1].initialValue = "CLEARED";
+LOCK_OUTPUTS.associatedPins[1].pin.$assign  = "PA15";
+LOCK_OUTPUTS.associatedPins[2].$name        = "BUZZER";
+LOCK_OUTPUTS.associatedPins[2].initialValue = "CLEARED";
+LOCK_OUTPUTS.associatedPins[2].pin.$assign  = "PA0";
 
 pinFunction4.peripheral.$suggestSolution           = "SYSCTL";
 pinFunction4.peripheral.hfxInPin.$suggestSolution  = "PA5";

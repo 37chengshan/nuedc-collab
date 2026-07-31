@@ -12,6 +12,7 @@ bool lock_hw_uart_channel_read_byte(uint8_t channel, uint8_t *byte);
 uint8_t lock_hw_read_id_inputs_low_active(void);
 void lock_hw_apply_outputs(const LockOutputSnapshot *outputs);
 void lock_hw_present_display(const LockDisplayModel *display);
+void lock_hw_show_display_test_pattern(void);
 void lock_hw_idle(void);
 
 #endif

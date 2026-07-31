@@ -3,6 +3,7 @@
 
 #include "calibration_model.h"
 #include "empirical_model.h"
+#include "lock_distance_stabilizer.h"
 #include "lock_app_config.h"
 #include "trilateration.h"
 
@@ -27,6 +28,7 @@ typedef struct {
     LockUwbChannelCache channels[LOCK_UWB_CHANNEL_COUNT];
     LockPositionSolution last_solution;
     LockKalman2d kalman;
+    LockDistanceStabilizer distance_stabilizer;
     const CalibrationModelV1 *calibration_model;
     const EmpiricalModelV1 *empirical_model;
     bool has_solve_time;

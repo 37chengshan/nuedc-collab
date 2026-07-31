@@ -12,11 +12,27 @@ void lock_fsm_init(LockStateMachine *state_machine)
 LockZone lock_fsm_classify_zone(const LockPositionSolution *position,
                                 const LockAppConfig *config)
 {
-    if (!position->valid || !position->angle_valid) {
+    bool distance_only_two_anchor;
+    bool trusted_multi_anchor;
+
+    if (!position->valid) {
         return LOCK_ZONE_INVALID;
     }
 
-    if (fabsf(position->bearing_deg) > config->access_bearing_limit_deg) {
+    distance_only_two_anchor =
+        (position->mode == LOCK_LOCALIZATION_TWO_ANCHOR) &&
+        (position->anchor_count >= 2U);
+    trusted_multi_anchor =
+        ((position->mode == LOCK_LOCALIZATION_THREE_ANCHOR) ||
+         (position->mode == LOCK_LOCALIZATION_FOUR_ANCHOR)) &&
+        position->angle_valid;
+    if (!distance_only_two_anchor && !trusted_multi_anchor) {
+        return LOCK_ZONE_INVALID;
+    }
+
+    if (trusted_multi_anchor &&
+        (fabsf(position->bearing_deg) >
+         config->access_bearing_limit_deg)) {
         return LOCK_ZONE_BACKSIDE;
     }
 
@@ -33,11 +49,16 @@ LockZone lock_fsm_classify_zone(const LockPositionSolution *position,
 
 static bool position_is_measured(const LockPositionSolution *position)
 {
-    return position->valid && position->angle_valid &&
-           ((position->mode == LOCK_LOCALIZATION_TWO_ANCHOR) ||
-            (position->mode == LOCK_LOCALIZATION_THREE_ANCHOR) ||
-            (position->mode == LOCK_LOCALIZATION_FOUR_ANCHOR)) &&
-           (position->anchor_count >= LOCK_UWB_MIN_CHANNEL_COUNT);
+    if (!position->valid ||
+        (position->anchor_count < LOCK_UWB_MIN_CHANNEL_COUNT)) {
+        return false;
+    }
+    if (position->mode == LOCK_LOCALIZATION_TWO_ANCHOR) {
+        return true;
+    }
+    return position->angle_valid &&
+           ((position->mode == LOCK_LOCALIZATION_THREE_ANCHOR) ||
+            (position->mode == LOCK_LOCALIZATION_FOUR_ANCHOR));
 }
 
 static LockState measured_target_state(const LockStateMachine *state_machine,
@@ -46,7 +67,9 @@ static LockState measured_target_state(const LockStateMachine *state_machine,
 {
     float boundary_distance_mm = position->boundary_distance_mm;
 
-    if (fabsf(position->bearing_deg) > config->access_bearing_limit_deg) {
+    if (position->angle_valid &&
+        (fabsf(position->bearing_deg) >
+         config->access_bearing_limit_deg)) {
         return LOCK_STATE_LOCKED;
     }
 

@@ -5,118 +5,68 @@ set -eu
 script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 module_dir=$(CDPATH= cd -- "$script_dir/.." && pwd)
 compiler=${CC:-cc}
-legacy_binary=$(mktemp "${TMPDIR:-/tmp}/c_digital_key_lock_tests.XXXXXX")
-calibrated_binary=$(mktemp "${TMPDIR:-/tmp}/c_digital_key_lock_calibrated_tests.XXXXXX")
-display_format_binary=$(mktemp "${TMPDIR:-/tmp}/c_digital_key_lock_display_format_tests.XXXXXX")
-st7735s_binary=$(mktemp "${TMPDIR:-/tmp}/c_digital_key_lock_st7735s_tests.XXXXXX")
-display_ui_binary=$(mktemp "${TMPDIR:-/tmp}/c_digital_key_lock_display_ui_tests.XXXXXX")
-output_behavior_binary=$(mktemp "${TMPDIR:-/tmp}/c_digital_key_lock_output_behavior_tests.XXXXXX")
-distance_stabilizer_binary=$(mktemp "${TMPDIR:-/tmp}/c_digital_key_lock_distance_stabilizer_tests.XXXXXX")
+build_dir=$(mktemp -d "${TMPDIR:-/tmp}/c_digital_key_lock_tests.XXXXXX")
 
 cleanup() {
-    rm -f "$legacy_binary" "$calibrated_binary" \
-        "$display_format_binary" "$st7735s_binary" "$display_ui_binary" \
-        "$output_behavior_binary" "$distance_stabilizer_binary"
+    rm -rf "$build_dir"
 }
 trap cleanup EXIT HUP INT TERM
 
-"$compiler" \
-    -std=c11 \
-    -D_POSIX_C_SOURCE=200809L \
-    -Wall -Wextra -Werror -pedantic \
-    -I"$module_dir" \
-    "$script_dir/test_lock_logic.c" \
-    "$module_dir/id_input.c" \
-    "$module_dir/uwb_text_protocol.c" \
-    "$module_dir/uwb_fusion.c" \
-    "$module_dir/trilateration.c" \
-    "$module_dir/lock_fsm.c" \
-    "$module_dir/lock_app.c" \
-    "$module_dir/lock_app_config.c" \
-    "$module_dir/calibration_model.c" \
-    "$module_dir/calibration_model_data.c" \
-    -lm \
-    -o "$legacy_binary"
+compile_and_run() {
+    name=$1
+    shift
+    binary="$build_dir/$name"
+    "$compiler" \
+        -std=c11 \
+        -D_POSIX_C_SOURCE=200809L \
+        -Wall -Wextra -Werror -pedantic \
+        -I"$module_dir" \
+        "$@" \
+        -lm \
+        -o "$binary"
+    "$binary"
+}
 
-"$legacy_binary"
+compile_logic_test() {
+    name=$1
+    test_source=$2
+    compile_and_run "$name" \
+        "$test_source" \
+        "$module_dir/id_input.c" \
+        "$module_dir/uwb_text_protocol.c" \
+        "$module_dir/uwb_fusion.c" \
+        "$module_dir/lock_distance_stabilizer.c" \
+        "$module_dir/trilateration.c" \
+        "$module_dir/lock_fsm.c" \
+        "$module_dir/lock_app.c" \
+        "$module_dir/lock_app_config.c" \
+        "$module_dir/calibration_model.c" \
+        "$module_dir/calibration_model_data.c" \
+        "$module_dir/empirical_model.c" \
+        "$module_dir/empirical_model_data.c"
+}
 
-"$compiler" \
-    -std=c11 \
-    -D_POSIX_C_SOURCE=200809L \
-    -Wall -Wextra -Werror -pedantic \
-    -I"$module_dir" \
-    "$script_dir/test_calibrated_lock.c" \
-    "$module_dir/id_input.c" \
-    "$module_dir/uwb_text_protocol.c" \
-    "$module_dir/uwb_fusion.c" \
-    "$module_dir/trilateration.c" \
-    "$module_dir/lock_fsm.c" \
-    "$module_dir/lock_app.c" \
-    "$module_dir/lock_app_config.c" \
-    "$module_dir/calibration_model.c" \
-    "$module_dir/calibration_model_data.c" \
-    -lm \
-    -o "$calibrated_binary"
+compile_logic_test legacy "$script_dir/test_lock_logic.c"
+compile_logic_test calibrated "$script_dir/test_calibrated_lock.c"
 
-"$calibrated_binary"
-
-"$compiler" \
-    -std=c11 \
-    -D_POSIX_C_SOURCE=200809L \
-    -Wall -Wextra -Werror -pedantic \
-    -I"$module_dir" \
+compile_and_run display_format \
     "$script_dir/test_lock_display_format.c" \
-    "$module_dir/lock_display_format.c" \
-    -lm \
-    -o "$display_format_binary"
+    "$module_dir/lock_display_format.c"
 
-"$display_format_binary"
-
-"$compiler" \
-    -std=c11 \
-    -D_POSIX_C_SOURCE=200809L \
-    -Wall -Wextra -Werror -pedantic \
-    -I"$module_dir" \
+compile_and_run st7735s \
     "$script_dir/test_st7735s.c" \
-    "$module_dir/st7735s.c" \
-    -lm \
-    -o "$st7735s_binary"
+    "$module_dir/st7735s.c"
 
-"$st7735s_binary"
-
-"$compiler" \
-    -std=c11 \
-    -D_POSIX_C_SOURCE=200809L \
-    -Wall -Wextra -Werror -pedantic \
-    -I"$module_dir" \
+compile_and_run display_ui \
     "$script_dir/test_lock_display_ui.c" \
     "$module_dir/st7735s.c" \
     "$module_dir/lock_display_format.c" \
-    "$module_dir/lock_display_ui.c" \
-    -lm \
-    -o "$display_ui_binary"
+    "$module_dir/lock_display_ui.c"
 
-"$display_ui_binary"
-
-"$compiler" \
-    -std=c11 \
-    -D_POSIX_C_SOURCE=200809L \
-    -Wall -Wextra -Werror -pedantic \
-    -I"$module_dir" \
+compile_and_run output_behavior \
     "$script_dir/test_lock_output_behavior.c" \
-    "$module_dir/lock_output_behavior.c" \
-    -o "$output_behavior_binary"
+    "$module_dir/lock_output_behavior.c"
 
-"$output_behavior_binary"
-
-"$compiler" \
-    -std=c11 \
-    -D_POSIX_C_SOURCE=200809L \
-    -Wall -Wextra -Werror -pedantic \
-    -I"$module_dir" \
+compile_and_run distance_stabilizer \
     "$script_dir/test_lock_distance_stabilizer.c" \
-    "$module_dir/lock_distance_stabilizer.c" \
-    -lm \
-    -o "$distance_stabilizer_binary"
-
-"$distance_stabilizer_binary"
+    "$module_dir/lock_distance_stabilizer.c"

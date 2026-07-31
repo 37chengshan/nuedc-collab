@@ -208,7 +208,7 @@ static bool test_empirical_model_rejects_ambiguous_angle(void)
 
 static bool test_exported_empirical_model_contains_all_training_points(void)
 {
-    TEST_ASSERT(g_empirical_model_v1.prototype_count == 66U);
+    TEST_ASSERT(g_empirical_model_v1.prototype_count == 68U);
     TEST_ASSERT(g_empirical_model_v1.distance_neighbor_count == 6U);
     TEST_ASSERT(g_empirical_model_v1.angle_neighbor_count == 4U);
     TEST_ASSERT(empirical_model_validate(&g_empirical_model_v1) ==
@@ -293,7 +293,7 @@ static bool test_two_anchor_fusion_marks_ambiguous_angle_invalid(void)
     TEST_ASSERT(!solution.angle_valid);
     TEST_ASSERT(solution.angle_held);
     TEST_ASSERT_NEAR(solution.bearing_deg, 12.0f, 0.1f);
-    TEST_ASSERT_NEAR(solution.boundary_distance_mm, 900.0f, 1.0f);
+    TEST_ASSERT_NEAR(solution.boundary_distance_mm, 825.0f, 1.0f);
     return true;
 }
 
@@ -532,20 +532,30 @@ static LockPositionSolution position(uint8_t key_id, bool valid,
     return value;
 }
 
-static bool test_untrusted_angle_never_unlocks(void)
+static bool test_two_anchor_distance_unlocks_without_using_angle(void)
 {
     LockAppConfig config = g_lock_app_default_config;
     LockStateMachine fsm;
     LockOutputSnapshot output;
-    LockPositionSolution untrusted =
+    LockPositionSolution two_anchor =
         position(3U, true, 900.0f, 0.0f, LOCK_LOCALIZATION_TWO_ANCHOR, 2U);
 
-    untrusted.angle_valid = false;
+    two_anchor.angle_valid = false;
     lock_fsm_init(&fsm);
-    output = lock_fsm_update(&fsm, &untrusted, 3U, &config, 10U);
-    output = lock_fsm_update(&fsm, &untrusted, 3U, &config, 20U);
-    output = lock_fsm_update(&fsm, &untrusted, 3U, &config, 30U);
+    output = lock_fsm_update(&fsm, &two_anchor, 3U, &config, 10U);
+    output = lock_fsm_update(&fsm, &two_anchor, 3U, &config, 20U);
+    output = lock_fsm_update(&fsm, &two_anchor, 3U, &config, 30U);
 
+    TEST_ASSERT(output.zone == LOCK_ZONE_UNLOCK);
+    TEST_ASSERT(output.state == LOCK_STATE_UNLOCKED);
+    TEST_ASSERT(output.unlock_output);
+
+    two_anchor.mode = LOCK_LOCALIZATION_THREE_ANCHOR;
+    two_anchor.anchor_count = 3U;
+    lock_fsm_init(&fsm);
+    output = lock_fsm_update(&fsm, &two_anchor, 3U, &config, 40U);
+    output = lock_fsm_update(&fsm, &two_anchor, 3U, &config, 50U);
+    output = lock_fsm_update(&fsm, &two_anchor, 3U, &config, 60U);
     TEST_ASSERT(output.zone == LOCK_ZONE_INVALID);
     TEST_ASSERT(output.state == LOCK_STATE_LOCKED);
     TEST_ASSERT(!output.unlock_output);
@@ -649,7 +659,7 @@ int main(void)
          test_empirical_model_distance_angle_and_crc},
         {"empirical model rejects ambiguous angle",
          test_empirical_model_rejects_ambiguous_angle},
-        {"exported empirical model contains all 66 training points",
+        {"exported empirical model contains all 68 final points",
          test_exported_empirical_model_contains_all_training_points},
         {"2-anchor fusion uses empirical distance only",
          test_two_anchor_fusion_uses_empirical_distance_only},
@@ -671,7 +681,8 @@ int main(void)
          test_fusion_rejects_mixed_key_addresses},
         {"3-frame hysteresis and immediate safety",
          test_three_frame_hysteresis_and_immediate_safety},
-        {"untrusted angle never unlocks", test_untrusted_angle_never_unlocks},
+        {"2-anchor distance unlocks without using angle",
+         test_two_anchor_distance_unlocks_without_using_angle},
         {"invalid calibration model closes lock",
          test_invalid_model_forces_calibration_error_lock},
     };
