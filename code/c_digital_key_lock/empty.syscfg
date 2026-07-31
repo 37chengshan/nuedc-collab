@@ -119,13 +119,13 @@ LCD_CONTROL.$name = "LCD_CONTROL";
 LCD_CONTROL.associatedPins.create(3);
 LCD_CONTROL.associatedPins[0].$name        = "LCD_CS";
 LCD_CONTROL.associatedPins[0].initialValue = "SET";
-LCD_CONTROL.associatedPins[0].pin.$assign  = "PB14";
+LCD_CONTROL.associatedPins[0].pin.$assign  = "PA12";
 LCD_CONTROL.associatedPins[1].$name        = "LCD_DC";
 LCD_CONTROL.associatedPins[1].initialValue = "SET";
-LCD_CONTROL.associatedPins[1].pin.$assign  = "PB10";
+LCD_CONTROL.associatedPins[1].pin.$assign  = "PA13";
 LCD_CONTROL.associatedPins[2].$name        = "LCD_RESET";
 LCD_CONTROL.associatedPins[2].initialValue = "SET";
-LCD_CONTROL.associatedPins[2].pin.$assign  = "PB11";
+LCD_CONTROL.associatedPins[2].pin.$assign  = "PA17";
 
 SET_ID_INPUTS.$name = "SET_ID_INPUTS";
 SET_ID_INPUTS.associatedPins.create(4);
