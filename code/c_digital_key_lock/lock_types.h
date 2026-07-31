@@ -39,6 +39,8 @@ typedef enum {
 
 typedef struct {
     bool valid;
+    bool angle_valid;
+    bool angle_held;
     uint16_t key_addr;
     uint8_t key_id;
     uint8_t valid_mask;
@@ -53,6 +55,8 @@ typedef struct {
     float boundary_distance_mm;
     float radial_mm;
     float bearing_deg;
+    float distance_confidence;
+    float angle_confidence;
     float radial_correction_mm;
     float bearing_correction_deg;
     float residual_mm;
@@ -98,6 +102,7 @@ typedef struct {
     LockState state;
     bool authorized;
     uint8_t calibration_status;
+    uint8_t empirical_status;
     LockPositionSolution position;
 } LockDisplayModel;
 

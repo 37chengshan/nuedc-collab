@@ -9,7 +9,9 @@
 typedef struct {
     LockAppConfig config;
     const CalibrationModelV1 *calibration_model;
+    const EmpiricalModelV1 *empirical_model;
     CalibrationModelStatus calibration_status;
+    EmpiricalModelStatus empirical_status;
     UwbTextParser parsers[LOCK_UWB_CHANNEL_COUNT];
     LockUwbFusion fusion;
     LockIdInput id_input;
@@ -22,6 +24,9 @@ typedef struct {
 void lock_app_init(LockApp *app, LockIdInputBackend backend);
 void lock_app_init_with_model(LockApp *app, LockIdInputBackend backend,
                               const CalibrationModelV1 *model);
+void lock_app_init_with_models(LockApp *app, LockIdInputBackend backend,
+                               const CalibrationModelV1 *calibration_model,
+                               const EmpiricalModelV1 *empirical_model);
 void lock_app_process_uart_byte(LockApp *app, uint8_t channel, uint8_t byte,
                                 uint32_t now_ms);
 void lock_app_update(LockApp *app, uint32_t now_ms,

@@ -174,6 +174,31 @@ static bool same_key(const LockUwbMeasurement *left,
            (left->key_id == right->key_id);
 }
 
+static uint32_t filtered_distance_mm(const LockUwbChannelCache *cache)
+{
+    uint32_t sorted[LOCK_UWB_DISTANCE_FILTER_DEPTH];
+    uint8_t index;
+    uint8_t inner;
+
+    if (cache->history_count == 0U) {
+        return cache->measurement.distance_mm;
+    }
+    for (index = 0U; index < cache->history_count; index++) {
+        sorted[index] = cache->distance_history_mm[index];
+    }
+    for (index = 1U; index < cache->history_count; index++) {
+        uint32_t value = sorted[index];
+
+        inner = index;
+        while ((inner > 0U) && (sorted[inner - 1U] > value)) {
+            sorted[inner] = sorted[inner - 1U];
+            inner--;
+        }
+        sorted[inner] = value;
+    }
+    return sorted[cache->history_count / 2U];
+}
+
 void uwb_fusion_init(LockUwbFusion *fusion)
 {
     uwb_fusion_init_with_model(fusion, &g_calibration_model_v1);
@@ -182,19 +207,45 @@ void uwb_fusion_init(LockUwbFusion *fusion)
 void uwb_fusion_init_with_model(LockUwbFusion *fusion,
                                 const CalibrationModelV1 *model)
 {
+    uwb_fusion_init_with_models(fusion, model, NULL);
+}
+
+void uwb_fusion_init_with_models(LockUwbFusion *fusion,
+                                 const CalibrationModelV1 *calibration_model,
+                                 const EmpiricalModelV1 *empirical_model)
+{
     memset(fusion, 0, sizeof(*fusion));
-    fusion->calibration_model = model;
+    fusion->calibration_model = calibration_model;
+    fusion->empirical_model = empirical_model;
 }
 
 void uwb_fusion_store_measurement(LockUwbFusion *fusion, uint8_t channel,
                                   const LockUwbMeasurement *measurement)
 {
+    LockUwbChannelCache *cache;
+
     if (channel >= LOCK_UWB_CHANNEL_COUNT) {
         return;
     }
 
-    fusion->channels[channel].occupied = measurement->valid;
-    fusion->channels[channel].measurement = *measurement;
+    cache = &fusion->channels[channel];
+    if (measurement->valid && cache->occupied &&
+        !same_key(&cache->measurement, measurement)) {
+        cache->history_count = 0U;
+        cache->history_next = 0U;
+    }
+    cache->occupied = measurement->valid;
+    cache->measurement = *measurement;
+    if (measurement->valid) {
+        cache->distance_history_mm[cache->history_next] =
+            measurement->distance_mm;
+        cache->history_next =
+            (uint8_t)((cache->history_next + 1U) %
+                      LOCK_UWB_DISTANCE_FILTER_DEPTH);
+        if (cache->history_count < LOCK_UWB_DISTANCE_FILTER_DEPTH) {
+            cache->history_count++;
+        }
+    }
 }
 
 void uwb_fusion_solve(LockUwbFusion *fusion, const LockAppConfig *config,
@@ -203,6 +254,7 @@ void uwb_fusion_solve(LockUwbFusion *fusion, const LockAppConfig *config,
     const LockUwbMeasurement *identity = NULL;
     LockAnchor2d anchors[LOCK_UWB_CHANNEL_COUNT];
     float distances_mm[LOCK_UWB_CHANNEL_COUNT];
+    uint32_t raw_distances_mm[LOCK_UWB_CHANNEL_COUNT];
     uint8_t source_channels[LOCK_UWB_CHANNEL_COUNT];
     LockPoint2f hint;
     uint8_t valid_mask = 0U;
@@ -218,11 +270,15 @@ void uwb_fusion_solve(LockUwbFusion *fusion, const LockAppConfig *config,
     float corrected_boundary;
     float corrected_bearing;
     float corrected_radius;
+    EmpiricalEstimate empirical_estimate;
 
     memset(solution, 0, sizeof(*solution));
     if ((fusion == NULL) || !lock_app_config_validate(config) ||
         (calibration_model_validate(fusion->calibration_model) !=
-         CALIBRATION_MODEL_OK)) {
+         CALIBRATION_MODEL_OK) ||
+        ((fusion->empirical_model != NULL) &&
+         (empirical_model_validate(fusion->empirical_model) !=
+          EMPIRICAL_MODEL_OK))) {
         if (fusion != NULL) {
             fusion->last_solution.valid = false;
             fusion->kalman.initialized = false;
@@ -270,6 +326,7 @@ void uwb_fusion_solve(LockUwbFusion *fusion, const LockAppConfig *config,
         const LockUwbChannelCache *cache = &fusion->channels[channel];
 
         float corrected_distance;
+        uint32_t filtered_raw_distance;
 
         if ((config->enabled_anchor_mask & (uint8_t)(1U << channel)) == 0U) {
             continue;
@@ -279,10 +336,11 @@ void uwb_fusion_solve(LockUwbFusion *fusion, const LockAppConfig *config,
                              config->sample_window_ms)) {
             continue;
         }
+        filtered_raw_distance = filtered_distance_mm(cache);
         if (!same_key(identity, &cache->measurement) ||
             !calibration_model_correct_range(
                 fusion->calibration_model, channel,
-                (float)cache->measurement.distance_mm,
+                (float)filtered_raw_distance,
                 &corrected_distance)) {
             fusion->last_solution.valid = false;
             fusion->kalman.initialized = false;
@@ -290,6 +348,7 @@ void uwb_fusion_solve(LockUwbFusion *fusion, const LockAppConfig *config,
         }
 
         anchors[count] = config->anchors[channel];
+        raw_distances_mm[count] = filtered_raw_distance;
         distances_mm[count] = corrected_distance;
         source_channels[count] = channel;
         valid_mask |= (uint8_t)(1U << channel);
@@ -308,6 +367,91 @@ void uwb_fusion_solve(LockUwbFusion *fusion, const LockAppConfig *config,
             solution->anchor_count = count;
             solution->mode = LOCK_LOCALIZATION_HOLD;
         }
+        return;
+    }
+
+    if (fusion->last_solution.valid &&
+        (fusion->last_solution.key_addr == identity->key_addr) &&
+        (fusion->last_solution.key_id == identity->key_id) &&
+        fusion->has_solve_time &&
+        (elapsed_ms(fusion->last_solve_ms, now_ms) <
+         config->solution_update_interval_ms)) {
+        *solution = fusion->last_solution;
+        solution->valid_mask = valid_mask;
+        solution->rejected_mask = 0U;
+        solution->anchor_count = count;
+        solution->mode = LOCK_LOCALIZATION_HOLD;
+        return;
+    }
+    fusion->has_solve_time = true;
+    fusion->last_solve_ms = now_ms;
+
+    if ((count == 2U) && (source_channels[0] == 0U) &&
+        (source_channels[1] == 1U) &&
+        (fusion->empirical_model != NULL) &&
+        (raw_distances_mm[0] <= UINT16_MAX) &&
+        (raw_distances_mm[1] <= UINT16_MAX) &&
+        empirical_model_predict(
+            fusion->empirical_model,
+            (uint16_t)raw_distances_mm[0],
+            (uint16_t)raw_distances_mm[1],
+            &empirical_estimate)) {
+        bool can_hold_angle =
+            fusion->last_solution.valid &&
+            (fusion->last_solution.key_addr == identity->key_addr) &&
+            (fusion->last_solution.key_id == identity->key_id) &&
+            (fusion->last_solution.angle_valid ||
+             fusion->last_solution.angle_held);
+
+        corrected_radius =
+            empirical_estimate.distance_mm + config->radial_zero_offset_mm;
+        corrected_bearing = empirical_estimate.angle_valid
+                                ? wrap_bearing(empirical_estimate.bearing_deg)
+                                : can_hold_angle
+                                      ? fusion->last_solution.bearing_deg
+                                      : 0.0f;
+        corrected_point.x_mm =
+            corrected_radius *
+            sinf(corrected_bearing *
+                  (3.14159265358979323846f / 180.0f));
+        corrected_point.y_mm =
+            corrected_radius *
+            cosf(corrected_bearing *
+                  (3.14159265358979323846f / 180.0f));
+        if (empirical_estimate.angle_valid) {
+            kalman_update(&fusion->kalman,
+                          &fusion->calibration_model->kalman,
+                          corrected_point.x_mm, corrected_point.y_mm, now_ms,
+                          &corrected_point);
+        } else {
+            fusion->kalman.initialized = false;
+        }
+
+        solution->valid = true;
+        solution->angle_valid = empirical_estimate.angle_valid;
+        solution->angle_held =
+            !empirical_estimate.angle_valid && can_hold_angle;
+        solution->key_addr = identity->key_addr;
+        solution->key_id = identity->key_id;
+        solution->valid_mask = valid_mask;
+        solution->anchor_count = 2U;
+        solution->updated_ms = now_ms;
+        solution->raw_x_mm =
+            corrected_radius *
+            sinf(corrected_bearing *
+                  (3.14159265358979323846f / 180.0f));
+        solution->raw_y_mm =
+            corrected_radius *
+            cosf(corrected_bearing *
+                  (3.14159265358979323846f / 180.0f));
+        solution->x_mm = corrected_point.x_mm;
+        solution->y_mm = corrected_point.y_mm;
+        solution->distance_confidence =
+            empirical_estimate.distance_confidence;
+        solution->angle_confidence = empirical_estimate.angle_confidence;
+        solution->mode = LOCK_LOCALIZATION_TWO_ANCHOR;
+        fill_solution_metrics(solution, config);
+        fusion->last_solution = *solution;
         return;
     }
 
@@ -338,6 +482,8 @@ void uwb_fusion_solve(LockUwbFusion *fusion, const LockAppConfig *config,
     }
 
     solution->valid = true;
+    solution->angle_valid = true;
+    solution->angle_held = false;
     solution->key_addr = identity->key_addr;
     solution->key_id = identity->key_id;
     solution->valid_mask = used_channel_mask;
@@ -348,6 +494,10 @@ void uwb_fusion_solve(LockUwbFusion *fusion, const LockAppConfig *config,
     solution->raw_y_mm = result.point.y_mm;
     solution->residual_mm = result.residual_mm;
     solution->solver_iterations = result.iterations;
+    solution->distance_confidence =
+        1.0f / (1.0f + result.residual_mm /
+                           config->nlos_residual_threshold_mm);
+    solution->angle_confidence = solution->distance_confidence;
 
     raw_radius = sqrtf((result.point.x_mm * result.point.x_mm) +
                        (result.point.y_mm * result.point.y_mm));

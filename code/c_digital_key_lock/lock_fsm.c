@@ -12,7 +12,7 @@ void lock_fsm_init(LockStateMachine *state_machine)
 LockZone lock_fsm_classify_zone(const LockPositionSolution *position,
                                 const LockAppConfig *config)
 {
-    if (!position->valid) {
+    if (!position->valid || !position->angle_valid) {
         return LOCK_ZONE_INVALID;
     }
 
@@ -33,7 +33,7 @@ LockZone lock_fsm_classify_zone(const LockPositionSolution *position,
 
 static bool position_is_measured(const LockPositionSolution *position)
 {
-    return position->valid &&
+    return position->valid && position->angle_valid &&
            ((position->mode == LOCK_LOCALIZATION_TWO_ANCHOR) ||
             (position->mode == LOCK_LOCALIZATION_THREE_ANCHOR) ||
             (position->mode == LOCK_LOCALIZATION_FOUR_ANCHOR)) &&

@@ -88,6 +88,7 @@ static bool test_default_two_anchor_configuration(void)
     TEST_ASSERT_NEAR(g_lock_app_default_config.anchors[1].y_mm, 40.0f, 0.01f);
     TEST_ASSERT_NEAR(g_lock_app_default_config.radial_zero_offset_mm, 300.0f,
                      0.01f);
+    TEST_ASSERT(g_lock_app_default_config.solution_update_interval_ms == 500U);
     return true;
 }
 
@@ -264,20 +265,66 @@ static bool test_two_anchor_fusion_marks_ambiguous_angle_invalid(void)
     LockAppConfig config = g_lock_app_default_config;
     LockUwbFusion fusion;
     LockPositionSolution solution;
-    LockUwbMeasurement first = measurement(3U, 1001U, 100U);
-    LockUwbMeasurement second = measurement(3U, 901U, 100U);
+    LockUwbMeasurement first = measurement(3U, 1001U, 500U);
+    LockUwbMeasurement second = measurement(3U, 901U, 500U);
+    LockUwbMeasurement trusted_first = measurement(3U, 900U, 0U);
+    LockUwbMeasurement trusted_second = measurement(3U, 800U, 0U);
 
     first.key_addr = 0x0100U;
     second.key_addr = 0x0100U;
+    trusted_first.key_addr = 0x0100U;
+    trusted_second.key_addr = 0x0100U;
     empirical_model_refresh_crc(&model);
     uwb_fusion_init_with_models(&fusion, &g_calibration_model_v1, &model);
+    uwb_fusion_store_measurement(&fusion, 0U, &trusted_first);
+    uwb_fusion_store_measurement(&fusion, 1U, &trusted_second);
+    uwb_fusion_solve(&fusion, &config, 0U, &solution);
+    TEST_ASSERT(solution.angle_valid);
+    TEST_ASSERT_NEAR(solution.bearing_deg, 0.0f, 0.1f);
+
     uwb_fusion_store_measurement(&fusion, 0U, &first);
     uwb_fusion_store_measurement(&fusion, 1U, &second);
-    uwb_fusion_solve(&fusion, &config, 100U, &solution);
+    uwb_fusion_solve(&fusion, &config,
+                     config.solution_update_interval_ms, &solution);
 
     TEST_ASSERT(solution.valid);
     TEST_ASSERT(!solution.angle_valid);
+    TEST_ASSERT(solution.angle_held);
+    TEST_ASSERT_NEAR(solution.bearing_deg, 0.0f, 0.1f);
     TEST_ASSERT_NEAR(solution.boundary_distance_mm, 900.0f, 1.0f);
+    return true;
+}
+
+static bool test_fusion_holds_output_between_stable_update_ticks(void)
+{
+    LockAppConfig config = g_lock_app_default_config;
+    LockUwbFusion fusion;
+    LockPositionSolution first_solution;
+    LockPositionSolution held_solution;
+    LockUwbMeasurement first = measurement(3U, 740U, 100U);
+    LockUwbMeasurement second = measurement(3U, 580U, 100U);
+    LockUwbMeasurement changed_first = measurement(3U, 780U, 200U);
+    LockUwbMeasurement changed_second = measurement(3U, 550U, 200U);
+
+    first.key_addr = 0x0100U;
+    second.key_addr = 0x0100U;
+    changed_first.key_addr = 0x0100U;
+    changed_second.key_addr = 0x0100U;
+    uwb_fusion_init_with_models(
+        &fusion, &g_calibration_model_v1, &g_empirical_model_v1);
+    uwb_fusion_store_measurement(&fusion, 0U, &first);
+    uwb_fusion_store_measurement(&fusion, 1U, &second);
+    uwb_fusion_solve(&fusion, &config, 100U, &first_solution);
+    uwb_fusion_store_measurement(&fusion, 0U, &changed_first);
+    uwb_fusion_store_measurement(&fusion, 1U, &changed_second);
+    uwb_fusion_solve(&fusion, &config, 200U, &held_solution);
+
+    TEST_ASSERT(held_solution.valid);
+    TEST_ASSERT(held_solution.mode == LOCK_LOCALIZATION_HOLD);
+    TEST_ASSERT_NEAR(held_solution.boundary_distance_mm,
+                     first_solution.boundary_distance_mm, 0.01f);
+    TEST_ASSERT_NEAR(held_solution.bearing_deg, first_solution.bearing_deg,
+                     0.01f);
     return true;
 }
 
@@ -601,6 +648,8 @@ int main(void)
          test_two_anchor_fusion_uses_empirical_distance_and_angle},
         {"2-anchor fusion rejects ambiguous empirical angle",
          test_two_anchor_fusion_marks_ambiguous_angle_invalid},
+        {"fusion holds output between stable update ticks",
+         test_fusion_holds_output_between_stable_update_ticks},
         {"bilinear distance/angle compensation",
          test_bilinear_distance_and_angle_compensation},
         {"2-anchor front mirror resolution",

@@ -265,6 +265,7 @@ static bool test_fusion_three_two_one_and_timeout(void)
     LockAppConfig config = g_lock_app_default_config;
 
     enable_three_anchor_fixture(&config);
+    config.solution_update_interval_ms = 1U;
     uwb_fusion_init(&fusion);
     store_channel_position(&fusion, &config, 0U, 7U, 0.0f, 1300.0f, 100U);
     store_channel_position(&fusion, &config, 1U, 7U, 0.0f, 1300.0f, 101U);
@@ -379,6 +380,7 @@ static LockPositionSolution position(uint8_t key_id, bool valid,
     value.key_id = key_id;
     value.radial_mm = radial_mm;
     value.bearing_deg = bearing_deg;
+    value.angle_valid = true;
     value.mode = mode;
     value.anchor_count = anchor_count;
     return value;
@@ -453,7 +455,9 @@ static bool test_app_uart_and_direct_id_integration(void)
     float x_mm = 0.0f;
     float y_mm = 1300.0f;
 
-    lock_app_init(&app, LOCK_ID_INPUT_DIRECT_BITS);
+    lock_app_init_with_model(
+        &app, LOCK_ID_INPUT_DIRECT_BITS, &g_calibration_model_v1);
+    app.config.solution_update_interval_ms = 1U;
     for (channel = 0U; channel < LOCK_UWB_CHANNEL_COUNT; channel++) {
         char line[40];
         uint32_t range = (uint32_t)lroundf(

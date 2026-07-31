@@ -1,35 +1,53 @@
 #include "lock_app.h"
 
+#include "empirical_model_data.h"
 #include "lock_app_config.h"
 
 #include <string.h>
 
 void lock_app_init(LockApp *app, LockIdInputBackend backend)
 {
-    lock_app_init_with_model(app, backend, &g_calibration_model_v1);
+    lock_app_init_with_models(app, backend, &g_calibration_model_v1,
+                              &g_empirical_model_v1);
 }
 
 void lock_app_init_with_model(LockApp *app, LockIdInputBackend backend,
                               const CalibrationModelV1 *model)
 {
+    lock_app_init_with_models(app, backend, model, NULL);
+}
+
+void lock_app_init_with_models(LockApp *app, LockIdInputBackend backend,
+                               const CalibrationModelV1 *calibration_model,
+                               const EmpiricalModelV1 *empirical_model)
+{
     uint8_t channel;
 
     memset(app, 0, sizeof(*app));
     app->config = g_lock_app_default_config;
-    app->calibration_model = model;
-    app->calibration_status = calibration_model_validate(model);
+    app->calibration_model = calibration_model;
+    app->empirical_model = empirical_model;
+    app->calibration_status =
+        calibration_model_validate(calibration_model);
+    app->empirical_status =
+        empirical_model == NULL
+            ? EMPIRICAL_MODEL_OK
+            : empirical_model_validate(empirical_model);
     if (app->calibration_status == CALIBRATION_MODEL_OK) {
-        app->config.anchor_count = model->anchor_count;
-        app->config.enabled_anchor_mask = model->enabled_anchor_mask;
+        app->config.anchor_count = calibration_model->anchor_count;
+        app->config.enabled_anchor_mask =
+            calibration_model->enabled_anchor_mask;
         for (channel = 0U; channel < LOCK_UWB_CHANNEL_COUNT; channel++) {
-            app->config.anchors[channel] = model->anchors[channel];
+            app->config.anchors[channel] =
+                calibration_model->anchors[channel];
         }
     }
 
     for (channel = 0U; channel < LOCK_UWB_CHANNEL_COUNT; channel++) {
         uwb_text_parser_init(&app->parsers[channel]);
     }
-    uwb_fusion_init_with_model(&app->fusion, model);
+    uwb_fusion_init_with_models(&app->fusion, calibration_model,
+                                empirical_model);
     id_input_init(&app->id_input, backend);
     lock_fsm_init(&app->state_machine);
     app->display.state = LOCK_STATE_LOCKED;
@@ -61,7 +79,12 @@ void lock_app_update(LockApp *app, uint32_t now_ms,
 
     app->calibration_status =
         calibration_model_validate(app->calibration_model);
+    app->empirical_status =
+        app->empirical_model == NULL
+            ? EMPIRICAL_MODEL_OK
+            : empirical_model_validate(app->empirical_model);
     if ((app->calibration_status != CALIBRATION_MODEL_OK) ||
+        (app->empirical_status != EMPIRICAL_MODEL_OK) ||
         !lock_app_config_validate(&app->config)) {
         memset(&app->position, 0, sizeof(app->position));
         memset(&app->outputs, 0, sizeof(app->outputs));
@@ -87,6 +110,7 @@ void lock_app_update(LockApp *app, uint32_t now_ms,
     app->display.state = app->outputs.state;
     app->display.authorized = app->outputs.authorized;
     app->display.calibration_status = (uint8_t)app->calibration_status;
+    app->display.empirical_status = (uint8_t)app->empirical_status;
     app->display.position = app->position;
 }
 

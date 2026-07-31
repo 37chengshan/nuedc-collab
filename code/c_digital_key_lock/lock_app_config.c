@@ -21,6 +21,7 @@ const LockAppConfig g_lock_app_default_config = {
     .access_bearing_limit_deg = 45.0f,
     .nlos_residual_threshold_mm = 180.0f,
     .huber_delta_mm = 150.0f,
+    .solution_update_interval_ms = 500U,
     .sample_window_ms = 120U,
     .solution_hold_ms = 500U,
     .denied_hold_ms = 700U,
@@ -50,7 +51,8 @@ bool lock_app_config_validate(const LockAppConfig *config)
         !isfinite(config->nlos_residual_threshold_mm) ||
         (config->nlos_residual_threshold_mm <= 0.0f) ||
         !isfinite(config->huber_delta_mm) ||
-        (config->huber_delta_mm <= 0.0f)) {
+        (config->huber_delta_mm <= 0.0f) ||
+        (config->solution_update_interval_ms == 0U)) {
         return false;
     }
 

@@ -20,6 +20,7 @@ typedef struct {
     float access_bearing_limit_deg;
     float nlos_residual_threshold_mm;
     float huber_delta_mm;
+    uint32_t solution_update_interval_ms;
     uint32_t sample_window_ms;
     uint32_t solution_hold_ms;
     uint32_t denied_hold_ms;
