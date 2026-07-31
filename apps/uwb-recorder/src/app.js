@@ -116,7 +116,7 @@ const state = {
   position: {
     latest: null,
     smoothedDistanceM: null,
-    smoothedAngleDeg: null,
+    smoothedAngleDeg: 0,
   },
   calibration: {
     plan: null,
@@ -343,13 +343,16 @@ function renderCalibratedPosition() {
   const model = state.finalCalibration;
   const estimate = state.position.latest;
   const errorM = model?.metrics?.distanceMaxErrorM;
+  const heldAngleDeg = state.position.smoothedAngleDeg ?? 0;
+  const heldAngleText =
+    `${heldAngleDeg >= 0 ? "+" : ""}${heldAngleDeg.toFixed(1)}°`;
   elements["calibration-error-bound"].textContent = Number.isFinite(errorM)
     ? `最终 18 组标定点最大误差 ±${errorM.toFixed(3)} m`
     : "正在载入最终模型";
 
   if (!estimate?.valid) {
     elements["calibrated-distance"].textContent = "--";
-    elements["calibrated-angle"].textContent = "--°";
+    elements["calibrated-angle"].textContent = heldAngleText;
     elements["calibrated-zone"].textContent = state.status?.connected
       ? "等待两路稳定数据"
       : "连接串口后开始定位";
@@ -363,13 +366,7 @@ function renderCalibratedPosition() {
   const distanceM =
     state.position.smoothedDistanceM ?? estimate.distanceM;
   elements["calibrated-distance"].textContent = distanceM.toFixed(2);
-  if (estimate.angleValid) {
-    const angleDeg = state.position.smoothedAngleDeg ?? estimate.angleDeg;
-    elements["calibrated-angle"].textContent =
-      `${angleDeg >= 0 ? "+" : ""}${angleDeg.toFixed(1)}°`;
-  } else {
-    elements["calibrated-angle"].textContent = "暂不可用";
-  }
+  elements["calibrated-angle"].textContent = heldAngleText;
 
   let zone = "感应区外";
   if (distanceM <= 1) {
@@ -1698,7 +1695,6 @@ async function pollRealtime() {
         reason: "串口已断开",
       };
       state.position.smoothedDistanceM = null;
-      state.position.smoothedAngleDeg = null;
       renderCalibratedPosition();
     }
   } catch (error) {
