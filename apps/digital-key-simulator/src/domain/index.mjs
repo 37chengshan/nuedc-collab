@@ -26,3 +26,4 @@ export {
 export { createDeterministicPrng } from "./prng.mjs";
 export { createDigitalKeySimulator } from "./simulator.mjs";
 export { runFixedSeedEntryScenario } from "./scenario.mjs";
+export { createFittedPositionFrame } from "./live-position.mjs";

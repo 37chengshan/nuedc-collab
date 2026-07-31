@@ -13,7 +13,7 @@ function jsonResponse(data, status = 200) {
   });
 }
 
-test("实机代理只向 4173 发起 status/measurements/sessions GET", async () => {
+test("实机代理只向 4173 发起状态、最终位置、标定、测量和会话 GET", async () => {
   const calls = [];
   const proxy = new UwbRecorderReadOnlyProxy({
     fetchImpl: async (url, options) => {
@@ -23,6 +23,8 @@ test("实机代理只向 4173 发起 status/measurements/sessions GET", async ()
   });
 
   await proxy.query("recorder.status.get", {});
+  await proxy.query("recorder.position.get", {});
+  await proxy.query("recorder.calibration.get", {});
   await proxy.query("recorder.measurements.list", {
     limit: 20,
     device: 2,
@@ -37,13 +39,17 @@ test("实机代理只向 4173 发起 status/measurements/sessions GET", async ()
       "http://127.0.0.1:4173",
       "http://127.0.0.1:4173",
       "http://127.0.0.1:4173",
+      "http://127.0.0.1:4173",
+      "http://127.0.0.1:4173",
     ],
   );
   assert.ok(calls.every((call) => call.options.method === "GET"));
   assert.equal(new URL(calls[0].url).pathname, "/api/status");
-  assert.equal(new URL(calls[1].url).pathname, "/api/measurements");
-  assert.equal(new URL(calls[2].url).pathname, "/api/sessions");
-  assert.equal(new URL(calls[1].url).searchParams.get("device"), "2");
+  assert.equal(new URL(calls[1].url).pathname, "/api/position");
+  assert.equal(new URL(calls[2].url).pathname, "/api/calibration/final");
+  assert.equal(new URL(calls[3].url).pathname, "/api/measurements");
+  assert.equal(new URL(calls[4].url).pathname, "/api/sessions");
+  assert.equal(new URL(calls[3].url).searchParams.get("device"), "2");
 });
 
 test("实机 runtime 拒绝抢串口、写参数和强制开锁", async () => {
@@ -70,4 +76,3 @@ test("实机 runtime 拒绝抢串口、写参数和强制开锁", async () => {
     );
   }
 });
-

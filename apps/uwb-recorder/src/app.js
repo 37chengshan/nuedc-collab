@@ -1934,7 +1934,7 @@ async function initialize() {
       `采集服务未启动：${error.message}`;
     elements["save-status"].textContent = "请双击 start.cmd 启动服务";
   }
-  window.setInterval(pollRealtime, 300);
+  window.setInterval(pollRealtime, 500);
 }
 
 void initialize();

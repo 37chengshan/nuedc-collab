@@ -550,6 +550,8 @@ export class DigitalKeyRuntime {
           operation,
           allowedOperations: [
             "recorder.status.get",
+            "recorder.position.get",
+            "recorder.calibration.get",
             "recorder.measurements.list",
             "recorder.sessions.list",
           ],

@@ -2,6 +2,8 @@ import { DigitalKeyAgentError } from "./errors.js";
 
 const LIVE_PATHS = {
   "recorder.status.get": "/api/status",
+  "recorder.position.get": "/api/position",
+  "recorder.calibration.get": "/api/calibration/final",
   "recorder.measurements.list": "/api/measurements",
   "recorder.sessions.list": "/api/sessions",
 };
@@ -109,4 +111,3 @@ export class UwbRecorderReadOnlyProxy {
     return payload?.ok === true ? payload.data : payload;
   }
 }
-

@@ -6,6 +6,7 @@ import {
   useState,
 } from "react";
 import { agentClient } from "./agent-client";
+import { createFittedPositionFrame } from "../domain/live-position.mjs";
 import {
   DigitalKeyScene,
   type ScenePoint,
@@ -27,6 +28,30 @@ interface AnchorMetric {
   id: "1" | "2" | "3";
   distance: number;
   snr: number;
+}
+
+interface LivePositionFrame {
+  valid: boolean;
+  positionMode: "fitted-2d" | "range-only" | "unavailable";
+  distanceM: number | null;
+  angleValid: boolean;
+  angleDeg: number | null;
+  xM: number | null;
+  yM: number | null;
+  plotX: number | null;
+  plotY: number | null;
+  confidencePercent: number;
+  quality: string;
+  source: string;
+  sampleCount: number;
+  usedAnchors: string[];
+  anchors: Array<Record<string, unknown>>;
+  expectedErrorM: number | null;
+  calibratedRangeM: Record<string, unknown> | null;
+  calibratedAngleDeg: Record<string, unknown> | null;
+  keyId: number | null;
+  reason: string | null;
+  receivedAt: string;
 }
 
 const anchorPositions = [
@@ -87,7 +112,7 @@ function eventList(value: unknown) {
 }
 
 export function App() {
-  const [mode, setMode] = useState<WorkbenchMode>("simulation");
+  const [mode, setMode] = useState<WorkbenchMode>("live");
   const [tab, setTab] = useState<BottomTab>("timeline");
   const [position, setPosition] = useState<ScenePoint>({ x: 0.18, y: 1.42 });
   const [idBits, setIdBits] = useState(bitsFromId(0x0a));
@@ -96,7 +121,7 @@ export function App() {
   const [connected, setConnected] = useState(false);
   const [lifecycle, setLifecycle] = useState("paused");
   const [busy, setBusy] = useState<string | null>(null);
-  const [port, setPort] = useState("SIM://KEYFIELD");
+  const [port, setPort] = useState("LIVE://UWB-RECORDER");
   const [baudRate, setBaudRate] = useState(115200);
   const [commandText, setCommandText] = useState("");
   const [announcement, setAnnouncement] = useState(
@@ -112,27 +137,52 @@ export function App() {
     },
   ]);
   const [records, setRecords] = useState<Array<Record<string, unknown>>>([]);
+  const [liveMonitoring, setLiveMonitoring] = useState(true);
+  const [liveFrame, setLiveFrame] = useState<LivePositionFrame | null>(null);
+  const [recorderStatus, setRecorderStatus] =
+    useState<Record<string, unknown> | null>(null);
+  const [calibrationStatus, setCalibrationStatus] =
+    useState<Record<string, unknown> | null>(null);
+  const [liveError, setLiveError] = useState<string | null>(null);
+  const [clock, setClock] = useState(Date.now());
   const moveTimer = useRef<number | null>(null);
+  const liveRequestActive = useRef(false);
 
   const selectedId = idFromBits(idBits);
-  const radialDistance = Math.max(
-    0,
-    Math.hypot(position.x, position.y) - 0.3,
-  );
-  const bearing = (Math.atan2(position.x, position.y) * 180) / Math.PI;
-  const idAuthorized = selectedId === expectedId && fault !== "id";
-  const lockState: LockState =
-    fault === "timeout" || !idAuthorized
-      ? "locked"
-      : radialDistance <= 1
-        ? "unlocked"
-        : radialDistance <= 2
-          ? "welcome"
-          : "locked";
+  const radialDistance =
+    mode === "live" && liveFrame?.valid
+      ? Number(liveFrame.distanceM)
+      : Math.max(
+          0,
+          Math.hypot(position.x, position.y) - 0.3,
+        );
+  const bearing =
+    mode === "live"
+      ? liveFrame?.angleValid
+        ? Number(liveFrame.angleDeg)
+        : null
+      : (Math.atan2(position.x, position.y) * 180) / Math.PI;
+  const liveKeyId = liveFrame?.keyId;
+  const idAuthorized =
+    mode === "live"
+      ? liveKeyId !== null &&
+        liveKeyId !== undefined &&
+        liveKeyId === expectedId
+      : selectedId === expectedId && fault !== "id";
+  const bearingInside =
+    bearing !== null && Number.isFinite(bearing) && Math.abs(bearing) <= 45;
 
-  const anchorMetrics = useMemo<AnchorMetric[]>(
-    () =>
-      anchorPositions.map((anchor, index) => ({
+  const anchorMetrics = useMemo<AnchorMetric[]>(() => {
+    if (mode === "live" && liveFrame?.anchors.length) {
+      return liveFrame.anchors.slice(0, 3).map((anchor, index) => ({
+        id: String(anchor.anchorId ?? `A${index + 1}`)
+          .replace(/^A/i, "") as AnchorMetric["id"],
+        distance:
+          Number(anchor.medianMm ?? anchor.distanceMm ?? 0) / 1000,
+        snr: Number(anchor.snrDb ?? -99),
+      }));
+    }
+    return anchorPositions.map((anchor, index) => ({
         id: anchor.id,
         distance: Math.hypot(
           position.x - anchor.x,
@@ -142,9 +192,37 @@ export function App() {
           fault === "anchor" && anchor.id === "2"
             ? -99
             : 16.8 - radialDistance * 2.1 - index * 0.7,
-      })),
-    [fault, position, radialDistance],
-  );
+      }));
+  }, [fault, liveFrame, mode, position, radialDistance]);
+
+  const latestMeasurementAt = useMemo(() => {
+    const latest = recordOf(recorderStatus?.latestByDevice);
+    if (!latest) {
+      return null;
+    }
+    const timestamps = Object.values(latest)
+      .map((item) => recordOf(item)?.timestamp)
+      .map((value) => Date.parse(String(value ?? "")))
+      .filter(Number.isFinite);
+    return timestamps.length > 0 ? Math.max(...timestamps) : null;
+  }, [recorderStatus]);
+  const dataAgeMs =
+    latestMeasurementAt === null ? null : Math.max(0, clock - latestMeasurementAt);
+  const recorderConnected = recorderStatus?.connected === true;
+  const dataFresh =
+    recorderConnected && dataAgeMs !== null && dataAgeMs <= 2000;
+  const modelReady = calibrationStatus?.ready === true;
+  const lockState: LockState =
+    fault === "timeout" ||
+    !idAuthorized ||
+    (mode === "live" &&
+      (!bearingInside || !dataFresh || liveFrame?.valid !== true))
+      ? "locked"
+      : radialDistance <= 1
+        ? "unlocked"
+        : radialDistance <= 2
+          ? "welcome"
+          : "locked";
 
   const appendTimeline = useCallback(
     (kind: TimelineItem["kind"], message: string) => {
@@ -252,32 +330,141 @@ export function App() {
     [appendTimeline, applyState],
   );
 
+  const applyLivePosition = useCallback((payload: unknown) => {
+    const data = domainData(payload) ?? {};
+    const frame = createFittedPositionFrame(data) as LivePositionFrame;
+    setLiveFrame(frame);
+    if (frame.plotX !== null && frame.plotY !== null) {
+      setPosition({ x: frame.plotX, y: frame.plotY });
+    }
+    if (frame.keyId !== null) {
+      setIdBits(bitsFromId(frame.keyId & 0x0f));
+    }
+    return frame;
+  }, []);
+
+  const refreshLivePosition = useCallback(
+    async ({
+      silent = false,
+      includeCalibration = false,
+    }: {
+      silent?: boolean;
+      includeCalibration?: boolean;
+    } = {}) => {
+      if (liveRequestActive.current) {
+        return;
+      }
+      liveRequestActive.current = true;
+      if (!silent) {
+        setBusy("recorder.position.get");
+      }
+      try {
+        const requests = [
+          agentClient.query("recorder.position.get", {}),
+          agentClient.query("recorder.status.get", {}),
+          ...(includeCalibration
+            ? [agentClient.query("recorder.calibration.get", {})]
+            : []),
+        ];
+        const [positionResult, statusResult, calibrationResult] =
+          await Promise.allSettled(requests);
+
+        if (statusResult.status === "fulfilled") {
+          const status = domainData(statusResult.value);
+          if (status) {
+            setRecorderStatus(status);
+            const statusBaudRate = Number(status.baudRate);
+            if (Number.isFinite(statusBaudRate)) {
+              setBaudRate(statusBaudRate);
+            }
+          }
+        }
+        if (calibrationResult?.status === "fulfilled") {
+          const calibration = domainData(calibrationResult.value);
+          if (calibration) {
+            setCalibrationStatus(calibration);
+          }
+        }
+        if (positionResult.status === "rejected") {
+          throw positionResult.reason;
+        }
+
+        const frame = applyLivePosition(positionResult.value);
+        setConnected(true);
+        setLiveError(null);
+        if (!silent) {
+          const message = frame.valid
+            ? frame.angleValid
+              ? "已读取电脑拟合后的二维位置"
+              : "已读取拟合距离，当前方向数据无效"
+            : frame.reason ?? "尚未得到有效拟合位置";
+          setAnnouncement(message);
+          appendTimeline(frame.valid ? "RX" : "ERR", message);
+        }
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "无法读取最终位置";
+        setLiveFrame(null);
+        setConnected(false);
+        setLiveError(message);
+        if (!silent) {
+          setAnnouncement(`实机数据读取失败：${message}`);
+          appendTimeline("ERR", `recorder.position.get · ${message}`);
+        }
+      } finally {
+        liveRequestActive.current = false;
+        if (!silent) {
+          setBusy(null);
+        }
+      }
+    },
+    [appendTimeline, applyLivePosition],
+  );
+
   useEffect(() => {
     let cancelled = false;
-    void Promise.allSettled([
-      agentClient.registry(),
-      agentClient.query("simulation.state.get", {}),
-    ]).then((results) => {
+    void agentClient.registry().then(() => {
       if (cancelled) {
         return;
       }
-      const stateResult = results[1];
-      if (stateResult.status === "fulfilled") {
-        applyState(stateResult.value);
-        setConnected(true);
-        setAnnouncement("Agent v1 已连接，仿真状态同步完成");
-        appendTimeline("RX", "simulation.state.get 初始快照");
-      } else {
+      setConnected(true);
+      setAnnouncement("Agent v1 已连接，正在读取电脑拟合结果");
+      appendTimeline("SYS", "Agent v1 已连接，实机监看通道就绪");
+      void refreshLivePosition({ includeCalibration: true });
+    }).catch(() => {
+      if (!cancelled) {
         setConnected(false);
-        setAnnouncement("Agent 服务未连接，当前显示本地演示状态");
-        appendTimeline("ERR", "Agent v1 暂不可用，本地交互仍可预览");
+        setAnnouncement("Agent 服务未连接，实机数据暂不可用");
+        appendTimeline("ERR", "Agent v1 暂不可用");
       }
     });
 
     return () => {
       cancelled = true;
     };
-  }, [appendTimeline, applyState]);
+  }, [appendTimeline, refreshLivePosition]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setClock(Date.now()), 250);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    if (mode !== "live" || !liveMonitoring) {
+      return;
+    }
+    void refreshLivePosition({ silent: true, includeCalibration: true });
+    const positionTimer = window.setInterval(() => {
+      void refreshLivePosition({ silent: true });
+    }, 500);
+    const calibrationTimer = window.setInterval(() => {
+      void refreshLivePosition({ silent: true, includeCalibration: true });
+    }, 5000);
+    return () => {
+      window.clearInterval(positionTimer);
+      window.clearInterval(calibrationTimer);
+    };
+  }, [liveMonitoring, mode, refreshLivePosition]);
 
   useEffect(() => {
     let disposed = false;
@@ -323,14 +510,14 @@ export function App() {
     setMode(nextMode);
     if (nextMode === "live") {
       setPort("LIVE://UWB-RECORDER");
-      setLifecycle("paused");
-      void runQuery("recorder.status.get").then((result) => {
-        if (result) {
-          setAnnouncement("实机模式已连接，只读接收 UWB Lab 数据");
-        }
-      });
+      setLifecycle("monitoring");
+      setLiveMonitoring(true);
+      setTab("timeline");
+      setAnnouncement("实机监看已启动，读取电脑拟合后的最终位置");
+      void refreshLivePosition({ includeCalibration: true });
       return;
     }
+    setLiveMonitoring(false);
     if (nextMode === "replay") {
       setPort("REPLAY://LOCAL");
       setLifecycle("paused");
@@ -436,11 +623,13 @@ export function App() {
   }
 
   const quality =
-    fault === "none"
-      ? Math.max(72, Math.round(99 - radialDistance * 5))
-      : fault === "multipath"
-        ? 61
-        : 38;
+    mode === "live"
+      ? liveFrame?.confidencePercent ?? 0
+      : fault === "none"
+        ? Math.max(72, Math.round(99 - radialDistance * 5))
+        : fault === "multipath"
+          ? 61
+          : 38;
 
   return (
     <div className="workbench-shell">
@@ -452,14 +641,15 @@ export function App() {
           <div>
             <p className="instrument-kicker">NUEDC / C · KEYFIELD 3A</p>
             <h1>数字钥匙工作台</h1>
+            <p className="brand-subtitle">电脑拟合位置 · 门锁现场监看</p>
           </div>
         </div>
 
         <div className="mode-switch" aria-label="工作模式">
           {[
-            ["live", "实机模式"],
-            ["replay", "回放模式"],
-            ["simulation", "仿真模式"],
+            ["live", "实机监看"],
+            ["replay", "历史回放"],
+            ["simulation", "仿真调试"],
           ].map(([value, label]) => (
             <button
               key={value}
@@ -476,7 +666,7 @@ export function App() {
 
         <div className="connection-controls">
           <label>
-            <span>数据通道</span>
+            <span>数据源</span>
             <select value={port} onChange={(event) => setPort(event.target.value)}>
               <option>SIM://KEYFIELD</option>
               <option>LIVE://UWB-RECORDER</option>
@@ -500,21 +690,89 @@ export function App() {
             disabled={busy !== null}
             onClick={() => {
               if (port.startsWith("LIVE")) {
-                void runQuery("recorder.status.get");
+                void refreshLivePosition({ includeCalibration: true });
               } else {
                 void runQuery("simulation.state.get");
               }
             }}
           >
             <span className="status-lamp" />
-            {connected ? "链路在线" : "连接 Agent"}
+            {connected ? "Agent 在线" : "连接 Agent"}
           </button>
         </div>
       </header>
 
+      <section className="pipeline-rail" aria-label="数据链路">
+        <div className="pipeline-heading">
+          <span className="panel-code">DATA PATH / READ ONLY</span>
+          <strong>数据链路</strong>
+        </div>
+        {[
+          {
+            code: "01",
+            title: "UWB 基站",
+            detail: recorderConnected ? "串口采集中" : "等待串口连接",
+            active: recorderConnected,
+          },
+          {
+            code: "02",
+            title: "电脑拟合",
+            detail: modelReady ? "最终模型已载入" : "等待标定模型",
+            active: modelReady,
+          },
+          {
+            code: "03",
+            title: "门锁数据",
+            detail: dataFresh ? "最终位置实时有效" : "等待新鲜位置",
+            active: dataFresh && Boolean(liveFrame?.valid),
+          },
+          {
+            code: "04",
+            title: "网页监看",
+            detail: liveMonitoring ? "实时监看中" : "监看已暂停",
+            active: mode === "live" && liveMonitoring,
+          },
+        ].map((stage, index) => (
+          <div
+            key={stage.code}
+            className={stage.active ? "pipeline-stage is-active" : "pipeline-stage"}
+          >
+            <span>{stage.code}</span>
+            <div>
+              <strong>{stage.title}</strong>
+              <small>{stage.detail}</small>
+            </div>
+            {index < 3 && <i aria-hidden="true" />}
+          </div>
+        ))}
+        <div className="monitor-controls">
+          <button
+            type="button"
+            className={liveMonitoring ? "monitor-toggle is-running" : "monitor-toggle"}
+            aria-pressed={liveMonitoring}
+            disabled={mode !== "live"}
+            onClick={() => {
+              const next = !liveMonitoring;
+              setLiveMonitoring(next);
+              setLifecycle(next ? "monitoring" : "paused");
+              setAnnouncement(next ? "实时监看已启动" : "实时监看已暂停");
+            }}
+          >
+            {liveMonitoring ? "暂停监看" : "实时监看"}
+          </button>
+          <button
+            type="button"
+            disabled={mode !== "live" || busy !== null}
+            onClick={() => void refreshLivePosition({ includeCalibration: true })}
+          >
+            立即刷新
+          </button>
+        </div>
+      </section>
+
       <div className="telemetry-strip" aria-label="关键状态">
         <div>
-          <span>LOCK STATE</span>
+          <span>DOOR POLICY</span>
           <strong data-state={lockState}>
             {lockState === "unlocked"
               ? "已解锁"
@@ -525,7 +783,11 @@ export function App() {
         </div>
         <div>
           <span>KEY ID</span>
-          <strong>{idBits.map(Number).join("")}</strong>
+          <strong>
+            {mode === "live" && liveFrame?.keyId === null
+              ? "----"
+              : idBits.map(Number).join("")}
+          </strong>
         </div>
         <div>
           <span>RADIAL</span>
@@ -533,7 +795,11 @@ export function App() {
         </div>
         <div>
           <span>BEARING</span>
-          <strong>{bearing >= 0 ? "+" : ""}{bearing.toFixed(2)}°</strong>
+          <strong>
+            {bearing === null
+              ? "方向未锁定"
+              : `${bearing >= 0 ? "+" : ""}${bearing.toFixed(2)}°`}
+          </strong>
         </div>
         <div>
           <span>CONFIDENCE</span>
@@ -541,7 +807,13 @@ export function App() {
         </div>
         <div>
           <span>LIFECYCLE</span>
-          <strong>{lifecycle.toUpperCase()}</strong>
+          <strong>
+            {mode === "live"
+              ? liveMonitoring
+                ? "MONITORING"
+                : "PAUSED"
+              : lifecycle.toUpperCase()}
+          </strong>
         </div>
       </div>
 
@@ -551,15 +823,134 @@ export function App() {
           idBits={idBits}
           status={lockState}
           faultedAnchor={fault === "anchor" ? "A2" : undefined}
+          interactive={mode === "simulation"}
+          bearingValid={mode !== "live" || Boolean(liveFrame?.angleValid)}
+          stale={mode === "live" && !dataFresh}
+          showRangeLines={mode === "simulation"}
+          title={mode === "live" ? "电脑拟合后的最终位置" : "门锁前向定位场"}
+          sourceLabel={
+            mode === "live"
+              ? "POSITION SOURCE / UWB LAB FINAL CALIBRATION"
+              : mode === "replay"
+                ? "POSITION SOURCE / LOCAL SESSION"
+                : "POSITION SOURCE / SEEDED SIMULATION"
+          }
           onMove={moveKey}
         />
 
         <details className="mobile-fold debug-panel" open>
           <summary>
-            <span>链路调试台</span>
+            <span>{mode === "live" ? "实时数据台" : "链路调试台"}</span>
             <small>LINK / DIAGNOSTICS</small>
           </summary>
           <div className="debug-content">
+            {mode === "live" && (
+              <>
+                <section className="debug-section fitted-result">
+                  <header>
+                    <span className="panel-code">FITTED / FINAL POSITION</span>
+                    <h2>最终位置</h2>
+                  </header>
+                  <div className="position-hero">
+                    <div>
+                      <span>径向距离</span>
+                      <strong>
+                        {liveFrame?.valid
+                          ? `${liveFrame.distanceM?.toFixed(3)} m`
+                          : "--"}
+                      </strong>
+                    </div>
+                    <div>
+                      <span>方位角</span>
+                      <strong>
+                        {liveFrame?.angleValid
+                          ? `${Number(liveFrame.angleDeg).toFixed(2)}°`
+                          : "未锁定"}
+                      </strong>
+                    </div>
+                  </div>
+                  <div className="coordinate-grid">
+                    <span>
+                      X
+                      <strong>
+                        {liveFrame?.xM === null || liveFrame?.xM === undefined
+                          ? "--"
+                          : `${liveFrame.xM.toFixed(3)} m`}
+                      </strong>
+                    </span>
+                    <span>
+                      Y
+                      <strong>
+                        {liveFrame?.yM === null || liveFrame?.yM === undefined
+                          ? "--"
+                          : `${liveFrame.yM.toFixed(3)} m`}
+                      </strong>
+                    </span>
+                    <span>
+                      置信度
+                      <strong>{liveFrame?.confidencePercent ?? 0}%</strong>
+                    </span>
+                  </div>
+                  <p className={liveFrame?.angleValid ? "result-note good" : "result-note"}>
+                    {liveFrame?.valid
+                      ? liveFrame.angleValid
+                        ? "电脑拟合的二维位置有效，网页直接显示结果。"
+                        : "当前只能确定距离；网页不会伪造横向位置。"
+                      : liveFrame?.reason ?? "等待电脑输出有效拟合位置。"}
+                  </p>
+                </section>
+
+                <section className="debug-section data-health">
+                  <header>
+                    <span className="panel-code">SOURCE / HEALTH</span>
+                    <h2>数据健康度</h2>
+                  </header>
+                  <dl>
+                    <div>
+                      <dt>串口</dt>
+                      <dd>{recorderConnected ? "已连接" : "未连接"}</dd>
+                    </div>
+                    <div>
+                      <dt>拟合模型</dt>
+                      <dd>{modelReady ? "已就绪" : "未就绪"}</dd>
+                    </div>
+                    <div>
+                      <dt>数据时效</dt>
+                      <dd>
+                        {dataAgeMs === null
+                          ? "--"
+                          : dataAgeMs < 1000
+                            ? `${Math.round(dataAgeMs)} ms`
+                            : `${(dataAgeMs / 1000).toFixed(1)} s`}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>结果质量</dt>
+                      <dd>{liveFrame?.quality ?? "--"}</dd>
+                    </div>
+                    <div>
+                      <dt>样本数</dt>
+                      <dd>{liveFrame?.sampleCount ?? 0}</dd>
+                    </div>
+                    <div>
+                      <dt>预期最大误差</dt>
+                      <dd>
+                        {liveFrame?.expectedErrorM === null ||
+                        liveFrame?.expectedErrorM === undefined
+                          ? "--"
+                          : `±${liveFrame.expectedErrorM.toFixed(3)} m`}
+                      </dd>
+                    </div>
+                  </dl>
+                  {liveError && <p className="inline-error">{liveError}</p>}
+                  <p className="read-only-note">
+                    只读链路：网页不打开串口、不重新拟合、不向门锁发送危险指令。
+                  </p>
+                </section>
+              </>
+            )}
+
+            {mode === "simulation" && (
             <section className="debug-section">
               <header>
                 <span className="panel-code">IDENTITY / 4 BIT</span>
@@ -594,11 +985,12 @@ export function App() {
                   : `ID ${selectedId} 与期望 ${expectedId} 不一致`}
               </p>
             </section>
+            )}
 
             <section className="debug-section">
               <header>
                 <span className="panel-code">ANCHORS / TWR</span>
-                <h2>三路测距</h2>
+                <h2>{mode === "live" ? "拟合输入摘要" : "三路测距"}</h2>
               </header>
               <div className="anchor-table">
                 {anchorMetrics.map((anchor) => (
@@ -621,6 +1013,7 @@ export function App() {
               </div>
             </section>
 
+            {mode === "simulation" && (
             <section className="debug-section compact">
               <header>
                 <span className="panel-code">INJECTION</span>
@@ -639,7 +1032,9 @@ export function App() {
                 ))}
               </div>
             </section>
+            )}
 
+            {mode === "simulation" && (
             <section className="debug-section compact">
               <header>
                 <span className="panel-code">FAULT MATRIX</span>
@@ -660,6 +1055,26 @@ export function App() {
                 ))}
               </div>
             </section>
+            )}
+
+            {mode === "replay" && (
+              <section className="debug-section replay-guide">
+                <header>
+                  <span className="panel-code">REPLAY / LOCAL</span>
+                  <h2>历史位置回放</h2>
+                </header>
+                <p>
+                  从下方“记录”页选择本机会话。回放只使用记录中的真实数据，
+                  不用仿真结果冒充实机位置。
+                </p>
+                <button type="button" onClick={() => {
+                  setTab("records");
+                  void loadRecords();
+                }}>
+                  打开记录
+                </button>
+              </section>
+            )}
           </div>
         </details>
       </main>
@@ -671,7 +1086,12 @@ export function App() {
             ["serial", "串口"],
             ["configuration", "配置"],
             ["records", "记录"],
-          ].map(([value, label]) => (
+          ]
+            .filter(
+              ([value]) =>
+                mode === "simulation" || value !== "configuration",
+            )
+            .map(([value, label]) => (
             <button
               key={value}
               type="button"
@@ -686,7 +1106,7 @@ export function App() {
             >
               {label}
             </button>
-          ))}
+            ))}
         </nav>
 
         {tab === "timeline" && (
@@ -752,7 +1172,7 @@ export function App() {
           </div>
         )}
 
-        {tab === "configuration" && (
+        {tab === "configuration" && mode === "simulation" && (
           <div className="utility-view">
             <div>
               <span className="panel-code">LOCK / DIP SWITCH</span>
@@ -780,7 +1200,7 @@ export function App() {
                 disabled={busy !== null}
                 onClick={updateExpectedId}
               >
-                写入门锁拨码
+                应用到仿真门锁
               </button>
             </div>
           </div>

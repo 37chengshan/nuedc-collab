@@ -265,6 +265,52 @@ const liveDefinitions = [
     resultSchema: emptyResultSchema,
   },
   {
+    operation: "recorder.position.get",
+    title: "读取电脑拟合后的最终位置",
+    description:
+      "只读代理到 127.0.0.1:4173/api/position；返回电脑根据串口测距和最终标定模型计算出的距离、角度、质量与参与基站。",
+    modes: ["live"],
+    kind: "query",
+    execution: "immediate",
+    safety: "read",
+    changesState: false,
+    requiresIdempotencyKey: false,
+    requiresStateRevision: false,
+    risk: {
+      level: "low",
+      tier: "open",
+      reason: "只读访问电脑端已经拟合完成的位置结果",
+    },
+    argumentsSchema: objectSchema(
+      "recorder.position.get.arguments",
+      "读取最终位置参数",
+    ),
+    resultSchema: emptyResultSchema,
+  },
+  {
+    operation: "recorder.calibration.get",
+    title: "读取最终标定模型状态",
+    description:
+      "只读代理到 127.0.0.1:4173/api/calibration/final；用于显示模型是否就绪、标定范围与验证误差。",
+    modes: ["live"],
+    kind: "query",
+    execution: "immediate",
+    safety: "read",
+    changesState: false,
+    requiresIdempotencyKey: false,
+    requiresStateRevision: false,
+    risk: {
+      level: "low",
+      tier: "open",
+      reason: "只读访问电脑端最终标定模型状态",
+    },
+    argumentsSchema: objectSchema(
+      "recorder.calibration.get.arguments",
+      "读取最终标定状态参数",
+    ),
+    resultSchema: emptyResultSchema,
+  },
+  {
     operation: "recorder.measurements.list",
     title: "读取 UWB 测量",
     description: "只读代理到 127.0.0.1:4173/api/measurements。",

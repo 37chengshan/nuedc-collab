@@ -44,13 +44,15 @@ test("DigitalKeyCommandRegistry 渐进公开摘要与完整 JSON Schema", () => 
   });
 });
 
-test("实机模式能力表只有 4173 的三个只读资源", () => {
+test("实机模式能力表只有 4173 的五个只读资源", () => {
   const registry = new DigitalKeyCommandRegistry({ mode: "live" });
 
   assert.deepEqual(
     registry.list().commands.map((command) => command.operation),
     [
       "recorder.status.get",
+      "recorder.position.get",
+      "recorder.calibration.get",
       "recorder.measurements.list",
       "recorder.sessions.list",
     ],
@@ -75,9 +77,11 @@ test("workbench registry 同时发现仿真与 UWB Lab 只读命令", () => {
     .list()
     .commands.map((command) => command.operation);
 
-  assert.equal(operations.length, 11);
+  assert.equal(operations.length, 13);
   assert.ok(operations.includes("simulation.state.get"));
   assert.ok(operations.includes("recorder.status.get"));
+  assert.ok(operations.includes("recorder.position.get"));
+  assert.ok(operations.includes("recorder.calibration.get"));
   assert.ok(operations.includes("recorder.measurements.list"));
   assert.ok(operations.includes("recorder.sessions.list"));
 });

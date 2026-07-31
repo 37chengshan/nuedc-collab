@@ -10,6 +10,12 @@ interface DigitalKeySceneProps {
   idBits: boolean[];
   status: "locked" | "welcome" | "unlocked";
   faultedAnchor?: "A1" | "A2" | "A3";
+  interactive?: boolean;
+  bearingValid?: boolean;
+  stale?: boolean;
+  showRangeLines?: boolean;
+  title?: string;
+  sourceLabel?: string;
   onMove(position: ScenePoint): void;
 }
 
@@ -62,6 +68,12 @@ export function DigitalKeyScene({
   idBits,
   status,
   faultedAnchor,
+  interactive = true,
+  bearingValid = true,
+  stale = false,
+  showRangeLines = true,
+  title = "门锁前向定位场",
+  sourceLabel = "三锚点定位",
   onMove,
 }: DigitalKeySceneProps) {
   const svgRef = useRef<SVGSVGElement>(null);
@@ -71,6 +83,9 @@ export function DigitalKeyScene({
   const angle = (Math.atan2(position.x, position.y) * 180) / Math.PI;
 
   function positionFromPointer(clientX: number, clientY: number) {
+    if (!interactive) {
+      return;
+    }
     const rectangle = svgRef.current?.getBoundingClientRect();
     if (!rectangle) {
       return;
@@ -86,6 +101,9 @@ export function DigitalKeyScene({
   }
 
   function handleKeyDown(event: React.KeyboardEvent<SVGGElement>) {
+    if (!interactive) {
+      return;
+    }
     const step = event.shiftKey ? 0.2 : 0.05;
     const movement: Record<string, ScenePoint> = {
       ArrowLeft: { x: -step, y: 0 },
@@ -111,17 +129,23 @@ export function DigitalKeyScene({
       <header className="panel-header scene-heading">
         <div>
           <span className="panel-code">SPATIAL / 01</span>
-          <h2 id="scene-title">门锁前向定位场</h2>
+          <h2 id="scene-title">{title}</h2>
+          <p className="scene-source">{sourceLabel}</p>
         </div>
-        <div className="scene-readout" aria-label="钥匙实时坐标">
+        <div
+          className="scene-readout"
+          aria-label={bearingValid ? "钥匙实时坐标" : "钥匙距离有效，方向未锁定"}
+        >
           <span>
-            X <strong>{position.x.toFixed(2)}</strong> m
+            X <strong>{bearingValid ? position.x.toFixed(2) : "--"}</strong>
+            {bearingValid ? " m" : ""}
           </span>
           <span>
-            Y <strong>{position.y.toFixed(2)}</strong> m
+            Y <strong>{bearingValid ? position.y.toFixed(2) : "--"}</strong>
+            {bearingValid ? " m" : ""}
           </span>
           <span>
-            θ <strong>{angle.toFixed(1)}°</strong>
+            θ <strong>{bearingValid ? `${angle.toFixed(1)}°` : "方向未锁定"}</strong>
           </span>
         </div>
       </header>
@@ -147,7 +171,10 @@ export function DigitalKeyScene({
         >
           <title id="scene-svg-title">数字钥匙三锚点二维定位场</title>
           <desc id="scene-svg-desc">
-            门锁位于底部原点，检测范围为正前方正负四十五度。可拖动钥匙，或聚焦钥匙后使用方向键移动。
+            门锁位于底部原点，检测范围为正前方正负四十五度。
+            {interactive
+              ? "可拖动钥匙，或聚焦钥匙后使用方向键移动。"
+              : "钥匙位置来自电脑端已经完成拟合的实时结果，网页不参与重新定位。"}
           </desc>
           <defs>
             <pattern
@@ -204,7 +231,9 @@ export function DigitalKeyScene({
                 id={anchor.domId}
                 className={isFaulted ? "anchor anchor-fault" : "anchor"}
               >
-                <line x1={anchor.x} y1={anchor.y} x2={key.x} y2={key.y} className="range-line" />
+                {showRangeLines && (
+                  <line x1={anchor.x} y1={anchor.y} x2={key.x} y2={key.y} className="range-line" />
+                )}
                 <circle cx={anchor.x} cy={anchor.y} r="15" />
                 <circle cx={anchor.x} cy={anchor.y} r="4" className="anchor-core" />
                 <text x={anchor.x} y={anchor.y + 34}>{anchor.id}</text>
@@ -219,18 +248,33 @@ export function DigitalKeyScene({
             <text x="400" y="598">DOOR / ORIGIN</text>
           </g>
 
+          {!bearingValid && (
+            <g className="bearing-uncertainty" aria-label="只能确定距离，方向尚未锁定">
+              <path d={`M400 566 m-${distance * PIXELS_PER_METER},0 a${distance * PIXELS_PER_METER},${distance * PIXELS_PER_METER} 0 0,1 ${distance * PIXELS_PER_METER * 2},0`} />
+              <text x="400" y={Math.max(56, key.y - 58)}>方向未锁定 · 距离投影</text>
+            </g>
+          )}
+
           <g
-            className={`digital-key key-${status}`}
+            className={`digital-key key-${status}${bearingValid ? "" : " key-range-only"}${stale ? " key-stale" : ""}`}
             role="slider"
             tabIndex={0}
-            aria-label="数字钥匙位置"
+            aria-label={bearingValid ? "数字钥匙位置" : "钥匙距离投影，方向未锁定"}
+            aria-disabled={!interactive}
             aria-valuemin={0}
             aria-valuemax={3.15}
             aria-valuenow={Number(distance.toFixed(2))}
-            aria-valuetext={`${distance.toFixed(2)} 米，方位角 ${angle.toFixed(1)} 度`}
+            aria-valuetext={
+              bearingValid
+                ? `${distance.toFixed(2)} 米，方位角 ${angle.toFixed(1)} 度`
+                : `${distance.toFixed(2)} 米，方向未锁定`
+            }
             transform={`translate(${key.x} ${key.y})`}
             onKeyDown={handleKeyDown}
             onPointerDown={(event) => {
+              if (!interactive) {
+                return;
+              }
               dragging.current = true;
               event.currentTarget.ownerSVGElement?.setPointerCapture(
                 event.pointerId,
@@ -259,9 +303,19 @@ export function DigitalKeyScene({
         </svg>
 
         <div className="scene-instruction">
-          <span>拖动钥匙</span>
-          <span>方向键微调 5 cm</span>
-          <span>Shift + 方向键 20 cm</span>
+          {interactive ? (
+            <>
+              <span>拖动钥匙</span>
+              <span>方向键微调 5 cm</span>
+              <span>Shift + 方向键 20 cm</span>
+            </>
+          ) : (
+            <>
+              <span>位置来自电脑拟合</span>
+              <span>{bearingValid ? "二维位置有效" : "当前仅距离有效"}</span>
+              <span>{stale ? "数据已停止更新" : "实时数据流"}</span>
+            </>
+          )}
         </div>
       </div>
     </section>
