@@ -27,10 +27,15 @@ test("最终采集目录用66点评估并用全部68点生成运行模型", asyn
   assert.equal(status.ignoredCaptureCount, 5);
   assert.equal(
     status.metrics.distanceValidationMode,
-    "leave-one-capture-out",
+    "leave-one-physical-point-out",
   );
-  assert.ok(status.metrics.distanceMaxErrorM <= 0.2);
-  assert.ok(status.metrics.distanceP95M <= 0.1);
+  assert.ok(status.metrics.distanceMaxErrorM <= 0.3);
+  assert.ok(status.metrics.distanceP95M <= 0.18);
+  assert.ok(status.metrics.near1m.p95M <= 0.15);
+  assert.ok(status.metrics.near1m.maxErrorM <= 0.15);
+  assert.ok(status.metrics.near2m.p95M <= 0.15);
+  assert.ok(status.metrics.near2m.maxErrorM <= 0.18);
+  assert.equal(status.metrics.boundaryCrossingErrorCount, 0);
   assert.ok(Number.isFinite(status.validationMetrics.distanceMaxErrorM));
   assert.ok(Number.isFinite(status.validationMetrics.angleMaxErrorDeg));
   assert.ok(status.validationMetrics.distanceMaxErrorM >= 0.4);
@@ -105,7 +110,15 @@ test("最终模型导出到MSPM0时必须包含旧18组和新50组全部数据",
   assert.match(exported.source, /旧数据: 18/);
   assert.match(exported.source, /新结构化数据: 50/);
   assert.match(exported.source, /\.prototype_count = 68U/);
-  assert.match(exported.source, /\.distance_neighbor_count = 6U/);
+  assert.equal(exported.distanceNeighborCount, 2);
+  assert.equal(exported.distanceKnnBlend, 0.5);
+  assert.equal(exported.knownPrototypeRadius, 0.1);
+  assert.ok(exported.primaryKnotCount >= 8);
+  assert.match(exported.source, /\.distance_neighbor_count = 2U/);
   assert.match(exported.source, /\.angle_neighbor_count = 4U/);
+  assert.match(exported.source, /\.distance_knn_blend = 0\.500000000f/);
+  assert.match(exported.source, /\.known_prototype_radius = 0\.100000001f/);
+  assert.match(exported.source, /\.primary_knot_count = \d+U/);
+  assert.match(exported.source, /\.primary_knots = empirical_model_data_primary_knots/);
   assert.match(exported.firmwareCrc32, /^[0-9A-F]{8}$/);
 });
