@@ -29,6 +29,7 @@ static bool test_locked_and_unlocked_outputs(void)
     TEST_ASSERT(physical.red_on);
     TEST_ASSERT(!physical.green_on);
     TEST_ASSERT(!physical.buzzer_on);
+    TEST_ASSERT(!physical.lock_on);
 
     memset(&logical, 0, sizeof(logical));
     logical.unlock_output = true;
@@ -37,6 +38,7 @@ static bool test_locked_and_unlocked_outputs(void)
     physical = lock_output_behavior_update(&behavior, &logical, 1000U);
     TEST_ASSERT(!physical.red_on);
     TEST_ASSERT(physical.green_on);
+    TEST_ASSERT(physical.lock_on);
     return true;
 }
 
@@ -88,11 +90,13 @@ static bool test_denied_alarm_and_null_are_safe(void)
     TEST_ASSERT(physical.red_on);
     TEST_ASSERT(!physical.green_on);
     TEST_ASSERT(physical.buzzer_on);
+    TEST_ASSERT(!physical.lock_on);
 
     physical = lock_output_behavior_update(&behavior, NULL, 5001U);
     TEST_ASSERT(!physical.red_on);
     TEST_ASSERT(!physical.green_on);
     TEST_ASSERT(!physical.buzzer_on);
+    TEST_ASSERT(!physical.lock_on);
     return true;
 }
 
