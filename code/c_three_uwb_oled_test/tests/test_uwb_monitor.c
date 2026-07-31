@@ -95,13 +95,38 @@ static void test_current_ewt_stream_without_line_endings(void)
     push_text(&monitor, 0U,
               "P1,0100,21cm,3dBP1,0100,22cm,4dB");
 
-    state = uwb_monitor_channel(&monitor, 0U);
+    state = uwb_monitor_channel(&monitor, 1U);
     assert(state != NULL);
     assert(state->valid);
     assert(strcmp(state->address, "0100") == 0);
     assert(state->distance_cm == 22U);
     assert(state->frame_count == 2U);
     assert(state->rejected_lines == 0U);
+}
+
+static void test_numbered_frames_share_one_physical_uart(void)
+{
+    UwbMonitor monitor;
+    const UwbChannelState *first;
+    const UwbChannelState *second;
+
+    uwb_monitor_init(&monitor);
+    push_text_at(&monitor, 1U,
+                 "re:P0,0100,127cm,18dBP1,0200,127cm,15dB",
+                 100U);
+
+    first = uwb_monitor_channel(&monitor, 0U);
+    second = uwb_monitor_channel(&monitor, 1U);
+    assert(first != NULL);
+    assert(second != NULL);
+    assert(first->valid);
+    assert(second->valid);
+    assert(strcmp(first->address, "0100") == 0);
+    assert(strcmp(second->address, "0200") == 0);
+    assert(first->distance_cm == 127U);
+    assert(second->distance_cm == 127U);
+    assert(first->frame_count == 1U);
+    assert(second->frame_count == 1U);
 }
 
 static void test_display_update_waits_for_complete_line(void)
@@ -312,6 +337,24 @@ static void test_position_rejects_stale_unsynced_and_mismatched_data(void)
     assert(result.status == UWB_POSITION_LOST);
 }
 
+static void test_position_matches_address_low_nibble(void)
+{
+    UwbMonitor monitor;
+    UwbPositionResult result;
+
+    uwb_monitor_init(&monitor);
+    push_distance(&monitor, 0U, "0100", 127U, 100U);
+    push_distance(&monitor, 1U, "0200", 127U, 110U);
+    assert(uwb_position_solve(&monitor, 110U, &result));
+    assert(result.status == UWB_POSITION_OK);
+
+    uwb_monitor_init(&monitor);
+    push_distance(&monitor, 0U, "0100", 127U, 100U);
+    push_distance(&monitor, 1U, "0201", 127U, 110U);
+    assert(!uwb_position_solve(&monitor, 110U, &result));
+    assert(result.status == UWB_POSITION_ADDRESS);
+}
+
 static void test_four_line_position_screen(void)
 {
     UwbMonitor monitor;
@@ -349,6 +392,7 @@ int main(void)
     test_real_frame();
     test_current_ewt_frame_with_snr();
     test_current_ewt_stream_without_line_endings();
+    test_numbered_frames_share_one_physical_uart();
     test_display_update_waits_for_complete_line();
     test_fragmented_and_back_to_back_frames();
     test_two_channels_are_independent();
@@ -359,6 +403,7 @@ int main(void)
     test_channel_wait_bad_ok_and_lost_states();
     test_two_anchor_distance_and_bearing();
     test_position_rejects_stale_unsynced_and_mismatched_data();
+    test_position_matches_address_low_nibble();
     test_four_line_position_screen();
     test_per_channel_distance_calibration_math();
     puts("uwb_monitor tests passed");
