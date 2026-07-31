@@ -27,11 +27,16 @@ export async function createFinalCalibrationService({
   const loaded = await loadFinalCaptures(capturesDirectory, {
     warmupSeconds,
   });
-  const model = trainSparseRealtimeModel(loaded.samples);
+  const evaluationModel = trainSparseRealtimeModel(loaded.samples);
   const validationMetrics = validateSparseRealtimeModel(
-    model,
+    evaluationModel,
     loaded.validationSamples,
   );
+  const runtimeSamples = [
+    ...loaded.samples,
+    ...loaded.validationSamples,
+  ];
+  const model = trainSparseRealtimeModel(runtimeSamples);
 
   return {
     status() {
@@ -42,20 +47,21 @@ export async function createFinalCalibrationService({
         legacyTrainingPointCount: loaded.legacyTrainingPointCount,
         mode: model.mode,
         source: "final-captures",
-        captureCount: loaded.samples.length,
+        captureCount: runtimeSamples.length,
         validationPointCount: loaded.validationSamples.length,
         ignoredCaptureCount: loaded.ignored.length,
         ignoredCaptures: loaded.ignored,
         calibratedRangeM: model.calibratedRangeM,
         calibratedAngleDeg: model.calibratedAngleDeg,
         metrics: {
-          distanceValidationMode: model.metrics.distanceValidationMode,
-          trainingPointCount: model.metrics.trainingPointCount,
-          anglePointCount: model.metrics.anglePointCount,
-          distanceMaxErrorM: model.metrics.distanceMaxErrorM,
-          distanceP95M: model.metrics.distanceP95M,
-          angleMaxErrorDeg: model.metrics.angleMaxErrorDeg,
-          angleP95Deg: model.metrics.angleP95Deg,
+          distanceValidationMode:
+            evaluationModel.metrics.distanceValidationMode,
+          trainingPointCount: evaluationModel.metrics.trainingPointCount,
+          anglePointCount: evaluationModel.metrics.anglePointCount,
+          distanceMaxErrorM: evaluationModel.metrics.distanceMaxErrorM,
+          distanceP95M: evaluationModel.metrics.distanceP95M,
+          angleMaxErrorDeg: evaluationModel.metrics.angleMaxErrorDeg,
+          angleP95Deg: evaluationModel.metrics.angleP95Deg,
         },
         validationMetrics,
         rangeKnots: model.rangeKnots,
@@ -424,10 +430,10 @@ async function loadFinalCaptures(capturesDirectory, { warmupSeconds }) {
     validationSamples,
     ignored,
     dataset: selectedDataset,
-    structuredTrainingPointCount: samples.filter(
+    structuredTrainingPointCount: [...samples, ...validationSamples].filter(
       (sample) => sample.sourceDataset === "2026-07-31-grid",
     ).length,
-    legacyTrainingPointCount: samples.filter(
+    legacyTrainingPointCount: [...samples, ...validationSamples].filter(
       (sample) => sample.sourceDataset === "legacy",
     ).length,
   };

@@ -12,7 +12,7 @@ const capturesDirectory = join(
   "captures",
 );
 
-test("最终采集目录合并旧18组和新结构化数据并隔离独立验证点", async () => {
+test("最终采集目录用66点评估并用全部68点生成运行模型", async () => {
   const service = await createFinalCalibrationService({
     capturesDirectory,
   });
@@ -20,8 +20,8 @@ test("最终采集目录合并旧18组和新结构化数据并隔离独立验证
 
   assert.equal(status.ready, true);
   assert.equal(status.dataset, "combined-legacy-and-2026-07-31-grid");
-  assert.equal(status.captureCount, 66);
-  assert.equal(status.structuredTrainingPointCount, 48);
+  assert.equal(status.captureCount, 68);
+  assert.equal(status.structuredTrainingPointCount, 50);
   assert.equal(status.legacyTrainingPointCount, 18);
   assert.equal(status.validationPointCount, 2);
   assert.equal(status.ignoredCaptureCount, 5);
@@ -33,10 +33,32 @@ test("最终采集目录合并旧18组和新结构化数据并隔离独立验证
   assert.ok(status.metrics.distanceP95M <= 0.1);
   assert.ok(Number.isFinite(status.validationMetrics.distanceMaxErrorM));
   assert.ok(Number.isFinite(status.validationMetrics.angleMaxErrorDeg));
+  assert.ok(status.validationMetrics.distanceMaxErrorM >= 0.4);
   assert.deepEqual(status.calibratedAngleDeg, {
     minimum: -45,
     maximum: 45,
   });
+});
+
+test("两个最终1.5m补测点进入运行模型后误差不超过0.2m", async () => {
+  const service = await createFinalCalibrationService({
+    capturesDirectory,
+  });
+  for (const captureId of [
+    "capture-2026-07-31T09-10-13-186Z",
+    "capture-2026-07-31T09-11-50-057Z",
+  ]) {
+    const measurements = (
+      await readFile(join(capturesDirectory, `${captureId}.jsonl`), "utf8")
+    )
+      .split(/\r?\n/)
+      .filter(Boolean)
+      .map((line) => JSON.parse(line));
+    const estimate = service.estimate(measurements);
+
+    assert.equal(estimate.valid, true);
+    assert.ok(Math.abs(estimate.distanceM - 1.5) <= 0.2);
+  }
 });
 
 test("最终模型可从近期串口帧实时输出距离和角度", async () => {
@@ -64,7 +86,7 @@ test("最终模型可从近期串口帧实时输出距离和角度", async () =>
   assert.equal(estimate.source, "final-captures");
 });
 
-test("最终模型导出到MSPM0时必须包含旧18组和新48组训练数据", async () => {
+test("最终模型导出到MSPM0时必须包含旧18组和新50组全部数据", async () => {
   const service = await createFinalCalibrationService({
     capturesDirectory,
   });
@@ -74,15 +96,15 @@ test("最终模型导出到MSPM0时必须包含旧18组和新48组训练数据",
   });
 
   assert.equal(exported.name, "empirical_model_data");
-  assert.equal(exported.prototypeCount, 66);
+  assert.equal(exported.prototypeCount, 68);
   assert.equal(exported.legacyTrainingPointCount, 18);
-  assert.equal(exported.structuredTrainingPointCount, 48);
+  assert.equal(exported.structuredTrainingPointCount, 50);
   assert.equal(exported.headerFileName, "empirical_model_data.h");
   assert.equal(exported.sourceFileName, "empirical_model_data.c");
   assert.match(exported.header, /extern const EmpiricalModelV1 g_empirical_model_v1;/);
   assert.match(exported.source, /旧数据: 18/);
-  assert.match(exported.source, /新结构化数据: 48/);
-  assert.match(exported.source, /\.prototype_count = 66U/);
+  assert.match(exported.source, /新结构化数据: 50/);
+  assert.match(exported.source, /\.prototype_count = 68U/);
   assert.match(exported.source, /\.distance_neighbor_count = 6U/);
   assert.match(exported.source, /\.angle_neighbor_count = 4U/);
   assert.match(exported.firmwareCrc32, /^[0-9A-F]{8}$/);
