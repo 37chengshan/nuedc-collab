@@ -134,7 +134,8 @@ void lock_hw_init(void)
         LOCK_OUTPUTS_PORT,
         LOCK_OUTPUTS_RED_LED_PIN |
             LOCK_OUTPUTS_GREEN_LED_PIN |
-            LOCK_OUTPUTS_BUZZER_PIN);
+            LOCK_OUTPUTS_BUZZER_PIN |
+            LOCK_OUTPUTS_LOCK_RELAY_PIN);
 
     (void)SysTick_Config(CPUCLK_FREQ / 1000U);
     NVIC_ClearPendingIRQ(UWB_CH1_INST_INT_IRQN);
@@ -207,6 +208,8 @@ void lock_hw_apply_outputs(const LockOutputSnapshot *outputs)
         write_output_pin(LOCK_OUTPUTS_RED_LED_PIN, physical.red_on);
         write_output_pin(LOCK_OUTPUTS_GREEN_LED_PIN, physical.green_on);
         write_output_pin(LOCK_OUTPUTS_BUZZER_PIN, physical.buzzer_on);
+        write_output_pin(
+            LOCK_OUTPUTS_LOCK_RELAY_PIN, physical.lock_on);
     }
 }
 

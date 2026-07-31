@@ -128,7 +128,7 @@ SET_ID_INPUTS.associatedPins[3].internalResistor = "PULL_UP";
 SET_ID_INPUTS.associatedPins[3].pin.$assign      = "PB3";
 
 LOCK_OUTPUTS.$name = "LOCK_OUTPUTS";
-LOCK_OUTPUTS.associatedPins.create(3);
+LOCK_OUTPUTS.associatedPins.create(4);
 LOCK_OUTPUTS.associatedPins[0].$name        = "RED_LED";
 LOCK_OUTPUTS.associatedPins[0].initialValue = "CLEARED";
 LOCK_OUTPUTS.associatedPins[0].pin.$assign  = "PA14";
@@ -138,6 +138,9 @@ LOCK_OUTPUTS.associatedPins[1].pin.$assign  = "PA15";
 LOCK_OUTPUTS.associatedPins[2].$name        = "BUZZER";
 LOCK_OUTPUTS.associatedPins[2].initialValue = "CLEARED";
 LOCK_OUTPUTS.associatedPins[2].pin.$assign  = "PA0";
+LOCK_OUTPUTS.associatedPins[3].$name        = "LOCK_RELAY";
+LOCK_OUTPUTS.associatedPins[3].initialValue = "CLEARED";
+LOCK_OUTPUTS.associatedPins[3].pin.$assign  = "PA16";
 
 pinFunction4.peripheral.$suggestSolution           = "SYSCTL";
 pinFunction4.peripheral.hfxInPin.$suggestSolution  = "PA5";

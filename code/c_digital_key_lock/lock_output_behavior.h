@@ -18,6 +18,7 @@ typedef struct {
     bool red_on;
     bool green_on;
     bool buzzer_on;
+    bool lock_on;
 } LockPhysicalOutputs;
 
 void lock_output_behavior_init(LockOutputBehavior *behavior);

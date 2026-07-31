@@ -46,5 +46,6 @@ LockPhysicalOutputs lock_output_behavior_update(
     physical.buzzer_on =
         logical->buzzer_alarm ||
         deadline_is_future(behavior->welcome_beep_until_ms, now_ms);
+    physical.lock_on = logical->unlock_output;
     return physical;
 }
