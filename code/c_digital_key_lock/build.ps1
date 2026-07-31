@@ -73,7 +73,9 @@ $Sources = @(
     "lock_app.c",
     "lock_app_config.c",
     "calibration_model.c",
-    "calibration_model_data.c"
+    "calibration_model_data.c",
+    "empirical_model.c",
+    "empirical_model_data.c"
 )
 
 $Objects = @()
