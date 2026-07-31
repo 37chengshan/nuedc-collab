@@ -1,0 +1,11 @@
+{
+  "actor": "37chengshan",
+  "createdAt": "2026-07-31T20:08:00+08:00",
+  "entityId": "T-20260731-A3VW",
+  "entityType": "task",
+  "id": "E-20260731-200800-KS3J",
+  "kind": "statusChange",
+  "message": "状态从 todo 变更为 doing",
+  "recordType": "event",
+  "schemaVersion": 1
+}
