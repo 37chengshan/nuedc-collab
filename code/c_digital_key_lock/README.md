@@ -18,12 +18,15 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\build.ps1 -Variant All
 
 生成：
 
-| 层级 | HEX | 用途 |
+| 层级 | 仓库随附 HEX | 本地重新构建输出 | 用途 |
 |---|---|---|
-| L1 | `build/c_digital_key_lock_l1_screen.hex` | 只验证 ST7735S 颜色、文字和界面 |
-| L2 | `build/c_digital_key_lock_l2_monitor.hex` | 双串口接收、拟合、距离/角度与区域显示；设定 ID 固定为 `0000` |
-| L3 | `build/c_digital_key_lock_l3_identity.hex` | 在 L2 基础上增加四位拨码 ID 和授权判断，不驱动门锁输出 |
-| L4 | `build/c_digital_key_lock_l4_full.hex` | 完整版：拨码、显示、红绿灯、蜂鸣器和锁继电器 |
+| L1 | `releases/2026-07-31/c_digital_key_lock_l1_screen.hex` | `build/c_digital_key_lock_l1_screen.hex` | 只验证 ST7735S 颜色、文字和界面 |
+| L2 | `releases/2026-07-31/c_digital_key_lock_l2_monitor.hex` | `build/c_digital_key_lock_l2_monitor.hex` | UWB 接收、拟合、距离/角度与区域显示；设定 ID 固定为 `0000` |
+| L3 | `releases/2026-07-31/c_digital_key_lock_l3_identity.hex` | `build/c_digital_key_lock_l3_identity.hex` | 在 L2 基础上增加四位拨码 ID 和授权判断，不驱动门锁输出 |
+| L4 | `releases/2026-07-31/c_digital_key_lock_l4_full.hex` | `build/c_digital_key_lock_l4_full.hex` | 完整版：拨码、显示、红绿灯、蜂鸣器和锁继电器 |
+
+`build/` 被 Git 忽略；需要从远端直接取得 HEX 时，请使用
+`releases/2026-07-31/` 中的四个文件及其 SHA256 清单。
 
 2026-07-31 的本机构建结果：
 
