@@ -9,7 +9,7 @@ int main(void)
 
     SYSCFG_DL_init();
     lock_hw_init();
-    lock_app_init(&app, LOCK_ID_INPUT_TOGGLE_BUTTONS);
+    lock_app_init(&app, LOCK_ID_INPUT_DIRECT_BITS);
 
     while (1) {
         uint8_t channel;
@@ -26,7 +26,9 @@ int main(void)
 
         lock_app_update(&app, now_ms, lock_hw_read_id_inputs_low_active());
         lock_hw_apply_outputs(lock_app_outputs(&app));
-        lock_hw_present_display(lock_app_display(&app));
+        if (lock_app_should_present_display(&app, now_ms)) {
+            lock_hw_present_display(lock_app_display(&app));
+        }
 
         if (!had_uart_work) {
             lock_hw_idle();

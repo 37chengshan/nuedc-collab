@@ -123,3 +123,16 @@ const LockDisplayModel *lock_app_display(const LockApp *app)
 {
     return &app->display;
 }
+
+bool lock_app_should_present_display(LockApp *app, uint32_t now_ms)
+{
+    if (!app->display_publish_started ||
+        ((now_ms - app->last_display_publish_ms) >=
+         app->config.solution_update_interval_ms)) {
+        app->display_publish_started = true;
+        app->last_display_publish_ms = now_ms;
+        return true;
+    }
+
+    return false;
+}

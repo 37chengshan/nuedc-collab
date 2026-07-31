@@ -271,6 +271,8 @@ void uwb_fusion_solve(LockUwbFusion *fusion, const LockAppConfig *config,
     float corrected_bearing;
     float corrected_radius;
     EmpiricalEstimate empirical_estimate;
+    bool can_hold_angle = false;
+    float held_bearing = 0.0f;
 
     memset(solution, 0, sizeof(*solution));
     if ((fusion == NULL) || !lock_app_config_validate(config) ||
@@ -320,6 +322,14 @@ void uwb_fusion_solve(LockUwbFusion *fusion, const LockAppConfig *config,
             fusion->kalman.initialized = false;
         }
         return;
+    }
+
+    can_hold_angle =
+        fusion->last_solution.valid &&
+        (fusion->last_solution.key_addr == identity->key_addr) &&
+        (fusion->last_solution.key_id == identity->key_id);
+    if (can_hold_angle) {
+        held_bearing = fusion->last_solution.bearing_deg;
     }
 
     for (channel = 0U; channel < LOCK_UWB_CHANNEL_COUNT; channel++) {
@@ -396,19 +406,12 @@ void uwb_fusion_solve(LockUwbFusion *fusion, const LockAppConfig *config,
             (uint16_t)raw_distances_mm[0],
             (uint16_t)raw_distances_mm[1],
             &empirical_estimate)) {
-        bool can_hold_angle =
-            fusion->last_solution.valid &&
-            (fusion->last_solution.key_addr == identity->key_addr) &&
-            (fusion->last_solution.key_id == identity->key_id) &&
-            (fusion->last_solution.angle_valid ||
-             fusion->last_solution.angle_held);
-
         corrected_radius =
             empirical_estimate.distance_mm + config->radial_zero_offset_mm;
         corrected_bearing = empirical_estimate.angle_valid
                                 ? wrap_bearing(empirical_estimate.bearing_deg)
                                 : can_hold_angle
-                                      ? fusion->last_solution.bearing_deg
+                                      ? held_bearing
                                       : 0.0f;
         corrected_point.x_mm =
             corrected_radius *
@@ -428,7 +431,13 @@ void uwb_fusion_solve(LockUwbFusion *fusion, const LockAppConfig *config,
         }
 
         solution->valid = true;
-        solution->angle_valid = empirical_estimate.angle_valid;
+        /*
+         * Two-anchor angle remains display-only until independent validation
+         * passes. A newly predicted angle may be shown, and an ambiguous
+         * prediction keeps the previous displayed angle, but neither case is
+         * accepted by the lock state machine.
+         */
+        solution->angle_valid = false;
         solution->angle_held =
             !empirical_estimate.angle_valid && can_hold_angle;
         solution->key_addr = identity->key_addr;
@@ -482,7 +491,7 @@ void uwb_fusion_solve(LockUwbFusion *fusion, const LockAppConfig *config,
     }
 
     solution->valid = true;
-    solution->angle_valid = true;
+    solution->angle_valid = result.used_count >= 3U;
     solution->angle_held = false;
     solution->key_addr = identity->key_addr;
     solution->key_id = identity->key_id;
@@ -521,15 +530,23 @@ void uwb_fusion_solve(LockUwbFusion *fusion, const LockAppConfig *config,
         wrap_bearing(raw_bearing + solution->bearing_correction_deg);
     corrected_radius =
         corrected_boundary + config->radial_zero_offset_mm;
+    if (!solution->angle_valid && can_hold_angle) {
+        corrected_bearing = held_bearing;
+        solution->angle_held = true;
+    }
     corrected_point.x_mm =
         corrected_radius *
         sinf(corrected_bearing * (3.14159265358979323846f / 180.0f));
     corrected_point.y_mm =
         corrected_radius *
         cosf(corrected_bearing * (3.14159265358979323846f / 180.0f));
-    kalman_update(&fusion->kalman, &fusion->calibration_model->kalman,
-                  corrected_point.x_mm, corrected_point.y_mm, now_ms,
-                  &corrected_point);
+    if (solution->angle_valid) {
+        kalman_update(&fusion->kalman, &fusion->calibration_model->kalman,
+                      corrected_point.x_mm, corrected_point.y_mm, now_ms,
+                      &corrected_point);
+    } else {
+        fusion->kalman.initialized = false;
+    }
     solution->x_mm = corrected_point.x_mm;
     solution->y_mm = corrected_point.y_mm;
     fill_solution_metrics(solution, config);

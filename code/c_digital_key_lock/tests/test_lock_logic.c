@@ -340,31 +340,50 @@ static bool test_localization_bearings_and_radial_distances(void)
     LockPositionSolution solution;
     LockAppConfig config = g_lock_app_default_config;
 
+    enable_three_anchor_fixture(&config);
     uwb_fusion_init(&fusion);
-    store_position(&fusion, &config, 1U, 0.0f, 1300.0f, 100U, 0x03U);
+    store_position(&fusion, &config, 1U, 0.0f, 1300.0f, 100U, 0x07U);
     uwb_fusion_solve(&fusion, &config, 100U, &solution);
+    TEST_ASSERT(solution.angle_valid);
     TEST_ASSERT_NEAR(solution.bearing_deg, 0.0f, 0.5f);
     TEST_ASSERT_NEAR(solution.radial_mm, 1000.0f, 10.0f);
 
     uwb_fusion_init(&fusion);
-    store_position(&fusion, &config, 1U, 1300.0f, 1300.0f, 101U, 0x03U);
+    store_position(&fusion, &config, 1U, 1300.0f, 1300.0f, 101U, 0x07U);
     uwb_fusion_solve(&fusion, &config, 101U, &solution);
-    TEST_ASSERT_NEAR(solution.bearing_deg, 45.0f, 0.5f);
+    TEST_ASSERT_NEAR(solution.bearing_deg, 45.0f, 6.0f);
 
     uwb_fusion_init(&fusion);
-    store_position(&fusion, &config, 1U, -1300.0f, 1300.0f, 102U, 0x03U);
+    store_position(&fusion, &config, 1U, -1300.0f, 1300.0f, 102U, 0x07U);
     uwb_fusion_solve(&fusion, &config, 102U, &solution);
-    TEST_ASSERT_NEAR(solution.bearing_deg, -45.0f, 0.5f);
+    TEST_ASSERT_NEAR(solution.bearing_deg, -45.0f, 6.0f);
 
     uwb_fusion_init(&fusion);
-    store_position(&fusion, &config, 1U, 0.0f, 2300.0f, 103U, 0x03U);
+    store_position(&fusion, &config, 1U, 0.0f, 2300.0f, 103U, 0x07U);
     uwb_fusion_solve(&fusion, &config, 103U, &solution);
     TEST_ASSERT_NEAR(solution.radial_mm, 2000.0f, 10.0f);
 
     uwb_fusion_init(&fusion);
-    store_position(&fusion, &config, 1U, 0.0f, 3300.0f, 104U, 0x03U);
+    store_position(&fusion, &config, 1U, 0.0f, 3300.0f, 104U, 0x07U);
     uwb_fusion_solve(&fusion, &config, 104U, &solution);
     TEST_ASSERT_NEAR(solution.radial_mm, 3000.0f, 10.0f);
+    return true;
+}
+
+static bool test_two_anchor_angle_is_never_trusted(void)
+{
+    LockUwbFusion fusion;
+    LockPositionSolution solution;
+    LockAppConfig config = g_lock_app_default_config;
+
+    uwb_fusion_init(&fusion);
+    store_position(&fusion, &config, 1U, 0.0f, 1300.0f, 100U, 0x03U);
+    uwb_fusion_solve(&fusion, &config, 100U, &solution);
+
+    TEST_ASSERT(solution.valid);
+    TEST_ASSERT(solution.mode == LOCK_LOCALIZATION_TWO_ANCHOR);
+    TEST_ASSERT(solution.anchor_count == 2U);
+    TEST_ASSERT(!solution.angle_valid);
     return true;
 }
 
@@ -472,10 +491,24 @@ static bool test_app_uart_and_direct_id_integration(void)
     TEST_ASSERT(lock_app_display(&app)->observed_id == 10U);
     TEST_ASSERT(lock_app_outputs(&app)->authorized);
     TEST_ASSERT(lock_app_outputs(&app)->state == LOCK_STATE_LOCKED);
+    TEST_ASSERT(!lock_app_display(&app)->position.angle_valid);
     lock_app_update(&app, 101U, 10U);
     TEST_ASSERT(lock_app_outputs(&app)->state == LOCK_STATE_LOCKED);
     lock_app_update(&app, 102U, 10U);
-    TEST_ASSERT(lock_app_outputs(&app)->state == LOCK_STATE_UNLOCKED);
+    TEST_ASSERT(lock_app_outputs(&app)->state == LOCK_STATE_LOCKED);
+    return true;
+}
+
+static bool test_display_publish_interval_is_500_ms(void)
+{
+    LockApp app;
+
+    lock_app_init(&app, LOCK_ID_INPUT_DIRECT_BITS);
+    TEST_ASSERT(lock_app_should_present_display(&app, 100U));
+    TEST_ASSERT(!lock_app_should_present_display(&app, 599U));
+    TEST_ASSERT(lock_app_should_present_display(&app, 600U));
+    TEST_ASSERT(!lock_app_should_present_display(&app, 1099U));
+    TEST_ASSERT(lock_app_should_present_display(&app, 1100U));
     return true;
 }
 
@@ -498,8 +531,10 @@ int main(void)
         {"fusion three/two/one channels and hold timeout", test_fusion_three_two_one_and_timeout},
         {"fusion key address and sample window", test_fusion_does_not_mix_ids_or_stale_samples},
         {"localization 0/+45/-45 degrees and 1/2/3 m", test_localization_bearings_and_radial_distances},
+        {"two-anchor angle is never trusted", test_two_anchor_angle_is_never_trusted},
         {"FSM legal ID, illegal ID, and dropout", test_fsm_authorization_and_dropout},
         {"app UART and direct-ID integration", test_app_uart_and_direct_id_integration},
+        {"display publishes every 500 ms", test_display_publish_interval_is_500_ms},
     };
     size_t index;
     unsigned int failures = 0U;

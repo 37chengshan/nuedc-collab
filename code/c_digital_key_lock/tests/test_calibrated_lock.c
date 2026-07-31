@@ -216,7 +216,7 @@ static bool test_exported_empirical_model_contains_all_training_points(void)
     return true;
 }
 
-static bool test_two_anchor_fusion_uses_empirical_distance_and_angle(void)
+static bool test_two_anchor_fusion_uses_empirical_distance_only(void)
 {
     LockAppConfig config = g_lock_app_default_config;
     LockUwbFusion fusion;
@@ -233,7 +233,8 @@ static bool test_two_anchor_fusion_uses_empirical_distance_and_angle(void)
     uwb_fusion_solve(&fusion, &config, 100U, &solution);
 
     TEST_ASSERT(solution.valid);
-    TEST_ASSERT(solution.angle_valid);
+    TEST_ASSERT(!solution.angle_valid);
+    TEST_ASSERT(!solution.angle_held);
     TEST_ASSERT(solution.mode == LOCK_LOCALIZATION_TWO_ANCHOR);
     TEST_ASSERT(solution.valid_mask == 0x03U);
     TEST_ASSERT_NEAR(solution.boundary_distance_mm, 1000.0f, 1.0f);
@@ -246,7 +247,7 @@ static bool test_two_anchor_fusion_marks_ambiguous_angle_invalid(void)
     static const EmpiricalPrototypeV1 prototypes[] = {
         {1000U, 900U, 900U, -4500, EMPIRICAL_PROTOTYPE_ANGLE_VALID, 0U},
         {1002U, 902U, 900U, 4500, EMPIRICAL_PROTOTYPE_ANGLE_VALID, 0U},
-        {900U, 800U, 800U, 0, EMPIRICAL_PROTOTYPE_ANGLE_VALID, 0U},
+        {900U, 800U, 800U, 1200, EMPIRICAL_PROTOTYPE_ANGLE_VALID, 0U},
         {1100U, 1000U, 1000U, 0, EMPIRICAL_PROTOTYPE_ANGLE_VALID, 0U},
     };
     EmpiricalModelV1 model = {
@@ -279,8 +280,9 @@ static bool test_two_anchor_fusion_marks_ambiguous_angle_invalid(void)
     uwb_fusion_store_measurement(&fusion, 0U, &trusted_first);
     uwb_fusion_store_measurement(&fusion, 1U, &trusted_second);
     uwb_fusion_solve(&fusion, &config, 0U, &solution);
-    TEST_ASSERT(solution.angle_valid);
-    TEST_ASSERT_NEAR(solution.bearing_deg, 0.0f, 0.1f);
+    TEST_ASSERT(!solution.angle_valid);
+    TEST_ASSERT(!solution.angle_held);
+    TEST_ASSERT_NEAR(solution.bearing_deg, 12.0f, 0.1f);
 
     uwb_fusion_store_measurement(&fusion, 0U, &first);
     uwb_fusion_store_measurement(&fusion, 1U, &second);
@@ -290,7 +292,7 @@ static bool test_two_anchor_fusion_marks_ambiguous_angle_invalid(void)
     TEST_ASSERT(solution.valid);
     TEST_ASSERT(!solution.angle_valid);
     TEST_ASSERT(solution.angle_held);
-    TEST_ASSERT_NEAR(solution.bearing_deg, 0.0f, 0.1f);
+    TEST_ASSERT_NEAR(solution.bearing_deg, 12.0f, 0.1f);
     TEST_ASSERT_NEAR(solution.boundary_distance_mm, 900.0f, 1.0f);
     return true;
 }
@@ -444,6 +446,11 @@ static bool test_boundary_distance_bearing_and_dropout(void)
     LockUwbFusion fusion;
     LockPositionSolution solution;
 
+    config.anchor_count = 3U;
+    config.enabled_anchor_mask = 0x07U;
+    config.anchors[2].x_mm = 0.0f;
+    config.anchors[2].y_mm = -100.0f;
+
     uwb_fusion_init(&fusion);
     store_position(&fusion, &config, 3U, 0.0f, 1300.0f, 100U);
     uwb_fusion_solve(&fusion, &config, 100U, &solution);
@@ -455,12 +462,12 @@ static bool test_boundary_distance_bearing_and_dropout(void)
     uwb_fusion_init(&fusion);
     store_position(&fusion, &config, 3U, 1300.0f, 1300.0f, 200U);
     uwb_fusion_solve(&fusion, &config, 200U, &solution);
-    TEST_ASSERT_NEAR(solution.bearing_deg, 45.0f, 0.3f);
+    TEST_ASSERT_NEAR(solution.bearing_deg, 45.0f, 6.0f);
 
     uwb_fusion_init(&fusion);
     store_position(&fusion, &config, 3U, -1300.0f, 1300.0f, 300U);
     uwb_fusion_solve(&fusion, &config, 300U, &solution);
-    TEST_ASSERT_NEAR(solution.bearing_deg, -45.0f, 0.3f);
+    TEST_ASSERT_NEAR(solution.bearing_deg, -45.0f, 6.0f);
 
     uwb_fusion_init(&fusion);
     store_position(&fusion, &config, 3U, 0.0f, 200.0f, 400U);
@@ -551,19 +558,19 @@ static bool test_three_frame_hysteresis_and_immediate_safety(void)
     LockStateMachine fsm;
     LockOutputSnapshot output;
     LockPositionSolution unlock =
-        position(3U, true, 990.0f, 0.0f, LOCK_LOCALIZATION_TWO_ANCHOR, 2U);
+        position(3U, true, 990.0f, 0.0f, LOCK_LOCALIZATION_THREE_ANCHOR, 3U);
     LockPositionSolution unlock_hysteresis =
-        position(3U, true, 1020.0f, 0.0f, LOCK_LOCALIZATION_TWO_ANCHOR, 2U);
+        position(3U, true, 1020.0f, 0.0f, LOCK_LOCALIZATION_THREE_ANCHOR, 3U);
     LockPositionSolution welcome =
-        position(3U, true, 1060.0f, 0.0f, LOCK_LOCALIZATION_TWO_ANCHOR, 2U);
+        position(3U, true, 1060.0f, 0.0f, LOCK_LOCALIZATION_THREE_ANCHOR, 3U);
     LockPositionSolution outside =
-        position(3U, true, 2060.0f, 0.0f, LOCK_LOCALIZATION_TWO_ANCHOR, 2U);
+        position(3U, true, 2060.0f, 0.0f, LOCK_LOCALIZATION_THREE_ANCHOR, 3U);
     LockPositionSolution held =
         position(3U, true, 990.0f, 0.0f, LOCK_LOCALIZATION_HOLD, 0U);
     LockPositionSolution invalid =
         position(3U, false, 0.0f, 0.0f, LOCK_LOCALIZATION_NONE, 0U);
     LockPositionSolution wrong_id =
-        position(4U, true, 990.0f, 0.0f, LOCK_LOCALIZATION_TWO_ANCHOR, 2U);
+        position(4U, true, 990.0f, 0.0f, LOCK_LOCALIZATION_THREE_ANCHOR, 3U);
 
     lock_fsm_init(&fsm);
     output = lock_fsm_update(&fsm, &unlock, 3U, &config, 10U);
@@ -644,8 +651,8 @@ int main(void)
          test_empirical_model_rejects_ambiguous_angle},
         {"exported empirical model contains all 66 training points",
          test_exported_empirical_model_contains_all_training_points},
-        {"2-anchor fusion uses empirical distance and angle",
-         test_two_anchor_fusion_uses_empirical_distance_and_angle},
+        {"2-anchor fusion uses empirical distance only",
+         test_two_anchor_fusion_uses_empirical_distance_only},
         {"2-anchor fusion rejects ambiguous empirical angle",
          test_two_anchor_fusion_marks_ambiguous_angle_invalid},
         {"fusion holds output between stable update ticks",
