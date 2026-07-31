@@ -6,6 +6,27 @@
 #include <math.h>
 #include <string.h>
 
+#define LOCK_DISPLAY_RAW_CHANNEL_HOLD_MS 1500U
+
+static void update_raw_channel_display(LockApp *app, uint32_t now_ms)
+{
+    uint8_t channel;
+
+    app->display.channel_valid_mask = 0U;
+    for (channel = 0U; channel < LOCK_UWB_CHANNEL_COUNT; channel++) {
+        const LockUwbChannelCache *cache = &app->fusion.channels[channel];
+
+        if (cache->occupied && cache->measurement.valid &&
+            ((now_ms - cache->measurement.timestamp_ms) <=
+             LOCK_DISPLAY_RAW_CHANNEL_HOLD_MS)) {
+            app->display.channel_valid_mask |=
+                (uint8_t)(1U << channel);
+            app->display.channel_distance_mm[channel] =
+                cache->measurement.distance_mm;
+        }
+    }
+}
+
 void lock_app_init(LockApp *app, LockIdInputBackend backend)
 {
     lock_app_init_with_models(app, backend, &g_calibration_model_v1,
@@ -111,7 +132,7 @@ void lock_app_update(LockApp *app, uint32_t now_ms,
     app->display.expected_id = expected_id;
     app->display.observed_id_valid = app->position.valid;
     app->display.observed_id = app->position.key_id;
-    app->display.channel_valid_mask = app->position.valid_mask;
+    update_raw_channel_display(app, now_ms);
     app->display.now_ms = now_ms;
     app->display.zone = app->outputs.zone;
     app->display.state = app->outputs.state;

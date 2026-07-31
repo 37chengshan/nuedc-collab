@@ -12,6 +12,7 @@ static bool sample_is_fresh(const LockUwbMeasurement *measurement,
                             uint32_t now_ms, uint32_t window_ms)
 {
     return measurement->valid &&
+           (measurement->distance_mm > 0U) &&
            (elapsed_ms(measurement->timestamp_ms, now_ms) <= window_ms);
 }
 
@@ -242,7 +243,7 @@ void uwb_fusion_store_measurement(LockUwbFusion *fusion, uint8_t channel,
     }
     cache->occupied = measurement->valid;
     cache->measurement = *measurement;
-    if (measurement->valid) {
+    if (measurement->valid && (measurement->distance_mm > 0U)) {
         cache->distance_history_mm[cache->history_next] =
             measurement->distance_mm;
         cache->history_next =

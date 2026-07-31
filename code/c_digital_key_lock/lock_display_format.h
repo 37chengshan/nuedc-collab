@@ -8,6 +8,7 @@
 #define LOCK_DISPLAY_ID_TEXT_CAPACITY 5U
 #define LOCK_DISPLAY_ANGLE_TEXT_CAPACITY 10U
 #define LOCK_DISPLAY_DISTANCE_TEXT_CAPACITY 9U
+#define LOCK_DISPLAY_CHANNEL_TEXT_CAPACITY 12U
 
 /*
  * Formats the low four bits as binary and always keeps leading zeroes.
@@ -33,6 +34,14 @@ void lock_display_format_angle(const LockDisplayModel *model, char *output);
  * "1.23 m". Missing or non-finite positions are formatted as "--.-- m".
  */
 void lock_display_format_distance(const LockDisplayModel *model,
+                                  char *output);
+
+/*
+ * Formats raw UART1/UART3 ranges in whole centimeters. Each three-character
+ * field is "---" when that channel has no recent frame. A syntactically valid
+ * zero-distance frame remains visible as "000" for hardware diagnosis.
+ */
+void lock_display_format_channels(const LockDisplayModel *model,
                                   char *output);
 
 /* Returns one of the static strings "WAIT", "PASS", or "FAIL". */

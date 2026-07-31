@@ -86,12 +86,20 @@ static void draw_angle_panel(LockDisplayUi *ui,
     };
     St7735s *display = ui->display;
     char angle[LOCK_DISPLAY_ANGLE_TEXT_CAPACITY];
+    char channels[LOCK_DISPLAY_CHANNEL_TEXT_CAPACITY];
     uint16_t color =
         model->position.angle_valid ? UI_COLOR_CYAN : UI_COLOR_YELLOW;
+    uint16_t channel_color =
+        ((model->channel_valid_mask & 0x03U) == 0x03U &&
+         model->channel_distance_mm[0] > 0U &&
+         model->channel_distance_mm[1] > 0U)
+            ? UI_COLOR_CYAN
+            : UI_COLOR_YELLOW;
     size_t index;
 
     st7735s_fill_rect(display, 6, 52, 116, 56, UI_COLOR_PANEL);
-    st7735s_draw_text(display, 7, 55, "ANGLE", UI_COLOR_MUTED,
+    lock_display_format_channels(model, channels);
+    st7735s_draw_text(display, 7, 55, channels, channel_color,
                       UI_COLOR_PANEL, true);
     for (index = 1U;
          index < (sizeof(arc_points) / sizeof(arc_points[0]));

@@ -107,6 +107,41 @@ void lock_display_format_distance(const LockDisplayModel *model,
     output[6] = '\0';
 }
 
+static void format_channel_cm(const LockDisplayModel *model, uint8_t channel,
+                              char *output)
+{
+    uint32_t centimeters;
+
+    if ((model == NULL) ||
+        ((model->channel_valid_mask & (uint8_t)(1U << channel)) == 0U)) {
+        output[0] = '-';
+        output[1] = '-';
+        output[2] = '-';
+        return;
+    }
+
+    centimeters = (model->channel_distance_mm[channel] + 5U) / 10U;
+    if (centimeters > 999U) {
+        centimeters = 999U;
+    }
+    output[0] = (char)('0' + (centimeters / 100U));
+    output[1] = (char)('0' + ((centimeters / 10U) % 10U));
+    output[2] = (char)('0' + (centimeters % 10U));
+}
+
+void lock_display_format_channels(const LockDisplayModel *model,
+                                  char *output)
+{
+    output[0] = '1';
+    output[1] = ':';
+    format_channel_cm(model, 0U, &output[2]);
+    output[5] = ' ';
+    output[6] = '2';
+    output[7] = ':';
+    format_channel_cm(model, 1U, &output[8]);
+    output[11] = '\0';
+}
+
 const char *lock_display_auth_text(const LockDisplayModel *model)
 {
     if ((model == NULL) || !model->observed_id_valid) {

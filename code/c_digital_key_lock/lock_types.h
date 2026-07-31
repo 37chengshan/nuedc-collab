@@ -97,6 +97,7 @@ typedef struct {
     uint8_t observed_id;
     bool observed_id_valid;
     uint8_t channel_valid_mask;
+    uint32_t channel_distance_mm[LOCK_UWB_CHANNEL_COUNT];
     uint32_t now_ms;
     LockZone zone;
     LockState state;

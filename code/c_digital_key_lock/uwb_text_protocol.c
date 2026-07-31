@@ -105,8 +105,7 @@ static bool parse_distance_mm(const char *text, uint32_t *distance_mm_out)
     while (isspace((unsigned char)*endptr)) {
         endptr++;
     }
-    if ((*endptr != '\0') || (value == 0UL) ||
-        (value > (UINT32_MAX / multiplier))) {
+    if ((*endptr != '\0') || (value > (UINT32_MAX / multiplier))) {
         return false;
     }
 
