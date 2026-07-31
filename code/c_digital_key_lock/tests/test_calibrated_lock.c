@@ -209,10 +209,52 @@ static bool test_empirical_model_rejects_ambiguous_angle(void)
 static bool test_exported_empirical_model_contains_all_training_points(void)
 {
     TEST_ASSERT(g_empirical_model_v1.prototype_count == 68U);
-    TEST_ASSERT(g_empirical_model_v1.distance_neighbor_count == 6U);
+    TEST_ASSERT(g_empirical_model_v1.distance_neighbor_count == 2U);
     TEST_ASSERT(g_empirical_model_v1.angle_neighbor_count == 4U);
+    TEST_ASSERT(g_empirical_model_v1.primary_knot_count >= 8U);
+    TEST_ASSERT_NEAR(g_empirical_model_v1.distance_knn_blend, 0.5f, 0.001f);
+    TEST_ASSERT_NEAR(g_empirical_model_v1.known_prototype_radius, 0.1f,
+                     0.001f);
     TEST_ASSERT(empirical_model_validate(&g_empirical_model_v1) ==
                 EMPIRICAL_MODEL_OK);
+    return true;
+}
+
+static bool test_empirical_model_blends_knn_with_primary_range(void)
+{
+    static const EmpiricalPrototypeV1 prototypes[] = {
+        {800U, 800U, 1000U, 0, EMPIRICAL_PROTOTYPE_ANGLE_VALID, 0U},
+        {1200U, 1200U, 2000U, 0, EMPIRICAL_PROTOTYPE_ANGLE_VALID, 0U},
+    };
+    static const EmpiricalRangeKnotV1 primary_knots[] = {
+        {500U, 500U},
+        {1000U, 1000U},
+        {1500U, 1500U},
+    };
+    EmpiricalModelV1 model = {
+        .magic = EMPIRICAL_MODEL_V1_MAGIC,
+        .version = EMPIRICAL_MODEL_V1_VERSION,
+        .prototype_count =
+            (uint16_t)(sizeof(prototypes) / sizeof(prototypes[0])),
+        .distance_neighbor_count = 2U,
+        .angle_neighbor_count = 1U,
+        .primary_knot_count =
+            (uint8_t)(sizeof(primary_knots) / sizeof(primary_knots[0])),
+        .distance1_scale_mm = 500.0f,
+        .distance2_scale_mm = 500.0f,
+        .distance_knn_blend = 0.5f,
+        .known_prototype_radius = 0.1f,
+        .angle_max_neighbor_distance = 1.0f,
+        .angle_max_spread_deg = 20.0f,
+        .prototypes = prototypes,
+        .primary_knots = primary_knots,
+    };
+    EmpiricalEstimate estimate;
+
+    empirical_model_refresh_crc(&model);
+    TEST_ASSERT(empirical_model_validate(&model) == EMPIRICAL_MODEL_OK);
+    TEST_ASSERT(empirical_model_predict(&model, 1000U, 1000U, &estimate));
+    TEST_ASSERT_NEAR(estimate.distance_mm, 1250.0f, 0.1f);
     return true;
 }
 
@@ -687,6 +729,8 @@ int main(void)
          test_empirical_model_rejects_ambiguous_angle},
         {"exported empirical model contains all 68 final points",
          test_exported_empirical_model_contains_all_training_points},
+        {"empirical model blends kNN with primary range",
+         test_empirical_model_blends_knn_with_primary_range},
         {"2-anchor fusion uses empirical distance only",
          test_two_anchor_fusion_uses_empirical_distance_only},
         {"2-anchor fusion rejects ambiguous empirical angle",
