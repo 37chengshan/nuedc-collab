@@ -488,7 +488,7 @@ static bool test_boundary_distance_bearing_and_dropout(void)
     return true;
 }
 
-static bool test_fusion_rejects_mixed_key_addresses(void)
+static bool test_fusion_accepts_anchor_specific_addresses_for_same_key(void)
 {
     LockAppConfig config = g_lock_app_default_config;
     LockUwbFusion fusion;
@@ -505,6 +505,32 @@ static bool test_fusion_rejects_mixed_key_addresses(void)
         100U);
     first.key_addr = 0x0100U;
     second.key_addr = 0x0200U;
+    uwb_fusion_store_measurement(&fusion, 0U, &first);
+    uwb_fusion_store_measurement(&fusion, 1U, &second);
+    uwb_fusion_solve(&fusion, &config, 100U, &solution);
+    TEST_ASSERT(solution.valid);
+    TEST_ASSERT(solution.key_id == 0U);
+    TEST_ASSERT(solution.anchor_count == 2U);
+    return true;
+}
+
+static bool test_fusion_rejects_different_key_ids(void)
+{
+    LockAppConfig config = g_lock_app_default_config;
+    LockUwbFusion fusion;
+    LockPositionSolution solution;
+    LockUwbMeasurement first;
+    LockUwbMeasurement second;
+
+    uwb_fusion_init(&fusion);
+    first = measurement(
+        0U, (uint32_t)lroundf(point_distance(config.anchors[0], 0.0f, 1300.0f)),
+        100U);
+    second = measurement(
+        1U, (uint32_t)lroundf(point_distance(config.anchors[1], 0.0f, 1300.0f)),
+        100U);
+    first.key_addr = 0x0100U;
+    second.key_addr = 0x0201U;
     uwb_fusion_store_measurement(&fusion, 0U, &first);
     uwb_fusion_store_measurement(&fusion, 1U, &second);
     uwb_fusion_solve(&fusion, &config, 100U, &solution);
@@ -677,8 +703,10 @@ int main(void)
          test_four_anchor_single_nlos_rejection},
         {"boundary distance, bearing, and dropout",
          test_boundary_distance_bearing_and_dropout},
-        {"mixed key addresses are rejected",
-         test_fusion_rejects_mixed_key_addresses},
+        {"anchor-specific addresses for the same key are accepted",
+         test_fusion_accepts_anchor_specific_addresses_for_same_key},
+        {"different key IDs are rejected",
+         test_fusion_rejects_different_key_ids},
         {"3-frame hysteresis and immediate safety",
          test_three_frame_hysteresis_and_immediate_safety},
         {"2-anchor distance unlocks without using angle",
