@@ -455,8 +455,13 @@ void uwb_fusion_solve(LockUwbFusion *fusion, const LockAppConfig *config,
          * accepted by the lock state machine.
          */
         solution->angle_valid = false;
-        solution->angle_held =
-            !empirical_estimate.angle_valid && can_hold_angle;
+        /*
+         * A two-anchor bearing is display-only, so angle_valid remains false
+         * for lock safety. angle_held means the UI has a stable value to
+         * render: use the new empirical estimate when available, otherwise
+         * retain the previous value, or the initial 0-degree fallback.
+         */
+        solution->angle_held = true;
         solution->key_addr = identity->key_addr;
         solution->key_id = identity->key_id;
         solution->valid_mask = valid_mask;
