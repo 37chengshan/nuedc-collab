@@ -1,0 +1,9 @@
+{
+  "id": "2026-07-30T19-40-03-134Z",
+  "startedAt": "2026-07-30T19:40:03.134Z",
+  "endedAt": null,
+  "port": "COM6",
+  "baudRate": 115200,
+  "frameCount": 6719,
+  "eventCount": 6720
+}

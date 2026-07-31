@@ -21,6 +21,7 @@
     "git:push": "npm run build --workspace=@nuedc/git-core && npm run build --workspace=@nuedc/protocol && node scripts/git-safe.mjs push",
     "dev": "npm run dev --workspace=@nuedc/dashboard",
     "start": "npm run start --workspace=@nuedc/server",
+    "uwb:lab": "npm run start --workspace=@nuedc/uwb-recorder",
     "test:integration": "npm run test:integration --workspace=@nuedc/git-core",
     "test:smoke": "npm run build --workspace=@nuedc/git-core && npm run build --workspace=@nuedc/protocol && node tests/safe-git-cli-smoke.mjs",
     "test:e2e": "playwright test",

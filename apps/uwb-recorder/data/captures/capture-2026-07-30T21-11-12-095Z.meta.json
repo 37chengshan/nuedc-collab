@@ -1,0 +1,11 @@
+{
+  "id": "capture-2026-07-30T21-11-12-095Z",
+  "label": "d2 1m",
+  "durationSeconds": 45,
+  "startedAt": "2026-07-30T21:11:12.095Z",
+  "endsAt": "2026-07-30T21:11:57.095Z",
+  "endedAt": "2026-07-30T21:11:57.099Z",
+  "sessionId": "2026-07-30T20-42-28-050Z",
+  "frameCount": 850,
+  "status": "completed"
+}

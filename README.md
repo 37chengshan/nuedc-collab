@@ -38,6 +38,24 @@ npm run overview
 npm run git:status
 ```
 
+## UWB Lab（串口采集与自动标定）
+
+UWB Lab 是独立的本地网页，包含串口连接、实时数据显示、45 秒采集、采集记录和自动标定功能。它与上面的协作台不是同一个页面：
+
+- `http://127.0.0.1:5173`：比赛协作台。
+- `http://127.0.0.1:4173`：UWB Lab。
+
+从仓库根目录启动：
+
+```bash
+npm install
+npm run uwb:lab
+```
+
+然后浏览器打开 `http://127.0.0.1:4173`。Windows 也可以直接双击 `apps/uwb-recorder/start.cmd`。
+
+仓库中的 `apps/uwb-recorder/data/` 保存已采集的真实记录、会话和导出数据，新电脑拉取后可直接用于回放、分析和训练。
+
 日常开始工作前：
 
 ```bash
@@ -62,6 +80,7 @@ npm run git:push
 - `packages/`：协议、Agent CLI 与安全 Git 核心代码。
 - `apps/server/`：只监听本机回环地址的 API、身份识别和 Git 安全接口。
 - `apps/dashboard/`：Claude 橙色本地协作台。
+- `apps/uwb-recorder/`：UWB 串口实时显示、45 秒采集、记录回放和自动标定工具。
 - `scripts/`：Agent 动作薄包装、安全 Git 与维护脚本。
 - `生成内容/`：可重新生成的总览 JSON/Markdown。
 - `归档/前端看板/`：旧版前端源码和恢复说明。
