@@ -72,6 +72,9 @@ test("主场景包含三区、45度边界、三锚点和可操作钥匙", async 
   assert.match(scene, /role="slider"/);
   assert.match(scene, /onPointerMove/);
   assert.match(scene, /onKeyDown/);
+  assert.match(scene, /bearingValid\s*\?\s*position\.x\.toFixed/);
+  assert.match(scene, /bearingValid\s*\?\s*position\.y\.toFixed/);
+  assert.match(scene, /方向未锁定/);
 });
 
 test("工作台提供顶部控制、调试台、时间轴和无障碍状态", async () => {
@@ -88,6 +91,20 @@ test("工作台提供顶部控制、调试台、时间轴和无障碍状态", as
   assert.match(app, /x:\s*0,\s*y:\s*-0\.22/);
   assert.match(app, /Math\.max\(\s*0,\s*Math\.hypot\(position\.x,\s*position\.y\)\s*-\s*0\.3/);
   assert.match(app, /simulation\.faults\.set/);
+  assert.match(app, /useState<WorkbenchMode>\("live"\)/);
+  assert.match(app, /recorder\.position\.get/);
+  assert.match(app, /recorder\.calibration\.get/);
+  assert.match(app, /setLiveFrame\(null\)/);
+  assert.match(
+    app,
+    /window\.setInterval\(\(\)\s*=>\s*\{\s*void refreshLivePosition\(\{ silent: true \}\);\s*\},\s*500\)/s,
+  );
+  assert.match(
+    app,
+    /mode === "simulation"\s*\|\|\s*value !== "configuration"/,
+  );
+  assert.match(app, /应用到仿真门锁/);
+  assert.doesNotMatch(app, /写入门锁拨码/);
 
   for (const label of [
     "数字钥匙工作台",
@@ -101,6 +118,10 @@ test("工作台提供顶部控制、调试台、时间轴和无障碍状态", as
     "串口",
     "配置",
     "记录",
+    "电脑拟合",
+    "实时监看",
+    "最终位置",
+    "数据链路",
   ]) {
     assert.ok(app.includes(label), `缺少界面文本：${label}`);
   }
