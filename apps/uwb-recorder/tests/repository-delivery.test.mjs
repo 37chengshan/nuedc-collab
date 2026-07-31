@@ -37,3 +37,25 @@ test("真实采集记录会随仓库交付", async () => {
   );
   assert.ok(sessionFiles.some((name) => name.endsWith(".jsonl")));
 });
+
+test("四层 MSPM0 HEX 会随仓库交付并带校验清单", async () => {
+  const releaseRoot = new URL(
+    "../../../code/c_digital_key_lock/releases/2026-07-31/",
+    import.meta.url,
+  );
+  const releaseFiles = await readdir(releaseRoot);
+  const manifest = await readFile(new URL("README.md", releaseRoot), "utf8");
+
+  for (const name of [
+    "c_digital_key_lock_l1_screen.hex",
+    "c_digital_key_lock_l2_monitor.hex",
+    "c_digital_key_lock_l3_identity.hex",
+    "c_digital_key_lock_l4_full.hex",
+  ]) {
+    assert.ok(releaseFiles.includes(name), name);
+    assert.match(manifest, new RegExp(name.replaceAll(".", "\\.")));
+  }
+  assert.match(manifest, /SHA256/);
+  assert.match(manifest, /PB15/);
+  assert.match(manifest, /PB16/);
+});
