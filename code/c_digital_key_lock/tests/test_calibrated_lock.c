@@ -82,6 +82,7 @@ static bool test_default_two_anchor_configuration(void)
     TEST_ASSERT(LOCK_UWB_CHANNEL_COUNT == 4U);
     TEST_ASSERT(g_lock_app_default_config.anchor_count == 2U);
     TEST_ASSERT(g_lock_app_default_config.enabled_anchor_mask == 0x03U);
+    TEST_ASSERT(g_lock_app_default_config.configured_tag_address == 0x000AU);
     TEST_ASSERT_NEAR(g_lock_app_default_config.anchors[0].x_mm, -125.0f, 0.01f);
     TEST_ASSERT_NEAR(g_lock_app_default_config.anchors[0].y_mm, 40.0f, 0.01f);
     TEST_ASSERT_NEAR(g_lock_app_default_config.anchors[1].x_mm, 125.0f, 0.01f);
@@ -181,7 +182,7 @@ static bool test_empirical_model_rejects_ambiguous_angle(void)
 {
     static const EmpiricalPrototypeV1 prototypes[] = {
         {1000U, 900U, 1500U, -4500, EMPIRICAL_PROTOTYPE_ANGLE_VALID, 0U},
-        {1002U, 902U, 1500U, 4500, EMPIRICAL_PROTOTYPE_ANGLE_VALID, 0U},
+        {1002U, 902U, 1500U, 3000, EMPIRICAL_PROTOTYPE_ANGLE_VALID, 0U},
         {900U, 800U, 1400U, 0, EMPIRICAL_PROTOTYPE_ANGLE_VALID, 0U},
         {1100U, 1000U, 1600U, 0, EMPIRICAL_PROTOTYPE_ANGLE_VALID, 0U},
     };
@@ -207,6 +208,7 @@ static bool test_empirical_model_rejects_ambiguous_angle(void)
     TEST_ASSERT(estimate.valid);
     TEST_ASSERT_NEAR(estimate.distance_mm, 1500.0f, 0.1f);
     TEST_ASSERT(!estimate.angle_valid);
+    TEST_ASSERT_NEAR(estimate.bearing_deg, -7.5f, 0.2f);
     return true;
 }
 
@@ -321,7 +323,7 @@ static bool test_two_anchor_fusion_marks_ambiguous_angle_invalid(void)
 {
     static const EmpiricalPrototypeV1 prototypes[] = {
         {1000U, 900U, 900U, -4500, EMPIRICAL_PROTOTYPE_ANGLE_VALID, 0U},
-        {1002U, 902U, 900U, 4500, EMPIRICAL_PROTOTYPE_ANGLE_VALID, 0U},
+        {1002U, 902U, 900U, 3000, EMPIRICAL_PROTOTYPE_ANGLE_VALID, 0U},
         {900U, 800U, 800U, 1200, EMPIRICAL_PROTOTYPE_ANGLE_VALID, 0U},
         {1100U, 1000U, 1000U, 0, EMPIRICAL_PROTOTYPE_ANGLE_VALID, 0U},
     };
@@ -369,7 +371,9 @@ static bool test_two_anchor_fusion_marks_ambiguous_angle_invalid(void)
     TEST_ASSERT(solution.valid);
     TEST_ASSERT(!solution.angle_valid);
     TEST_ASSERT(solution.angle_held);
-    TEST_ASSERT_NEAR(solution.bearing_deg, 12.0f, 0.1f);
+    TEST_ASSERT_NEAR(solution.bearing_deg, -7.5f, 0.2f);
+    TEST_ASSERT(solution.key_addr == 0x000AU);
+    TEST_ASSERT(solution.key_id == 0x0AU);
     TEST_ASSERT_NEAR(solution.boundary_distance_mm, 825.0f, 1.0f);
     return true;
 }

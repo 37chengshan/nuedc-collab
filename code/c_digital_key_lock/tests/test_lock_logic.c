@@ -498,7 +498,7 @@ static bool test_app_uart_and_direct_id_integration(void)
     }
     lock_app_update(&app, 100U, 10U);
     TEST_ASSERT(lock_app_display(&app)->observed_id_valid);
-    TEST_ASSERT(lock_app_display(&app)->observed_id == 10U);
+    TEST_ASSERT(lock_app_display(&app)->observed_address == 0x000AU);
     TEST_ASSERT(lock_app_outputs(&app)->authorized);
     TEST_ASSERT(lock_app_outputs(&app)->state == LOCK_STATE_LOCKED);
     TEST_ASSERT(!lock_app_display(&app)->position.angle_valid);
@@ -509,14 +509,17 @@ static bool test_app_uart_and_direct_id_integration(void)
     lock_app_update(&app, 102U, 10U);
     TEST_ASSERT(lock_app_outputs(&app)->state == LOCK_STATE_UNLOCKED);
     lock_app_update(&app, 2000U, 10U);
-    TEST_ASSERT(!lock_app_display(&app)->position.valid);
+    TEST_ASSERT(!app.position.valid);
+    TEST_ASSERT(lock_app_display(&app)->position.valid);
     TEST_ASSERT(lock_app_display(&app)->position.angle_held);
     TEST_ASSERT_NEAR(lock_app_display(&app)->position.bearing_deg,
                      displayed_angle, 0.01f);
+    lock_app_update(&app, 3201U, 10U);
+    TEST_ASSERT(!lock_app_display(&app)->position.valid);
     return true;
 }
 
-static bool test_app_starts_with_held_zero_degree_display(void)
+static bool test_app_starts_without_stale_angle_display(void)
 {
     LockApp app;
 
@@ -525,9 +528,7 @@ static bool test_app_starts_with_held_zero_degree_display(void)
     lock_app_update(&app, 0U, 0U);
 
     TEST_ASSERT(!lock_app_display(&app)->position.angle_valid);
-    TEST_ASSERT(lock_app_display(&app)->position.angle_held);
-    TEST_ASSERT_NEAR(lock_app_display(&app)->position.bearing_deg,
-                     0.0f, 0.01f);
+    TEST_ASSERT(!lock_app_display(&app)->position.angle_held);
     return true;
 }
 
@@ -557,6 +558,10 @@ static bool test_app_exposes_each_raw_uart_before_position_is_valid(void)
 
     lock_app_update(&app, 1602U, 0U);
     display = lock_app_display(&app);
+    TEST_ASSERT(display->channel_valid_mask == 0x03U);
+
+    lock_app_update(&app, 3102U, 0U);
+    display = lock_app_display(&app);
     TEST_ASSERT(display->channel_valid_mask == 0U);
     return true;
 }
@@ -583,8 +588,8 @@ int main(void)
         {"two-anchor angle is never trusted", test_two_anchor_angle_is_never_trusted},
         {"FSM legal ID, illegal ID, and dropout", test_fsm_authorization_and_dropout},
         {"app UART and direct-ID integration", test_app_uart_and_direct_id_integration},
-        {"app starts with held zero-degree display",
-         test_app_starts_with_held_zero_degree_display},
+        {"app starts without stale angle display",
+         test_app_starts_without_stale_angle_display},
         {"app exposes raw UART channels before fusion",
          test_app_exposes_each_raw_uart_before_position_is_valid},
     };

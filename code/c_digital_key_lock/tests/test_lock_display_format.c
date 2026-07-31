@@ -36,20 +36,33 @@ static bool test_four_bit_id_keeps_leading_zeroes(void)
     return true;
 }
 
+static bool test_full_numeric_address_uses_four_hex_digits(void)
+{
+    char text[LOCK_DISPLAY_ID_TEXT_CAPACITY];
+
+    lock_display_format_address4(0x000AU, text);
+    TEST_ASSERT_TEXT(text, "000A");
+    lock_display_format_address4(0x0100U, text);
+    TEST_ASSERT_TEXT(text, "0100");
+    lock_display_format_address4(0xFFFFU, text);
+    TEST_ASSERT_TEXT(text, "FFFF");
+    return true;
+}
+
 static bool test_key_id_uses_placeholder_when_invalid(void)
 {
     LockDisplayModel model;
     char text[LOCK_DISPLAY_ID_TEXT_CAPACITY];
 
     memset(&model, 0, sizeof(model));
-    model.observed_id = 10U;
+    model.observed_address = 0x000AU;
     model.observed_id_valid = false;
     lock_display_format_key_id(&model, text);
     TEST_ASSERT_TEXT(text, "----");
 
     model.observed_id_valid = true;
     lock_display_format_key_id(&model, text);
-    TEST_ASSERT_TEXT(text, "1010");
+    TEST_ASSERT_TEXT(text, "000A");
 
     lock_display_format_key_id(NULL, text);
     TEST_ASSERT_TEXT(text, "----");
@@ -124,21 +137,21 @@ static bool test_raw_channels_show_each_uart_before_fusion(void)
 
     memset(&model, 0, sizeof(model));
     lock_display_format_channels(&model, text);
-    TEST_ASSERT_TEXT(text, "1:--- 2:---");
+    TEST_ASSERT_TEXT(text, "A:--- B:---");
 
     model.channel_valid_mask = 0x01U;
     model.channel_distance_mm[0] = 0U;
     lock_display_format_channels(&model, text);
-    TEST_ASSERT_TEXT(text, "1:000 2:---");
+    TEST_ASSERT_TEXT(text, "A:000 B:---");
 
     model.channel_valid_mask = 0x03U;
     model.channel_distance_mm[0] = 259U;
     model.channel_distance_mm[1] = 966U;
     lock_display_format_channels(&model, text);
-    TEST_ASSERT_TEXT(text, "1:026 2:097");
+    TEST_ASSERT_TEXT(text, "A:026 B:097");
 
     lock_display_format_channels(NULL, text);
-    TEST_ASSERT_TEXT(text, "1:--- 2:---");
+    TEST_ASSERT_TEXT(text, "A:--- B:---");
     return true;
 }
 
@@ -182,6 +195,21 @@ static bool test_lock_state_is_open_only_when_unlocked(void)
     return true;
 }
 
+static bool test_monitor_firmware_uses_monitor_footer(void)
+{
+    LockDisplayModel model;
+
+    memset(&model, 0, sizeof(model));
+    model.monitor_only = true;
+    model.state = LOCK_STATE_LOCKED;
+    TEST_ASSERT_TEXT(lock_display_footer_text(&model), "MONITOR");
+
+    model.monitor_only = false;
+    model.state = LOCK_STATE_UNLOCKED;
+    TEST_ASSERT_TEXT(lock_display_footer_text(&model), "OPEN");
+    return true;
+}
+
 static bool test_display_refresh_interval_is_500_ms(void)
 {
     TEST_ASSERT(LOCK_DISPLAY_UI_REFRESH_MS == 500U);
@@ -200,6 +228,8 @@ int main(void)
     static const TestCase tests[] = {
         {"four-bit ID keeps leading zeroes",
          test_four_bit_id_keeps_leading_zeroes},
+        {"full address uses four hex digits",
+         test_full_numeric_address_uses_four_hex_digits},
         {"invalid key ID uses placeholder",
          test_key_id_uses_placeholder_when_invalid},
         {"angle positive, negative, and invalid",
@@ -212,6 +242,8 @@ int main(void)
         {"ZONE text covers every value", test_zone_text_covers_every_zone},
         {"lock state is OPEN only when unlocked",
          test_lock_state_is_open_only_when_unlocked},
+        {"monitor firmware uses MONITOR footer",
+         test_monitor_firmware_uses_monitor_footer},
         {"display refresh interval is 500 ms",
          test_display_refresh_interval_is_500_ms},
     };
