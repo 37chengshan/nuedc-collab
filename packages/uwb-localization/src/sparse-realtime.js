@@ -9,6 +9,22 @@ export function parseSparseCalibrationLabel(label) {
   const text = String(label ?? "")
     .trim()
     .replaceAll("。", ".");
+  const structured = text.match(
+    /^(line|angle|valid)_r(\d+(?:\.\d+)?)cm_a([mp])(\d+(?:\.\d+)?)_rep\d+$/i,
+  );
+  if (structured) {
+    const [, kind, radiusCm, sign, angleMagnitude] = structured;
+    const angleDeg =
+      Number(angleMagnitude) * (sign.toLowerCase() === "m" ? -1 : 1);
+    return {
+      distanceM: Number(radiusCm) / 100,
+      angleDeg,
+      angleSource: "structured",
+      dataset: "2026-07-31-grid",
+      split: kind.toLowerCase() === "valid" ? "validation" : "train",
+    };
+  }
+
   const explicit = text.match(/R(\d+(?:\.\d+)?)\s*-\s*A([+-]?\d+(?:\.\d+)?)/i);
   if (explicit) {
     return {
@@ -68,17 +84,30 @@ export function trainSparseRealtimeModel(samples, options = {}) {
     throw new RangeError("主测距链路至少需要两个不同距离的标定点");
   }
 
-  const angleSamples = normalized.filter(
+  const pairedSamples = normalized.filter(
     (sample) =>
-      Number.isFinite(sample.angleDeg) &&
       sample.anchors.some((anchor) => anchor.anchorId === primaryAnchorId) &&
       sample.anchors.some((anchor) => anchor.anchorId === secondaryAnchorId),
   );
-  const featureScales = buildFeatureScales(angleSamples, [
+  const angleSamples = pairedSamples.filter((sample) =>
+    Number.isFinite(sample.angleDeg),
+  );
+  const featureScales = buildFeatureScales(pairedSamples, [
     primaryAnchorId,
     secondaryAnchorId,
   ]);
+  const distancePrototypes = pairedSamples.map((sample) => ({
+    sampleId: sample.sampleId,
+    label: sample.label,
+    distanceM: sample.distanceMm / 1000,
+    features: featureVector(
+      sample.anchors,
+      [primaryAnchorId, secondaryAnchorId],
+      featureScales,
+    ),
+  }));
   const anglePrototypes = angleSamples.map((sample) => ({
+    sampleId: sample.sampleId,
     label: sample.label,
     distanceM: sample.distanceMm / 1000,
     angleDeg: sample.angleDeg,
@@ -95,6 +124,7 @@ export function trainSparseRealtimeModel(samples, options = {}) {
     primaryAnchorId,
     secondaryAnchorId,
     rangeKnots,
+    distancePrototypes,
     anglePrototypes,
     featureScales,
     limits: {
@@ -125,6 +155,7 @@ export function trainSparseRealtimeModel(samples, options = {}) {
   const validationRows = normalized.map((sample) => {
     const estimate = estimateSparseRealtime(model, {
       anchors: sample.anchors,
+      excludedSampleId: sample.sampleId,
     });
     return {
       label: sample.label,
@@ -143,6 +174,7 @@ export function trainSparseRealtimeModel(samples, options = {}) {
     .filter(Number.isFinite)
     .map(Math.abs);
   model.metrics = {
+    distanceValidationMode: "leave-one-capture-out",
     trainingPointCount: normalized.length,
     anglePointCount: angleSamples.length,
     distanceMaxErrorM: Math.max(...distanceErrors),
@@ -165,15 +197,6 @@ export function estimateSparseRealtime(model, input = {}) {
     return invalidEstimate("主测距链路暂无有效数据");
   }
 
-  const rawDistanceMm = interpolateRange(
-    model.rangeKnots[model.primaryAnchorId],
-    primary.medianMm,
-  );
-  const distanceMm = clamp(
-    rawDistanceMm,
-    model.limits?.minimumDistanceMm ?? MIN_DISTANCE_MM,
-    model.limits?.maximumDistanceMm ?? MAX_DISTANCE_MM,
-  );
   const secondary = byId.get(model.secondaryAnchorId);
   const secondaryGood =
     secondary &&
@@ -185,40 +208,49 @@ export function estimateSparseRealtime(model, input = {}) {
       secondary.madMm <=
         (model.limits?.secondaryMaxMadMm ?? DEFAULT_SECONDARY_MAX_MAD_MM));
 
+  const features =
+    secondaryGood && model.featureScales
+      ? featureVector(
+          [primary, secondary],
+          [model.primaryAnchorId, model.secondaryAnchorId],
+          model.featureScales,
+        )
+      : null;
+  const distanceNeighbor =
+    features && model.distancePrototypes?.length > 0
+      ? estimateFromPrototypes(
+          model.distancePrototypes,
+          features,
+          "distanceM",
+          6,
+          input.excludedSampleId,
+        )
+      : null;
+  const rawDistanceMm =
+    distanceNeighbor !== null
+      ? distanceNeighbor.value * 1000
+      : interpolateRange(
+          model.rangeKnots[model.primaryAnchorId],
+          primary.medianMm,
+        );
+  const distanceMm = clamp(
+    rawDistanceMm,
+    model.limits?.minimumDistanceMm ?? MIN_DISTANCE_MM,
+    model.limits?.maximumDistanceMm ?? MAX_DISTANCE_MM,
+  );
+
   let angleDeg = null;
   let angleConfidence = 0;
-  if (secondaryGood && model.anglePrototypes?.length > 0) {
-    const features = featureVector(
-      [primary, secondary],
-      [model.primaryAnchorId, model.secondaryAnchorId],
-      model.featureScales,
+  if (features && model.anglePrototypes?.length > 0) {
+    const angleNeighbor = estimateFromPrototypes(
+      model.anglePrototypes,
+      features,
+      "angleDeg",
+      4,
+      input.excludedSampleId,
     );
-    const neighbors = model.anglePrototypes
-      .map((prototype) => ({
-        prototype,
-        distance: euclidean(features, prototype.features),
-      }))
-      .sort((left, right) => left.distance - right.distance);
-    const exact = neighbors.filter((neighbor) => neighbor.distance < 1e-9);
-    if (exact.length > 0) {
-      angleDeg =
-        exact.reduce((sum, item) => sum + item.prototype.angleDeg, 0) /
-        exact.length;
-      angleConfidence = 1;
-    } else {
-      const selected = neighbors.slice(0, Math.min(4, neighbors.length));
-      const weighted = selected.map((neighbor) => ({
-        ...neighbor,
-        weight: 1 / Math.max(0.02, neighbor.distance) ** 2,
-      }));
-      const totalWeight = weighted.reduce((sum, item) => sum + item.weight, 0);
-      angleDeg =
-        weighted.reduce(
-          (sum, item) => sum + item.prototype.angleDeg * item.weight,
-          0,
-        ) / totalWeight;
-      angleConfidence = clamp(1 / (1 + selected[0].distance), 0, 1);
-    }
+    angleDeg = angleNeighbor?.value ?? null;
+    angleConfidence = angleNeighbor?.confidence ?? 0;
     const minimumAngle = model.calibratedAngleDeg?.minimum;
     const maximumAngle = model.calibratedAngleDeg?.maximum;
     if (Number.isFinite(minimumAngle) && Number.isFinite(maximumAngle)) {
@@ -270,6 +302,9 @@ function normalizeTrainingSample(sample) {
   }
   return {
     label: String(sample.label ?? sample.pointId ?? ""),
+    sampleId: String(
+      sample.captureId ?? sample.sampleId ?? sample.label ?? sample.pointId ?? "",
+    ),
     distanceMm: parsed.distanceM * 1000,
     angleDeg: Number.isFinite(parsed.angleDeg) ? parsed.angleDeg : null,
     anchors,
@@ -409,6 +444,59 @@ function euclidean(left, right) {
   return Math.sqrt(
     left.reduce((sum, value, index) => sum + (value - right[index]) ** 2, 0),
   );
+}
+
+function estimateFromPrototypes(
+  prototypes,
+  features,
+  targetKey,
+  neighborCount,
+  excludedSampleId = null,
+) {
+  const neighbors = prototypes
+    .filter(
+      (prototype) =>
+        excludedSampleId === null ||
+        excludedSampleId === undefined ||
+        prototype.sampleId !== String(excludedSampleId),
+    )
+    .map((prototype) => ({
+      prototype,
+      distance: euclidean(features, prototype.features),
+    }))
+    .sort((left, right) => left.distance - right.distance);
+  if (neighbors.length === 0) {
+    return null;
+  }
+  const exact = neighbors.filter((neighbor) => neighbor.distance < 1e-9);
+  if (exact.length > 0) {
+    return {
+      value:
+        exact.reduce(
+          (sum, item) => sum + Number(item.prototype[targetKey]),
+          0,
+        ) / exact.length,
+      confidence: 1,
+    };
+  }
+  const selected = neighbors.slice(
+    0,
+    Math.min(neighborCount, neighbors.length),
+  );
+  const weighted = selected.map((neighbor) => ({
+    ...neighbor,
+    weight: 1 / Math.max(0.02, neighbor.distance) ** 2,
+  }));
+  const totalWeight = weighted.reduce((sum, item) => sum + item.weight, 0);
+  return {
+    value:
+      weighted.reduce(
+        (sum, item) =>
+          sum + Number(item.prototype[targetKey]) * item.weight,
+        0,
+      ) / totalWeight,
+    confidence: clamp(1 / (1 + selected[0].distance), 0, 1),
+  };
 }
 
 function normalizeAnchorId(value) {

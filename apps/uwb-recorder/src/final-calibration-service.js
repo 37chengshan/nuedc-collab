@@ -20,19 +20,28 @@ export async function createFinalCalibrationService({
     warmupSeconds,
   });
   const model = trainSparseRealtimeModel(loaded.samples);
+  const validationMetrics = validateSparseRealtimeModel(
+    model,
+    loaded.validationSamples,
+  );
 
   return {
     status() {
       return {
         ready: true,
+        dataset: loaded.dataset,
+        structuredTrainingPointCount: loaded.structuredTrainingPointCount,
+        legacyTrainingPointCount: loaded.legacyTrainingPointCount,
         mode: model.mode,
         source: "final-captures",
         captureCount: loaded.samples.length,
+        validationPointCount: loaded.validationSamples.length,
         ignoredCaptureCount: loaded.ignored.length,
         ignoredCaptures: loaded.ignored,
         calibratedRangeM: model.calibratedRangeM,
         calibratedAngleDeg: model.calibratedAngleDeg,
         metrics: {
+          distanceValidationMode: model.metrics.distanceValidationMode,
           trainingPointCount: model.metrics.trainingPointCount,
           anglePointCount: model.metrics.anglePointCount,
           distanceMaxErrorM: model.metrics.distanceMaxErrorM,
@@ -40,6 +49,7 @@ export async function createFinalCalibrationService({
           angleMaxErrorDeg: model.metrics.angleMaxErrorDeg,
           angleP95Deg: model.metrics.angleP95Deg,
         },
+        validationMetrics,
         rangeKnots: model.rangeKnots,
       };
     },
@@ -84,18 +94,72 @@ async function loadFinalCaptures(capturesDirectory, { warmupSeconds }) {
     )
     .map((entry) => entry.name)
     .sort();
-  const samples = [];
-  const ignored = [];
-
+  const metadata = [];
   for (const metaName of metaNames) {
     const meta = JSON.parse(
       await readFile(join(capturesDirectory, metaName), "utf8"),
     );
-    const target = parseSparseCalibrationLabel(meta.label);
-    if (!target) {
-      ignored.push({ captureId: meta.id, label: meta.label, reason: "标签无法识别" });
-      continue;
+    metadata.push({
+      metaName,
+      meta,
+      target: parseSparseCalibrationLabel(meta.label),
+    });
+  }
+
+  const structured = metadata.filter((entry) => entry.target?.dataset);
+  const legacy = metadata.filter(
+    (entry) => entry.target && !entry.target.dataset,
+  );
+  const selectedDataset =
+    structured.length > 0 && legacy.length > 0
+      ? "combined-legacy-and-2026-07-31-grid"
+      : structured.length > 0
+        ? structured[0].target.dataset
+        : "legacy";
+  const candidates = metadata.filter((entry) => entry.target);
+  const samples = [];
+  const validationSamples = [];
+  const ignored = [];
+
+  for (const entry of metadata) {
+    if (!entry.target) {
+      ignored.push({
+        captureId: entry.meta.id,
+        label: entry.meta.label,
+        reason: "标签无法识别",
+      });
     }
+  }
+
+  const latestByLabel = new Map();
+  for (const entry of candidates) {
+    const previous = latestByLabel.get(entry.meta.label);
+    if (
+      !previous ||
+      String(entry.meta.startedAt).localeCompare(String(previous.meta.startedAt)) >
+        0
+    ) {
+      if (previous) {
+        ignored.push({
+          captureId: previous.meta.id,
+          label: previous.meta.label,
+          reason: "同标签存在更新采集，默认采用时间较晚的数据",
+        });
+      }
+      latestByLabel.set(entry.meta.label, entry);
+    } else {
+      ignored.push({
+        captureId: entry.meta.id,
+        label: entry.meta.label,
+        reason: "同标签存在更新采集，默认采用时间较晚的数据",
+      });
+    }
+  }
+
+  const selected = [...latestByLabel.values()].sort((left, right) =>
+    String(left.meta.startedAt).localeCompare(String(right.meta.startedAt)),
+  );
+  for (const { meta, target } of selected) {
     const jsonlPath = join(capturesDirectory, `${meta.id}.jsonl`);
     let records;
     try {
@@ -125,14 +189,84 @@ async function loadFinalCaptures(capturesDirectory, { warmupSeconds }) {
       });
       continue;
     }
-    samples.push({
+    const sample = {
       captureId: meta.id,
       label: meta.label,
+      sourceDataset: target.dataset ?? "legacy",
       ...target,
       perAnchor,
-    });
+    };
+    if (target.split === "validation") {
+      validationSamples.push(sample);
+    } else {
+      samples.push(sample);
+    }
   }
-  return { samples, ignored };
+  return {
+    samples,
+    validationSamples,
+    ignored,
+    dataset: selectedDataset,
+    structuredTrainingPointCount: samples.filter(
+      (sample) => sample.sourceDataset === "2026-07-31-grid",
+    ).length,
+    legacyTrainingPointCount: samples.filter(
+      (sample) => sample.sourceDataset === "legacy",
+    ).length,
+  };
+}
+
+function validateSparseRealtimeModel(model, samples) {
+  const rows = samples.map((sample) => {
+    const estimate = estimateSparseRealtime(model, {
+      anchors: sample.perAnchor,
+    });
+    return {
+      captureId: sample.captureId,
+      label: sample.label,
+      trueDistanceM: sample.distanceM,
+      estimatedDistanceM: estimate.distanceM,
+      distanceErrorM: estimate.valid
+        ? estimate.distanceM - sample.distanceM
+        : null,
+      trueAngleDeg: sample.angleDeg,
+      estimatedAngleDeg: estimate.angleDeg,
+      angleErrorDeg:
+        estimate.angleValid && Number.isFinite(sample.angleDeg)
+          ? estimate.angleDeg - sample.angleDeg
+          : null,
+    };
+  });
+  const distanceErrors = rows
+    .map((row) => row.distanceErrorM)
+    .filter(Number.isFinite)
+    .map(Math.abs);
+  const angleErrors = rows
+    .map((row) => row.angleErrorDeg)
+    .filter(Number.isFinite)
+    .map(Math.abs);
+  return {
+    pointCount: rows.length,
+    distanceMaxErrorM:
+      distanceErrors.length > 0 ? Math.max(...distanceErrors) : null,
+    distanceP95M:
+      distanceErrors.length > 0 ? percentile(distanceErrors, 0.95) : null,
+    angleMaxErrorDeg:
+      angleErrors.length > 0 ? Math.max(...angleErrors) : null,
+    angleP95Deg:
+      angleErrors.length > 0 ? percentile(angleErrors, 0.95) : null,
+    rows,
+  };
+}
+
+function percentile(values, ratio) {
+  if (values.length === 0) return null;
+  const sorted = [...values].sort((left, right) => left - right);
+  const position = (sorted.length - 1) * ratio;
+  const lower = Math.floor(position);
+  const upper = Math.ceil(position);
+  const fraction = position - lower;
+  return sorted[lower] * (1 - fraction) + sorted[upper] * fraction;
 }
 
 function summarizeRecentMeasurements(measurements) {
