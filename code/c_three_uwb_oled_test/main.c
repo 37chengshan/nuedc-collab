@@ -1,6 +1,7 @@
 #include "ti_msp_dl_config.h"
 
 #include "../dimengxing_receiver/oled.h"
+#include "oled_recovery.h"
 #include "uwb_monitor.h"
 #include "uwb_position.h"
 
@@ -9,7 +10,7 @@
 
 #define UART_RX_RING_SIZE 128U
 #define UART_RX_RING_MASK (UART_RX_RING_SIZE - 1U)
-#define OLED_UPDATE_INTERVAL_MS 100U
+#define OLED_UPDATE_INTERVAL_MS 200U
 
 typedef struct {
     volatile uint8_t data[UART_RX_RING_SIZE];
@@ -90,7 +91,8 @@ static bool draw_screen(uint32_t now_ms)
 
 int main(void)
 {
-    bool oled_ready;
+    bool oled_initialized;
+    OledRecoveryState oled_recovery;
     uint32_t last_oled_update_ms = 0U;
 
     SYSCFG_DL_init();
@@ -103,10 +105,13 @@ int main(void)
     NVIC_EnableIRQ(UWB_CH1_INST_INT_IRQN);
     NVIC_EnableIRQ(UWB_CH2_INST_INT_IRQN);
 
-    oled_ready = (OLED_Init() == OLED_STATUS_OK);
-    if (oled_ready) {
-        oled_ready = draw_screen(g_millis);
+    oled_initialized = (OLED_Init() == OLED_STATUS_OK);
+    oled_recovery_init(&oled_recovery, oled_initialized, g_millis);
+    if (oled_initialized) {
+        oled_recovery_record_refresh(
+            &oled_recovery, draw_screen(g_millis), g_millis);
     }
+    last_oled_update_ms = g_millis;
 
     while (1) {
         uint32_t now_ms = g_millis;
@@ -114,10 +119,21 @@ int main(void)
         (void)drain_uart_ring(0U);
         (void)drain_uart_ring(1U);
 
-        if (oled_ready &&
+        if (oled_recovery_is_ready(&oled_recovery) &&
             ((now_ms - last_oled_update_ms) >= OLED_UPDATE_INTERVAL_MS)) {
-            oled_ready = draw_screen(now_ms);
+            oled_recovery_record_refresh(
+                &oled_recovery, draw_screen(now_ms), now_ms);
             last_oled_update_ms = now_ms;
+        } else if (oled_recovery_reinit_due(&oled_recovery, now_ms)) {
+            SYSCFG_DL_OLED_init();
+            oled_initialized = (OLED_Init() == OLED_STATUS_OK);
+            oled_recovery_record_reinit(
+                &oled_recovery, oled_initialized, now_ms);
+            if (oled_initialized) {
+                oled_recovery_record_refresh(
+                    &oled_recovery, draw_screen(g_millis), g_millis);
+                last_oled_update_ms = g_millis;
+            }
         }
     }
 }

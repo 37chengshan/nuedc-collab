@@ -70,6 +70,7 @@ $Sources = @(
     @{ Name = "main"; Source = (Join-Path $ProjectDir $MainSource) },
     @{ Name = "uwb_monitor"; Source = (Join-Path $ProjectDir "uwb_monitor.c") },
     @{ Name = "uwb_calibration"; Source = (Join-Path $ProjectDir "uwb_calibration.c") },
+    @{ Name = "oled_recovery"; Source = (Join-Path $ProjectDir "oled_recovery.c") },
     @{ Name = "uwb_position"; Source = (Join-Path $ProjectDir "uwb_position.c") },
     @{ Name = "oled"; Source = (Join-Path $SharedOledDir "oled.c") },
     @{ Name = "delay"; Source = (Join-Path $SharedOledDir "delay.c") },
