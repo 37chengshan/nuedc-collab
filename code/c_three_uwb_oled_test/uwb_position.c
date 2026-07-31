@@ -76,7 +76,7 @@ bool uwb_position_solve(const UwbMonitor *monitor, uint32_t now_ms,
         return false;
     }
 
-    if (memcmp(first->address, second->address, 5U) != 0) {
+    if (first->address[3] != second->address[3]) {
         result->status = UWB_POSITION_ADDRESS;
         return false;
     }
