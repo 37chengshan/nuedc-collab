@@ -36,7 +36,8 @@ $CommonSources = @(
     (Join-Path $ModuleDir "lock_app_config.c"),
     (Join-Path $ModuleDir "calibration_model.c"),
     (Join-Path $ModuleDir "calibration_model_data.c"),
-    (Join-Path $ModuleDir "empirical_model.c")
+    (Join-Path $ModuleDir "empirical_model.c"),
+    (Join-Path $ModuleDir "empirical_model_data.c")
 )
 $CommonFlags = @(
     "-std=c11",

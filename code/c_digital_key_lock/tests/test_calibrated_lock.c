@@ -1,5 +1,6 @@
 #include "calibration_model.h"
 #include "empirical_model.h"
+#include "empirical_model_data.h"
 #include "lock_app.h"
 #include "lock_app_config.h"
 #include "lock_fsm.h"
@@ -201,6 +202,16 @@ static bool test_empirical_model_rejects_ambiguous_angle(void)
     TEST_ASSERT(estimate.valid);
     TEST_ASSERT_NEAR(estimate.distance_mm, 1500.0f, 0.1f);
     TEST_ASSERT(!estimate.angle_valid);
+    return true;
+}
+
+static bool test_exported_empirical_model_contains_all_training_points(void)
+{
+    TEST_ASSERT(g_empirical_model_v1.prototype_count == 66U);
+    TEST_ASSERT(g_empirical_model_v1.distance_neighbor_count == 6U);
+    TEST_ASSERT(g_empirical_model_v1.angle_neighbor_count == 4U);
+    TEST_ASSERT(empirical_model_validate(&g_empirical_model_v1) ==
+                EMPIRICAL_MODEL_OK);
     return true;
 }
 
@@ -497,6 +508,8 @@ int main(void)
          test_empirical_model_distance_angle_and_crc},
         {"empirical model rejects ambiguous angle",
          test_empirical_model_rejects_ambiguous_angle},
+        {"exported empirical model contains all 66 training points",
+         test_exported_empirical_model_contains_all_training_points},
         {"bilinear distance/angle compensation",
          test_bilinear_distance_and_angle_compensation},
         {"2-anchor front mirror resolution",
