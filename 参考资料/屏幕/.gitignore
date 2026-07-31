@@ -1,0 +1,15 @@
+*
+!.gitignore
+!README.md
+!1.77模块尺寸信息.pdf
+!驱动IC数据手册.pdf
+!引脚接线.png
+!实物连接显示.jpg
+!PCtoLCD2002取模设置--汉字.JPG
+!参数设置.txt
+!LCD_Config.h
+!Lcd_Driver.c
+!Lcd_Driver.h
+!GUI.c
+!GUI.h
+!Font.h

@@ -13,16 +13,21 @@
     "T-20260730-11Y3",
     "T-20260730-75QP"
   ],
-  "description": "在距离和角度标定数据齐全后，专门解决当前静态测量值可接受但实时显示不稳定的问题。分别验证 Hampel、中值、质量权重、限速器和 Kalman 参数，不用增加过度延迟来掩盖跳变；距离与角度分别维护有效状态，角度失败不得拖累距离输出。",
+  "description": "已完成第一阶段稳定化：OLED、UWB Lab 和数字钥匙工作台统一每 500 ms 更新；两基站经验距离使用小变化 25% 跟随、大于 0.18 m 的突变连续 3 次确认；角度不可信或短暂丢失时保持上一显示值。仍需按固定距离和动态进出场景做实机连续运行，验证延迟、1 m/2 m 边界和长期波动。",
   "id": "T-20260730-CA0K",
   "module": "C题UWB实时定位",
   "owner": "37chengshan",
   "participants": [],
   "priority": "high",
   "recordType": "task",
-  "relatedCommits": [],
+  "relatedCommits": [
+    "b2b5c9c",
+    "d7c1e8b",
+    "0c7ab8e",
+    "b64a441"
+  ],
   "schemaVersion": 1,
-  "status": "todo",
+  "status": "doing",
   "title": "整定 UWB 实时滤波、坏链路降级与区域防抖",
-  "updatedAt": "2026-07-30T22:06:04+00:00"
+  "updatedAt": "2026-07-31T11:13:53+00:00"
 }

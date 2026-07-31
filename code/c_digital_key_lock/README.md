@@ -1,39 +1,159 @@
-# C 题数字钥匙门锁固件骨架
+# C 题数字钥匙门锁固件
 
-该工程是 `MSPM0G3507 + CCS + SysConfig` 的数字钥匙固件，当前按“确定的
-定位和安全逻辑进入生产代码，未确认接线隔离在 BSP”组织：
+本工程面向地猛星 `MSPM0G3507`，使用 TI DriverLib、SysConfig 和
+ST7735S 屏幕，实现双 UWB 基站测距、四位钥匙 ID、距离/角度显示、区域判断、
+声光提示和门锁继电器控制。
 
-- UWB_CH1：`UART1`，TX=`PA8`，RX=`PA9`，`115200 8N1`
-- UWB_CH2：`UART3`，TX=`PA26`，RX=`PA25`，`115200 8N1`
-- 定位和标定模型统一支持 2～4 基站；当前物理接线只启用前两路
-- 第 3/4 路需在实测外设实例和引脚后再加入 `.syscfg`
-- ST7735S、LED、蜂鸣器、锁执行器和最终拨码/按键 GPIO 仍在 BSP 中保留占位
+当前硬件启用 2 个基站，算法接口保留 2～4 基站能力。每个基站必须独占一个
+MCU 串口，不能把两个 UWB 从机并接到同一 UART。
 
-## 当前模块
+## 四层 HEX
 
-- `uwb_text_protocol.*`：UWB 文本帧行缓存与解析
-- `uwb_fusion.*`：四通道缓存、同地址时间窗融合、补偿和 Kalman 滤波
-- `trilateration.*`：2～4 基站统一定位、双圆镜像消歧、NLOS 剔除
-- `calibration_model.*`：900 字节模型 ABI、CRC、测距和双线性补偿算法
-- `calibration_model_data.*`：可由 UWB Lab 导出文件直接替换的只读模型
-- `id_input.*`：临时四按键翻转输入，兼容未来拨码直读
-- `lock_fsm.*`：授权、迎宾、开锁、拒绝与短时保持状态机
-- `lock_app.*`：业务编排与对 BSP 的统一输出模型
-- `lock_hw.*` / `lock_hw_mspm0.c`：硬件适配层
+在本目录执行：
 
-## 当前安全行为
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\build.ps1 -Variant All
+```
 
-- 标签标准帧 `P,1111,10cm\r\n` 解析为钥匙地址低 4 bit `0x1`、距离 `100 mm`。
-- 临时四按键在稳定按下 30 ms 后翻转对应位，长按不重复；必须释放后才能再次翻转。
-- 未来拨码后端继续输出相同的 4 bit 逻辑值，应用层不需要修改。
-- 2～4 路完整地址必须一致，不能只按低 4 bit ID 混合不同钥匙。
-- 两基站使用前方区域和上一帧位置解决镜像；三基站可剔除异常路并降级；
-  四基站执行单路 leave-one-out NLOS 检查。
-- 开锁进入阈值 1.00 m、离开阈值 1.05 m；迎宾进入 2.00 m、离开
-  2.05 m；状态变化需要连续 3 帧确认。
-- 短时丢帧保持上一位置，超时、ID 不匹配、模型损坏或定位失效立即禁止开锁。
+生成：
 
-## 主机侧回归
+| 层级 | HEX | 用途 |
+|---|---|---|
+| L1 | `build/c_digital_key_lock_l1_screen.hex` | 只验证 ST7735S 颜色、文字和界面 |
+| L2 | `build/c_digital_key_lock_l2_monitor.hex` | 双串口接收、拟合、距离/角度与区域显示；设定 ID 固定为 `0000` |
+| L3 | `build/c_digital_key_lock_l3_identity.hex` | 在 L2 基础上增加四位拨码 ID 和授权判断，不驱动门锁输出 |
+| L4 | `build/c_digital_key_lock_l4_full.hex` | 完整版：拨码、显示、红绿灯、蜂鸣器和锁继电器 |
+
+2026-07-31 的本机构建结果：
+
+| 层级 | Flash text | BSS |
+|---|---:|---:|
+| L1 | 18,568 B | 917 B |
+| L2 | 44,064 B | 921 B |
+| L3 | 44,096 B | 921 B |
+| L4 | 44,352 B | 921 B |
+
+四个 HEX 已通过 SysConfig 和编译链接，但尚未在当前会话中完成真实板卡烧录验证。
+
+## 完整接线
+
+### UWB 基站
+
+串口参数均为 `115200 8N1`。模块 TX 接 MCU RX，模块 RX 接 MCU TX，所有模块
+与 MCU 必须共地。
+
+| 通道 | MCU TX | MCU RX |
+|---|---|---|
+| UWB1 / UART1 | `PA8` | `PA9` |
+| UWB2 / UART3 | `PA26` | `PA25` |
+
+真实模块报文允许每路带不同的基站地址，例如：
+
+```text
+P0,0100,195cm,19dB
+P1,0200,160cm,10dB
+```
+
+`0100` 和 `0200` 是不同基站上报的完整地址；固件使用其低 4 bit 作为钥匙 ID，
+因此二者都对应 ID `0000`，可以正常融合。只有低 4 bit 不同才视为不同钥匙并
+拒绝组合。
+
+### ST7735S
+
+| 屏幕信号 | MCU |
+|---|---|
+| SDA / MOSI | `PB8` |
+| SCL / SCLK | `PB9` |
+| CS | `PB14` |
+| DC | `PB10` |
+| RESET | `PB11` |
+
+屏幕供电和背光按模块标称电压连接，并与 MCU 共地。
+
+### 四位拨码
+
+输入使用内部上拉，拨码闭合到 GND 表示该位为 1：
+
+| 位 | MCU |
+|---|---|
+| bit0 | `PB0` |
+| bit1 | `PB1` |
+| bit2 | `PB2` |
+| bit3 | `PB3` |
+
+### 声光和门锁
+
+| 功能 | MCU |
+|---|---|
+| 红灯 | `PA14` |
+| 绿灯 | `PA15` |
+| 有源蜂鸣器控制 | `PA0` |
+| 锁继电器控制 | `PA16` |
+
+蜂鸣器、继电器线圈和电磁锁不能直接由 GPIO 带负载。建议使用：
+
+```text
+GPIO -> 约 1 kΩ -> S8050/2N2222 基极
+发射极 -> GND
+集电极 -> 负载负端
+负载正端 -> 对应电源正端
+```
+
+继电器线圈、电磁锁等感性负载两端必须并联反向续流二极管。MCU、UWB、
+驱动电源必须共地。`PA16` 仅在逻辑状态为允许开锁时输出有效电平。
+
+## OLED/TFT 字段含义
+
+| 字段 | 含义 |
+|---|---|
+| `SET ID` | 四位拨码设定的允许钥匙 ID |
+| `KEY ID` | UWB 报文识别到的钥匙低 4 bit ID |
+| `AUTH` | `WAIT` 未收到钥匙，`PASS` ID 匹配，`FAIL` ID 不匹配 |
+| `ANGLE` | 钥匙相对门锁正前方的角度，左负右正 |
+| `DIST` | 钥匙到题目圆柱边界的拟合距离，不是单个基站原始距离 |
+| `ZONE` | `OUTSIDE` 区外、`APPROACH` 迎宾区、`UNLOCK` 开锁区、`BACKSIDE` 背面、`INVALID` 数据不足 |
+| 底部状态 | `OPEN` 已开锁，否则统一显示 `LOCKED` |
+
+显示和定位结果每 `500 ms` 更新一次，串口接收始终连续进行。
+
+## 距离、角度和安全策略
+
+- 当前运行模型使用 68 个真实标定点：旧数据 18 点、新结构化数据 50 点，
+  模型 CRC32 为 `A912C308`。
+- 距离小变化按 25% 跟随；超过 180 mm 的跳变需要连续 3 次、且候选值彼此
+  相差不超过 120 mm 才接受，以稳定实时显示和边界判断。
+- 两基站角度始终保留一个显示值：有新估计时更新；估计不可信时保持上次；
+  上电还没有历史值时显示 0°。
+- 两基站角度当前只供显示，绝不参与开锁。独立验证显示两基站角度误差仍明显
+  超标，可信角度需要增加第三基站并重新标定。
+- 三基站使用全部有效距离定位，异常时可降级；四基站支持单基站剔除以处理
+  偶发 NLOS/多径。
+- 开锁进入阈值 1.00 m、离开阈值 1.05 m；迎宾进入阈值 2.00 m、离开阈值
+  2.05 m；状态变化连续 3 帧确认。
+- ID 不匹配、模型校验失败或位置超时失效时，立即禁止开锁。
+
+66 个独立评估点的距离留一法结果约为：最大误差 0.20 m、P95 0.099 m。
+两个新增 1.5 m 会话已加入 68 点运行模型，但 1.5～2.0 m 原始双路读数存在
+重叠，2 m 边界仍需要继续补采和独立复测。
+
+## 主要代码
+
+- `uwb_text_protocol.*`：文本报文行缓存、地址和距离解析。
+- `uwb_fusion.*`：2～4 路同步、按钥匙低 4 bit 融合、角度保持和 Kalman。
+- `lock_distance_stabilizer.*`：500 ms 距离输出的平滑与三次突变确认。
+- `empirical_model.*` / `empirical_model_data.*`：68 点双基站经验模型。
+- `trilateration.*`：2～4 基站定位、双圆镜像消歧和 NLOS 剔除。
+- `calibration_model.*`：模型 ABI、CRC、测距校正和双线性补偿。
+- `id_input.*`：四位低有效拨码输入。
+- `lock_fsm.*`：授权、迎宾、开锁、拒绝和闭锁状态机。
+- `lock_display_ui.*`：500 ms ST7735S 界面。
+- `lock_output_behavior.*`：红绿灯、迎宾短鸣和独立锁输出。
+- `lock_hw_mspm0.c`：MSPM0 UART、SPI、GPIO 和 SysTick 硬件层。
+
+不要手改 `generated/ti_msp_dl_config.c/.h`，引脚和外设应修改
+`empty.syscfg` 后重新构建。
+
+## 主机回归测试
 
 Windows：
 
@@ -41,53 +161,13 @@ Windows：
 powershell -NoProfile -ExecutionPolicy Bypass -File .\tests\run_tests.ps1
 ```
 
-Linux/macOS：
+测试覆盖报文解析、不同基站地址融合、2～4 基站定位、模型 CRC、距离稳定器、
+角度保持、拨码 ID、区域状态机、显示格式、500 ms 刷新和物理输出映射。
 
-```bash
-./tests/run_tests.sh
-```
+## 仍需实物确认
 
-测试使用系统 C11 编译器，不依赖 TI SDK，可在不上板时验证协议、输入、融合、
-定位、模型 CRC、补偿和状态机。
-
-## TI SysConfig 与固件构建
-
-不要手改 `generated/ti_msp_dl_config.c/.h`。在本目录运行：
-
-```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File .\build.ps1
-```
-
-脚本会重新生成 SysConfig、使用 TI Arm Clang 编译并输出：
-
-```text
-build\c_digital_key_lock.out
-build\c_digital_key_lock.hex
-build\c_digital_key_lock.map
-```
-
-当前构建结果为 `text=28576 B`、`bss=832 B`，低于方案要求的
-Flash 96 KB 和 SRAM 20 KB。
-
-## 标定模型替换
-
-UWB Lab 默认导出：
-
-```text
-calibration_model_data.c
-calibration_model_data.h
-calibration_model_data.json
-```
-
-将导出的 `.c/.h` 覆盖本目录同名文件后重新运行 `build.ps1`。模型源文件不包含
-SysConfig 输出，也不需要修改定位算法。上电会检查模型 magic、版本、尺寸和
-CRC32，失败时进入 `LOCK_STATE_CALIBRATION_ERROR` 并保持闭锁。
-
-## 明确未验证项
-
-- 第 3/4 路 UWB 的实际 UART 实例、引脚、电平和与调试口冲突
-- ST7735S 刷屏接口与时序
-- 红绿 LED、迎宾灯、蜂鸣器和锁执行器的实际接线
-- 临时四按键输入 GPIO 以及未来拨码输入 GPIO
-- 第 3/4 个基站的实测锚点坐标
-- 真实板卡烧录、显示和锁执行器联调；当前验证止于主机测试、SysConfig 和构建
+- 烧录 L1 验证屏幕方向、颜色和长期点亮。
+- 烧录 L2 验证两路 `0100` / `0200` 报文可同时形成距离和角度显示。
+- 烧录 L3 验证拨码 16 种 ID 与实际钥匙低 4 bit 一致。
+- 烧录 L4 前先用 LED 或万用表验证 `PA16`，再连接三极管和继电器。
+- 增加第三基站后填写实测天线中心坐标并重做角度标定。

@@ -19,9 +19,13 @@
   "participants": [],
   "priority": "critical",
   "recordType": "task",
-  "relatedCommits": [],
+  "relatedCommits": [
+    "608f631",
+    "b2b5c9c",
+    "b64a441"
+  ],
   "schemaVersion": 1,
-  "status": "todo",
+  "status": "doing",
   "title": "扩展 UWB 距离标定到 0.5～3.0 m 并加密 1 m/2 m 边界",
-  "updatedAt": "2026-07-30T22:05:17+00:00"
+  "updatedAt": "2026-07-31T11:13:53+00:00"
 }
