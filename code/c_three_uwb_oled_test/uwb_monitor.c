@@ -72,17 +72,14 @@ static void accept_distance(UwbChannelState *state, const char address[5],
 }
 
 static bool parse_line(const char *line, uint8_t length,
-                       UwbMonitor *monitor, uint8_t physical_channel,
-                       uint32_t now_ms)
+                       UwbChannelState *state, uint32_t now_ms)
 {
     uint8_t index;
     uint8_t address_index;
-    uint8_t logical_channel;
     uint8_t payload_end;
     uint32_t distance = 0U;
     bool has_digit = false;
     char address[5];
-    UwbChannelState *state;
 
     if ((length >= 3U) && (line[0] == 'r') && (line[1] == 'e') &&
         (line[2] == ':')) {
@@ -96,14 +93,9 @@ static bool parse_line(const char *line, uint8_t length,
 
     if (line[1] == ',') {
         address_index = 2U;
-        logical_channel = physical_channel;
     } else if ((length >= 11U) && (line[1] >= '0') &&
                (line[1] <= '9') && (line[2] == ',')) {
         address_index = 3U;
-        logical_channel = (uint8_t)(line[1] - '0');
-        if (logical_channel >= UWB_CHANNEL_COUNT) {
-            return false;
-        }
     } else {
         return false;
     }
@@ -162,7 +154,6 @@ static bool parse_line(const char *line, uint8_t length,
         address[index] = upper_hex(line[address_index + index]);
     }
     address[4] = '\0';
-    state = &monitor->channels[logical_channel];
     accept_distance(state, address, distance, now_ms);
     return true;
 }
@@ -201,7 +192,8 @@ static bool finish_buffer(UwbMonitor *monitor, uint8_t channel,
     bool parsed = false;
 
     if (!monitor->discarding[channel] && (length > 0U)) {
-        parsed = parse_line(monitor->lines[channel], length, monitor, channel,
+        parsed = parse_line(monitor->lines[channel], length,
+                            &monitor->channels[channel],
                             monitor->byte_timestamps_ms[channel]);
     }
     if (!parsed && count_rejection &&
