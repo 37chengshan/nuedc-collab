@@ -16,6 +16,9 @@
  */
 void lock_display_format_id4(uint8_t id, char *output);
 
+/* Formats a 16-bit numeric address as four uppercase hexadecimal digits. */
+void lock_display_format_address4(uint16_t address, char *output);
+
 /*
  * Formats the observed key ID, or "----" while no valid key ID is present.
  * The output buffer must provide LOCK_DISPLAY_ID_TEXT_CAPACITY bytes.
@@ -52,5 +55,8 @@ const char *lock_display_zone_text(LockZone zone);
 
 /* Returns "OPEN" only for LOCK_STATE_UNLOCKED; otherwise returns "LOCKED". */
 const char *lock_display_state_text(LockState state);
+
+/* Returns "MONITOR" for the non-actuating L2 firmware. */
+const char *lock_display_footer_text(const LockDisplayModel *model);
 
 #endif

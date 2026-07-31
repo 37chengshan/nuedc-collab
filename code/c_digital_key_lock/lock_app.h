@@ -17,9 +17,10 @@ typedef struct {
     LockIdInput id_input;
     LockStateMachine state_machine;
     LockPositionSolution position;
+    LockPositionSolution display_position;
     LockOutputSnapshot outputs;
     LockDisplayModel display;
-    float display_bearing_deg;
+    bool display_position_available;
 } LockApp;
 
 void lock_app_init(LockApp *app, LockIdInputBackend backend);

@@ -27,6 +27,21 @@ void lock_display_format_id4(uint8_t id, char *output)
     output[LOCK_ID_BIT_COUNT] = '\0';
 }
 
+static char hex_digit(uint8_t value)
+{
+    return (value < 10U) ? (char)('0' + value)
+                         : (char)('A' + (value - 10U));
+}
+
+void lock_display_format_address4(uint16_t address, char *output)
+{
+    output[0] = hex_digit((uint8_t)((address >> 12U) & 0x0FU));
+    output[1] = hex_digit((uint8_t)((address >> 8U) & 0x0FU));
+    output[2] = hex_digit((uint8_t)((address >> 4U) & 0x0FU));
+    output[3] = hex_digit((uint8_t)(address & 0x0FU));
+    output[4] = '\0';
+}
+
 void lock_display_format_key_id(const LockDisplayModel *model, char *output)
 {
     if ((model == NULL) || !model->observed_id_valid) {
@@ -34,7 +49,7 @@ void lock_display_format_key_id(const LockDisplayModel *model, char *output)
         return;
     }
 
-    lock_display_format_id4(model->observed_id, output);
+    lock_display_format_address4(model->observed_address, output);
 }
 
 void lock_display_format_angle(const LockDisplayModel *model, char *output)
@@ -132,11 +147,11 @@ static void format_channel_cm(const LockDisplayModel *model, uint8_t channel,
 void lock_display_format_channels(const LockDisplayModel *model,
                                   char *output)
 {
-    output[0] = '1';
+    output[0] = 'A';
     output[1] = ':';
     format_channel_cm(model, 0U, &output[2]);
     output[5] = ' ';
-    output[6] = '2';
+    output[6] = 'B';
     output[7] = ':';
     format_channel_cm(model, 1U, &output[8]);
     output[11] = '\0';
@@ -171,4 +186,13 @@ const char *lock_display_zone_text(LockZone zone)
 const char *lock_display_state_text(LockState state)
 {
     return (state == LOCK_STATE_UNLOCKED) ? "OPEN" : "LOCKED";
+}
+
+const char *lock_display_footer_text(const LockDisplayModel *model)
+{
+    if ((model != NULL) && model->monitor_only) {
+        return "MONITOR";
+    }
+    return lock_display_state_text(
+        model == NULL ? LOCK_STATE_LOCKED : model->state);
 }

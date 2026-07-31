@@ -278,7 +278,8 @@ static bool test_fusion_three_two_one_and_timeout(void)
     TEST_ASSERT(solution.mode == LOCK_LOCALIZATION_THREE_ANCHOR);
     TEST_ASSERT(solution.anchor_count == 3U);
     TEST_ASSERT(solution.valid_mask == 0x07U);
-    TEST_ASSERT(solution.key_id == 7U);
+    TEST_ASSERT(solution.key_addr == 0x000AU);
+    TEST_ASSERT(solution.key_id == 0x0AU);
     TEST_ASSERT_NEAR(solution.x_mm, 0.0f, 8.0f);
     TEST_ASSERT_NEAR(solution.y_mm, 1300.0f, 8.0f);
 
@@ -299,7 +300,7 @@ static bool test_fusion_three_two_one_and_timeout(void)
     return true;
 }
 
-static bool test_fusion_does_not_mix_ids_or_stale_samples(void)
+static bool test_fusion_accepts_anchor_addresses_and_rejects_stale_samples(void)
 {
     LockUwbFusion fusion;
     LockPositionSolution solution;
@@ -315,7 +316,8 @@ static bool test_fusion_does_not_mix_ids_or_stale_samples(void)
                        101U);
     uwb_fusion_store_measurement(&fusion, 2U, &item);
     uwb_fusion_solve(&fusion, &config, 101U, &solution);
-    TEST_ASSERT(!solution.valid);
+    TEST_ASSERT(solution.valid);
+    TEST_ASSERT(solution.key_addr == 0x000AU);
 
     uwb_fusion_init(&fusion);
     store_position(&fusion, &config, 2U, 0.0f, 1300.0f, 100U, 0x07U);
@@ -333,7 +335,8 @@ static bool test_fusion_does_not_mix_ids_or_stale_samples(void)
     item.key_addr = 0x2222U;
     uwb_fusion_store_measurement(&fusion, 2U, &item);
     uwb_fusion_solve(&fusion, &config, 101U, &solution);
-    TEST_ASSERT(!solution.valid);
+    TEST_ASSERT(solution.valid);
+    TEST_ASSERT(solution.anchor_count == 3U);
     return true;
 }
 
@@ -583,7 +586,8 @@ int main(void)
         {"UWB fragmented and sticky frames", test_uwb_parser_fragmented_and_sticky_lines},
         {"UWB units and compact CRLF frame", test_uwb_parser_units_and_compact_crlf_frame},
         {"fusion three/two/one channels and hold timeout", test_fusion_three_two_one_and_timeout},
-        {"fusion key address and sample window", test_fusion_does_not_mix_ids_or_stale_samples},
+        {"fusion anchor addresses and sample window",
+         test_fusion_accepts_anchor_addresses_and_rejects_stale_samples},
         {"localization 0/+45/-45 degrees and 1/2/3 m", test_localization_bearings_and_radial_distances},
         {"two-anchor angle is never trusted", test_two_anchor_angle_is_never_trusted},
         {"FSM legal ID, illegal ID, and dropout", test_fsm_authorization_and_dropout},

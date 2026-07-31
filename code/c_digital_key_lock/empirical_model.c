@@ -306,11 +306,10 @@ static bool weighted_angle(const EmpiricalModelV1 *model,
     float total_weight = 0.0f;
     uint8_t usable_count = count;
     uint8_t index;
+    bool within_neighbor_limit =
+        sqrtf(neighbors[0].distance_squared) <=
+        model->angle_max_neighbor_distance;
 
-    if (sqrtf(neighbors[0].distance_squared) >
-        model->angle_max_neighbor_distance) {
-        return false;
-    }
     if (neighbors[0].distance_squared < 1.0e-12f) {
         usable_count = 0U;
         while ((usable_count < count) &&
@@ -338,11 +337,9 @@ static bool weighted_angle(const EmpiricalModelV1 *model,
         weighted += weight * angle;
         total_weight += weight;
     }
-    if ((maximum - minimum) > model->angle_max_spread_deg) {
-        return false;
-    }
     *bearing_deg = weighted / total_weight;
-    return true;
+    return within_neighbor_limit &&
+           ((maximum - minimum) <= model->angle_max_spread_deg);
 }
 
 bool empirical_model_predict(const EmpiricalModelV1 *model,
@@ -389,6 +386,7 @@ bool empirical_model_predict(const EmpiricalModelV1 *model,
     estimate->distance_confidence =
         1.0f / (1.0f + sqrtf(distance_neighbors[0].distance_squared));
     if (angle_count > 0U) {
+        estimate->angle_available = true;
         estimate->angle_valid =
             weighted_angle(model, angle_neighbors, angle_count,
                            &estimate->bearing_deg);

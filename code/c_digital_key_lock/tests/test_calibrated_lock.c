@@ -590,12 +590,13 @@ static bool test_fusion_accepts_anchor_specific_addresses_for_same_key(void)
     uwb_fusion_store_measurement(&fusion, 1U, &second);
     uwb_fusion_solve(&fusion, &config, 100U, &solution);
     TEST_ASSERT(solution.valid);
-    TEST_ASSERT(solution.key_id == 0U);
+    TEST_ASSERT(solution.key_addr == 0x000AU);
+    TEST_ASSERT(solution.key_id == 0x0AU);
     TEST_ASSERT(solution.anchor_count == 2U);
     return true;
 }
 
-static bool test_fusion_rejects_different_key_ids(void)
+static bool test_fusion_accepts_different_anchor_source_addresses(void)
 {
     LockAppConfig config = g_lock_app_default_config;
     LockUwbFusion fusion;
@@ -615,7 +616,10 @@ static bool test_fusion_rejects_different_key_ids(void)
     uwb_fusion_store_measurement(&fusion, 0U, &first);
     uwb_fusion_store_measurement(&fusion, 1U, &second);
     uwb_fusion_solve(&fusion, &config, 100U, &solution);
-    TEST_ASSERT(!solution.valid);
+    TEST_ASSERT(solution.valid);
+    TEST_ASSERT(solution.key_addr == 0x000AU);
+    TEST_ASSERT(solution.key_id == 0x0AU);
+    TEST_ASSERT(solution.anchor_count == 2U);
     return true;
 }
 
@@ -790,8 +794,8 @@ int main(void)
          test_boundary_distance_bearing_and_dropout},
         {"anchor-specific addresses for the same key are accepted",
          test_fusion_accepts_anchor_specific_addresses_for_same_key},
-        {"different key IDs are rejected",
-         test_fusion_rejects_different_key_ids},
+        {"different anchor source addresses are accepted",
+         test_fusion_accepts_different_anchor_source_addresses},
         {"3-frame hysteresis and immediate safety",
          test_three_frame_hysteresis_and_immediate_safety},
         {"2-anchor distance unlocks without using angle",

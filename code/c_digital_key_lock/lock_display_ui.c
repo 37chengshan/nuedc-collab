@@ -53,8 +53,8 @@ static void draw_static_frame(LockDisplayUi *ui)
                       UI_COLOR_PANEL, true);
     st7735s_draw_line(display, 0, 14, 127, 14, UI_COLOR_CYAN);
 
-    draw_label(display, 19, "SET ID");
-    draw_label(display, 30, "KEY ID");
+    draw_label(display, 19, "TAG SET");
+    draw_label(display, 30, "TAG ID");
     draw_label(display, 41, "AUTH");
     draw_label(display, 113, "DIST");
     draw_label(display, 125, "ZONE");
@@ -146,13 +146,17 @@ static void draw_value_row(St7735s *display, int16_t y, const char *text,
 static void draw_status_bar(St7735s *display,
                             const LockDisplayModel *model)
 {
-    const char *state = lock_display_state_text(model->state);
+    const char *state = lock_display_footer_text(model);
     uint16_t background =
-        (model->state == LOCK_STATE_UNLOCKED) ? UI_COLOR_GREEN
-                                              : UI_COLOR_RED;
+        model->monitor_only
+            ? UI_COLOR_BLUE
+            : (model->state == LOCK_STATE_UNLOCKED) ? UI_COLOR_GREEN
+                                                    : UI_COLOR_RED;
     uint16_t foreground =
-        (model->state == LOCK_STATE_UNLOCKED) ? UI_COLOR_BLACK
-                                              : UI_COLOR_WHITE;
+        (!model->monitor_only &&
+         (model->state == LOCK_STATE_UNLOCKED))
+            ? UI_COLOR_BLACK
+            : UI_COLOR_WHITE;
 
     st7735s_fill_rect(display, 0, 140, ST7735S_WIDTH, 20, background);
     st7735s_draw_text_scaled(display, centered_x(state, 2U), 143, state,
@@ -189,7 +193,7 @@ void lock_display_ui_render(LockDisplayUi *ui,
         draw_static_frame(ui);
     }
 
-    lock_display_format_id4(model->expected_id, expected);
+    lock_display_format_address4(model->expected_address, expected);
     lock_display_format_key_id(model, observed);
     lock_display_format_distance(model, distance);
 

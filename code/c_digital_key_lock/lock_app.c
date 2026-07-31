@@ -6,7 +6,7 @@
 #include <math.h>
 #include <string.h>
 
-#define LOCK_DISPLAY_RAW_CHANNEL_HOLD_MS 1500U
+#define LOCK_DISPLAY_DATA_HOLD_MS 3000U
 
 static void update_raw_channel_display(LockApp *app, uint32_t now_ms)
 {
@@ -18,7 +18,7 @@ static void update_raw_channel_display(LockApp *app, uint32_t now_ms)
 
         if (cache->occupied && cache->measurement.valid &&
             ((now_ms - cache->measurement.timestamp_ms) <=
-             LOCK_DISPLAY_RAW_CHANNEL_HOLD_MS)) {
+             LOCK_DISPLAY_DATA_HOLD_MS)) {
             app->display.channel_valid_mask |=
                 (uint8_t)(1U << channel);
             app->display.channel_distance_mm[channel] =
@@ -74,7 +74,7 @@ void lock_app_init_with_models(LockApp *app, LockIdInputBackend backend,
     lock_fsm_init(&app->state_machine);
     app->display.state = LOCK_STATE_LOCKED;
     app->display.zone = LOCK_ZONE_INVALID;
-    app->display_bearing_deg = 0.0f;
+    app->display_position_available = false;
 }
 
 void lock_app_process_uart_byte(LockApp *app, uint8_t channel, uint8_t byte,
@@ -123,27 +123,39 @@ void lock_app_update(LockApp *app, uint32_t now_ms,
                                        expected_id, &app->config, now_ms);
     }
 
-    if (app->position.valid && !app->position.angle_held &&
+    if (app->position.valid &&
+        (app->position.mode != LOCK_LOCALIZATION_HOLD) &&
+        isfinite(app->position.boundary_distance_mm) &&
         isfinite(app->position.bearing_deg)) {
-        app->display_bearing_deg = app->position.bearing_deg;
+        app->display_position = app->position;
+        app->display_position_available = true;
     }
 
     memset(&app->display, 0, sizeof(app->display));
+    app->display.expected_address =
+        (uint16_t)((app->config.configured_tag_address & 0xFFF0U) |
+                   expected_id);
     app->display.expected_id = expected_id;
-    app->display.observed_id_valid = app->position.valid;
-    app->display.observed_id = app->position.key_id;
+    if (app->display_position_available &&
+        ((now_ms - app->display_position.updated_ms) <=
+         LOCK_DISPLAY_DATA_HOLD_MS)) {
+        app->display.position = app->display_position;
+        app->display.observed_address =
+            app->display_position.key_addr;
+        app->display.observed_id =
+            app->display_position.key_id;
+        app->display.observed_id_valid = true;
+        app->display.authorized =
+            app->display_position.key_id == expected_id;
+    } else {
+        app->display_position_available = false;
+    }
     update_raw_channel_display(app, now_ms);
     app->display.now_ms = now_ms;
     app->display.zone = app->outputs.zone;
     app->display.state = app->outputs.state;
-    app->display.authorized = app->outputs.authorized;
     app->display.calibration_status = (uint8_t)app->calibration_status;
     app->display.empirical_status = (uint8_t)app->empirical_status;
-    app->display.position = app->position;
-    if (!app->display.position.angle_valid) {
-        app->display.position.bearing_deg = app->display_bearing_deg;
-        app->display.position.angle_held = true;
-    }
 }
 
 const LockOutputSnapshot *lock_app_outputs(const LockApp *app)

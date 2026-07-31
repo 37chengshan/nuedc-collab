@@ -34,10 +34,18 @@ int main(void)
 
         uint8_t raw_id_bits = 0U;
 
-#if LOCK_FIRMWARE_LEVEL >= 3
+#if LOCK_FIRMWARE_LEVEL == 2
+        raw_id_bits =
+            (uint8_t)(app.config.configured_tag_address & 0x0FU);
+#elif LOCK_FIRMWARE_LEVEL >= 3
         raw_id_bits = lock_hw_read_id_inputs_low_active();
 #endif
         lock_app_update(&app, now_ms, raw_id_bits);
+#if LOCK_FIRMWARE_LEVEL == 2
+        app.display.monitor_only = true;
+        app.display.zone =
+            lock_fsm_classify_zone(&app.display.position, &app.config);
+#endif
 #if LOCK_FIRMWARE_LEVEL >= 4
         lock_hw_apply_outputs(lock_app_outputs(&app));
 #endif

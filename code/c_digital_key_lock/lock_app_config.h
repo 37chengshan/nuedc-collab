@@ -9,6 +9,7 @@ enum {
 
 typedef struct {
     LockAnchor2d anchors[LOCK_UWB_CHANNEL_COUNT];
+    uint16_t configured_tag_address;
     uint8_t anchor_count;
     uint8_t enabled_anchor_mask;
     uint8_t zone_confirmation_frames;

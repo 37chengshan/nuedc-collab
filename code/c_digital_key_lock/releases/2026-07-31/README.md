@@ -9,18 +9,18 @@ MSPM0G3507 地猛星开发板。屏幕控制脚已按实际排针图修正为
 
 | 层级 | 文件 | 大小 | 用途 |
 |---|---|---:|---|
-| L1 | `c_digital_key_lock_l1_screen.hex` | 53,854 B | 只验证 ST7735S 屏幕、密码字段、距离和角度界面 |
-| L2 | `c_digital_key_lock_l2_monitor.hex` | 131,209 B | UWB 串口接收、两路原始距离、拟合距离/角度和区域显示，设定密码固定为 `0000` |
-| L3 | `c_digital_key_lock_l3_identity.hex` | 131,254 B | 增加四位拨码设定密码和钥匙 ID 授权判断，不驱动门锁 |
-| L4 | `c_digital_key_lock_l4_full.hex` | 131,974 B | 完整版：拨码、显示、迎宾/开锁声光和 `PA16` 门锁输出 |
+| L1 | `c_digital_key_lock_l1_screen.hex` | 54,108 B | 只验证 ST7735S 屏幕、密码字段、距离和角度界面 |
+| L2 | `c_digital_key_lock_l2_monitor.hex` | 132,289 B | UWB 串口接收、A/B 两路原始距离、拟合距离/角度和区域显示，标签地址固定为 `000A` |
+| L3 | `c_digital_key_lock_l3_identity.hex` | 131,749 B | 增加四位拨码设定密码和标签 ID 授权判断，不驱动门锁 |
+| L4 | `c_digital_key_lock_l4_full.hex` | 132,469 B | 完整版：拨码、显示、迎宾/开锁声光和 `PA16` 门锁输出 |
 
 ## SHA256
 
 ```text
-E6EEFA0F43D488249BA2F02C8D7CCEC3E96A539A3A0805B8D71A3E3FC2186534  c_digital_key_lock_l1_screen.hex
-D34D5B810FC22745D83775F46181EB29EB9AFCDAC348D87D633162261FCC81CC  c_digital_key_lock_l2_monitor.hex
-D69AD4300C6F0EE2F799567D6F33F3EAD443697608FC36DB1621DDBB08C59C70  c_digital_key_lock_l3_identity.hex
-B5C4686013EE1F78DE259C74937455F4CA42E7DF79E10DF82C34F1EFDF31789E  c_digital_key_lock_l4_full.hex
+D4D72C1D55172500EC7F5E9DB2833078EDED2D44591EE4AE2D69747A7CA3EB36  c_digital_key_lock_l1_screen.hex
+2842A08D3E202E97955FD9A550B3B20A27B6E21DCEFD23528F536CBA5CD751AB  c_digital_key_lock_l2_monitor.hex
+589A369B83A37473FCF6CF8B6BE6CF7C977E269CAF8FAC9C29F2E487C64414C9  c_digital_key_lock_l3_identity.hex
+A0DFDE9C5D20721F52C6F13F763C47D5DE22EB5496EB03EB137250FE232BA65B  c_digital_key_lock_l4_full.hex
 ```
 
 ## UWB 接线
@@ -56,19 +56,29 @@ B5C4686013EE1F78DE259C74937455F4CA42E7DF79E10DF82C34F1EFDF31789E  c_digital_key_
 
 ## L2 双串口诊断显示
 
-角度区域上方新增紧凑显示：
+角度区域上方使用字母区分两个固定串口通道：
 
 ```text
-1:026 2:097
+A:026 B:097
 ```
 
+`A/B` 只是屏幕上的基站别名，模块硬件地址仍保持 `0100/0200`，不需要改写。
 两项分别是 UART1 和 UART3 最近收到的原始距离，单位为厘米：
 
-- `---`：1.5 秒内没有收到可解析报文，优先检查 TX/RX、共地和波特率；
+- `---`：连续 3 秒没有收到可解析报文，优先检查 TX/RX、共地和波特率；
 - `000`：已经收到该通道报文，但模块报告 `0cm`；
 - 两项都有非零数字后，固件才会继续进行双路同步和最终距离拟合。
 
 零距离不会参与定位和开锁，仅保留在屏幕上用于现场诊断。
+
+标签地址固定显示为完整四位十六进制 `000A`。当前 `P0/P1` 距离报文只包含
+基站地址，并不携带标签地址，因此两台基站必须在模块配置中都只测标签
+`000A`。
+
+L2 是只监视、不驱动门锁的诊断固件，底栏显示蓝色 `MONITOR`，不会再用
+`LOCKED` 造成已经执行门锁控制的误解。距离、角度和 A/B 原始距离每 500 ms
+刷新一次；新数据短暂中断时保持最后一个有效值，连续超过 3 秒才清空。
+两基站角度即使可信度不足也会继续显示最新估计值，但不参与开锁安全判断。
 
 ## 烧录顺序
 

@@ -57,6 +57,7 @@ typedef enum {
 
 typedef struct {
     bool valid;
+    bool angle_available;
     bool angle_valid;
     float distance_mm;
     float bearing_deg;

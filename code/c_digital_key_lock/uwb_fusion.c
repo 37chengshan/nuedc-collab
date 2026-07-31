@@ -168,19 +168,6 @@ static void kalman_update(LockKalman2d *kalman,
     filtered->y_mm = kalman->state[1];
 }
 
-static bool same_key(const LockUwbMeasurement *left,
-                     const LockUwbMeasurement *right)
-{
-    /*
-     * Each UART is wired to one anchor. Real modules report an
-     * anchor-specific address (for example 0x0100 and 0x0200) while the
-     * low nibble identifies the same key. Fusion and authorization therefore
-     * use the configured 4-bit key ID instead of requiring identical full
-     * addresses from different anchors.
-     */
-    return left->key_id == right->key_id;
-}
-
 static uint32_t filtered_distance_mm(const LockUwbChannelCache *cache)
 {
     uint32_t sorted[LOCK_UWB_DISTANCE_FILTER_DEPTH];
@@ -237,7 +224,7 @@ void uwb_fusion_store_measurement(LockUwbFusion *fusion, uint8_t channel,
 
     cache = &fusion->channels[channel];
     if (measurement->valid && cache->occupied &&
-        !same_key(&cache->measurement, measurement)) {
+        (cache->measurement.key_addr != measurement->key_addr)) {
         cache->history_count = 0U;
         cache->history_next = 0U;
     }
@@ -310,12 +297,6 @@ void uwb_fusion_solve(LockUwbFusion *fusion, const LockAppConfig *config,
         }
         if (identity == NULL) {
             identity = &cache->measurement;
-        } else if (!same_key(identity, &cache->measurement)) {
-            fusion->last_solution.valid = false;
-            fusion->kalman.initialized = false;
-            lock_distance_stabilizer_reset(
-                &fusion->distance_stabilizer);
-            return;
         }
     }
 
@@ -339,7 +320,8 @@ void uwb_fusion_solve(LockUwbFusion *fusion, const LockAppConfig *config,
 
     can_hold_angle =
         fusion->last_solution.valid &&
-        (fusion->last_solution.key_id == identity->key_id);
+        (fusion->last_solution.key_addr ==
+         config->configured_tag_address);
     if (can_hold_angle) {
         held_bearing = fusion->last_solution.bearing_deg;
     }
@@ -359,8 +341,7 @@ void uwb_fusion_solve(LockUwbFusion *fusion, const LockAppConfig *config,
             continue;
         }
         filtered_raw_distance = filtered_distance_mm(cache);
-        if (!same_key(identity, &cache->measurement) ||
-            !calibration_model_correct_range(
+        if (!calibration_model_correct_range(
                 fusion->calibration_model, channel,
                 (float)filtered_raw_distance,
                 &corrected_distance)) {
@@ -381,7 +362,8 @@ void uwb_fusion_solve(LockUwbFusion *fusion, const LockAppConfig *config,
 
     if (count < 2U) {
         if (fusion->last_solution.valid &&
-            (identity->key_id == fusion->last_solution.key_id) &&
+            (config->configured_tag_address ==
+             fusion->last_solution.key_addr) &&
             (elapsed_ms(fusion->last_solution.updated_ms, now_ms) <=
              config->solution_hold_ms)) {
             *solution = fusion->last_solution;
@@ -397,7 +379,8 @@ void uwb_fusion_solve(LockUwbFusion *fusion, const LockAppConfig *config,
     }
 
     if (fusion->last_solution.valid &&
-        (fusion->last_solution.key_id == identity->key_id) &&
+        (fusion->last_solution.key_addr ==
+         config->configured_tag_address) &&
         fusion->has_solve_time &&
         (elapsed_ms(fusion->last_solve_ms, now_ms) <
          config->solution_update_interval_ms)) {
@@ -423,10 +406,12 @@ void uwb_fusion_solve(LockUwbFusion *fusion, const LockAppConfig *config,
             &empirical_estimate)) {
         corrected_radius =
             lock_distance_stabilizer_update(
-                &fusion->distance_stabilizer, identity->key_addr,
-                identity->key_id, empirical_estimate.distance_mm) +
+                &fusion->distance_stabilizer,
+                config->configured_tag_address,
+                (uint8_t)(config->configured_tag_address & 0x0FU),
+                empirical_estimate.distance_mm) +
             config->radial_zero_offset_mm;
-        corrected_bearing = empirical_estimate.angle_valid
+        corrected_bearing = empirical_estimate.angle_available
                                 ? wrap_bearing(empirical_estimate.bearing_deg)
                                 : can_hold_angle
                                       ? held_bearing
@@ -463,8 +448,9 @@ void uwb_fusion_solve(LockUwbFusion *fusion, const LockAppConfig *config,
          * retain the previous value, or the initial 0-degree fallback.
          */
         solution->angle_held = true;
-        solution->key_addr = identity->key_addr;
-        solution->key_id = identity->key_id;
+        solution->key_addr = config->configured_tag_address;
+        solution->key_id =
+            (uint8_t)(config->configured_tag_address & 0x0FU);
         solution->valid_mask = valid_mask;
         solution->anchor_count = 2U;
         solution->updated_ms = now_ms;
@@ -488,7 +474,8 @@ void uwb_fusion_solve(LockUwbFusion *fusion, const LockAppConfig *config,
     }
 
     if (fusion->last_solution.valid &&
-        (fusion->last_solution.key_id == identity->key_id)) {
+        (fusion->last_solution.key_addr ==
+         config->configured_tag_address)) {
         hint.x_mm = fusion->last_solution.raw_x_mm;
         hint.y_mm = fusion->last_solution.raw_y_mm;
     } else {
@@ -515,8 +502,9 @@ void uwb_fusion_solve(LockUwbFusion *fusion, const LockAppConfig *config,
     solution->valid = true;
     solution->angle_valid = result.used_count >= 3U;
     solution->angle_held = false;
-    solution->key_addr = identity->key_addr;
-    solution->key_id = identity->key_id;
+    solution->key_addr = config->configured_tag_address;
+    solution->key_id =
+        (uint8_t)(config->configured_tag_address & 0x0FU);
     solution->valid_mask = used_channel_mask;
     solution->rejected_mask = rejected_channel_mask;
     solution->anchor_count = result.used_count;
@@ -579,6 +567,8 @@ void uwb_fusion_solve(LockUwbFusion *fusion, const LockAppConfig *config,
         solution->mode = LOCK_LOCALIZATION_THREE_ANCHOR;
     } else {
         solution->mode = LOCK_LOCALIZATION_TWO_ANCHOR;
+        solution->angle_valid = false;
+        solution->angle_held = true;
     }
     fusion->last_solution = *solution;
 }

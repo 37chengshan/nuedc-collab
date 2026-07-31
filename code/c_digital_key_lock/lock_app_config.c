@@ -10,6 +10,7 @@ const LockAppConfig g_lock_app_default_config = {
         {0.0f, 0.0f},
         {0.0f, 0.0f},
     },
+    .configured_tag_address = 0x000AU,
     .anchor_count = 2U,
     .enabled_anchor_mask = 0x03U,
     .zone_confirmation_frames = 3U,

@@ -93,9 +93,12 @@ typedef struct {
 } LockOutputSnapshot;
 
 typedef struct {
+    uint16_t expected_address;
+    uint16_t observed_address;
     uint8_t expected_id;
     uint8_t observed_id;
     bool observed_id_valid;
+    bool monitor_only;
     uint8_t channel_valid_mask;
     uint32_t channel_distance_mm[LOCK_UWB_CHANNEL_COUNT];
     uint32_t now_ms;
