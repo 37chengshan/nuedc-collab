@@ -7,7 +7,7 @@
 
 #define RX_RING_SIZE 128U
 #define RX_RING_MASK (RX_RING_SIZE - 1U)
-#define HARDWARE_UWB_CHANNEL_COUNT 2U
+#define HARDWARE_UWB_CHANNEL_COUNT 3U
 #define MILLISECOND_CYCLES (CPUCLK_FREQ / 1000U)
 
 static volatile uint8_t
@@ -116,6 +116,11 @@ void UWB_CH2_INST_IRQHandler(void)
     capture_uart(1U, UWB_CH2_INST);
 }
 
+void UWB_CH3_INST_IRQHandler(void)
+{
+    capture_uart(2U, UWB_CH3_INST);
+}
+
 void lock_hw_init(void)
 {
     St7735sBus lcd_bus;
@@ -140,8 +145,10 @@ void lock_hw_init(void)
     (void)SysTick_Config(CPUCLK_FREQ / 1000U);
     NVIC_ClearPendingIRQ(UWB_CH1_INST_INT_IRQN);
     NVIC_ClearPendingIRQ(UWB_CH2_INST_INT_IRQN);
+    NVIC_ClearPendingIRQ(UWB_CH3_INST_INT_IRQN);
     NVIC_EnableIRQ(UWB_CH1_INST_INT_IRQN);
     NVIC_EnableIRQ(UWB_CH2_INST_INT_IRQN);
+    NVIC_EnableIRQ(UWB_CH3_INST_INT_IRQN);
 
     lcd_bus.context = NULL;
     lcd_bus.set_cs = lcd_set_cs;

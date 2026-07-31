@@ -4,8 +4,9 @@
 ST7735S 屏幕，实现双 UWB 基站测距、四位钥匙 ID、距离/角度显示、区域判断、
 声光提示和门锁继电器控制。
 
-当前硬件启用 2 个基站，算法接口保留 2～4 基站能力。每个基站必须独占一个
-MCU 串口，不能把两个 UWB 从机并接到同一 UART。
+当前硬件层可独立接收 3 个基站，正式定位模型仍默认启用前 2 个基站；算法接口
+保留 2～4 基站能力。每个基站必须独占一个 MCU 串口，不能把两个 UWB 从机
+并接到同一 UART。
 
 ## 四层 HEX
 
@@ -46,6 +47,16 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\build.ps1 -Variant All
 |---|---|---|
 | UWB1 / UART1 | `PA8` | `PA9` |
 | UWB2 / UART3 | `PA26` | `PA25` |
+| UWB3 / UART2 | `PB15` | `PB16` |
+
+第三路已经具备独立 UART 中断和独立环形接收缓冲，但
+`g_lock_app_default_config` 当前仍为 `anchor_count = 2`、掩码 `0x03`。
+因此没有第三基站标定数据时，接入 UWB3 不会改变现有距离、开锁和迎宾判断。
+取得第三基站实测天线中心坐标并完成三路标定后，再把它加入正式定位模型。
+
+第四路候选为 UART0 的 `PA10` / `PA11`，但这两个引脚是地猛星默认串口相关
+引脚，可能与板载下载、调试或串口连接方式冲突，所以当前正式固件不占用它们。
+确实需要四基站时，应先确认地猛星原理图和实际引出方式，再生成四路版本。
 
 真实模块报文允许每路带不同的基站地址，例如：
 
@@ -154,7 +165,8 @@ GPIO -> 约 1 kΩ -> S8050/2N2222 基极
 - `lock_fsm.*`：授权、迎宾、开锁、拒绝和闭锁状态机。
 - `lock_display_ui.*`：500 ms ST7735S 界面。
 - `lock_output_behavior.*`：红绿灯、迎宾短鸣和独立锁输出。
-- `lock_hw_mspm0.c`：MSPM0 UART、SPI、GPIO 和 SysTick 硬件层。
+- `lock_hw_mspm0.c`：MSPM0 三路独立 UWB UART、SPI、GPIO 和 SysTick
+  硬件层。
 
 不要手改 `generated/ti_msp_dl_config.c/.h`，引脚和外设应修改
 `empty.syscfg` 后重新构建。
@@ -174,6 +186,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\tests\run_tests.ps1
 
 - 烧录 L1 验证屏幕方向、颜色和长期点亮。
 - 烧录 L2 验证两路 `0100` / `0200` 报文可同时形成距离和角度显示。
+- 准备第三基站后，可先接 `PB15/PB16` 验证第三路独立收包；在完成三路标定
+  前，它不会参与正式定位。
 - 烧录 L3 验证拨码 16 种 ID 与实际钥匙低 4 bit 一致。
 - 烧录 L4 前先用 LED 或万用表验证 `PA16`，再连接三极管和继电器。
 - 增加第三基站后填写实测天线中心坐标并重做角度标定。
