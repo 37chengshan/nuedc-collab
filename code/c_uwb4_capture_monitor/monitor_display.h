@@ -1,6 +1,7 @@
 #ifndef MONITOR_DISPLAY_H
 #define MONITOR_DISPLAY_H
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #define UWB_MONITOR_CHANNEL_COUNT 4U
@@ -14,6 +15,8 @@ typedef enum {
 
 typedef struct {
     uint32_t byte_count[UWB_MONITOR_CHANNEL_COUNT];
+    uint32_t distance_mm[UWB_MONITOR_CHANNEL_COUNT];
+    bool distance_valid[UWB_MONITOR_CHANNEL_COUNT];
     UwbMonitorStatus status[UWB_MONITOR_CHANNEL_COUNT];
 } UwbMonitorSnapshot;
 

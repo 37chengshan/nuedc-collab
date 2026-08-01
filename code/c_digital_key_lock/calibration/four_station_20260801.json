@@ -1,0 +1,4025 @@
+{
+  "modelId": "four_station_20260801_v1",
+  "generatedAt": "2026-08-01",
+  "sourceDate": "2026-08-01",
+  "sessionIds": [
+    "2026-08-01T05-47-59-003Z",
+    "2026-08-01T05-55-49-935Z",
+    "2026-08-01T06-07-57-224Z",
+    "2026-08-01T06-16-00-115Z"
+  ],
+  "geometry": {
+    "competitionCircleDiameterMm": 600,
+    "competitionCircleRadiusMm": 300,
+    "boundaryDistanceToCenterOffsetMm": 300,
+    "stations": [
+      {
+        "index": 0,
+        "name": "right",
+        "address": "0100",
+        "xMm": 95,
+        "yMm": 0
+      },
+      {
+        "index": 1,
+        "name": "left",
+        "address": "0200",
+        "xMm": -95,
+        "yMm": 0
+      },
+      {
+        "index": 2,
+        "name": "up",
+        "address": "0300",
+        "xMm": 0,
+        "yMm": 70
+      },
+      {
+        "index": 3,
+        "name": "down",
+        "address": "0400",
+        "xMm": 0,
+        "yMm": -75
+      }
+    ],
+    "angleConvention": "atan2(x,y), FRONT=+y, right positive"
+  },
+  "selection": {
+    "completedCaptureCount": 45,
+    "physicalPointCount": 27,
+    "recordingSessionsExcluded": true,
+    "labelCorrections": [],
+    "excludedCaptures": []
+  },
+  "runtime": {
+    "windowMs": 800,
+    "pairSkewMs": 120,
+    "updatePeriodMs": 100,
+    "displayPeriodMs": 500,
+    "holdMs": 500,
+    "minSamples": 3,
+    "neighborCount": 3,
+    "scaleMm": [
+      481.64051219804776,
+      549.7631139695364,
+      533.4917614486728,
+      465.22802055670627
+    ],
+    "qFloor": 0.0004,
+    "highNearestQ": 0.4,
+    "minimumDistanceMm": 800,
+    "maximumDistanceMm": 2300,
+    "modelSelection": "knn_k3_inverse_sqrt_q_plus_ridge_angle"
+  },
+  "evaluation": {
+    "scalesMm": [
+      481.64051219804776,
+      549.7631139695364,
+      533.4917614486728,
+      465.22802055670627
+    ],
+    "angleLinearModel": {
+      "meanMm": [
+        1459.5185185185185,
+        1516.6666666666667,
+        1647.851851851852,
+        1411.6666666666667
+      ],
+      "scaleMm": 500.0,
+      "coefficients": [
+        -2.2222222222222294,
+        33.04569929872383,
+        -31.383194425280603,
+        -2.06106250590373,
+        5.847660771977842
+      ],
+      "regularization": 1.0
+    },
+    "candidates": {
+      "geometry": {
+        "distance": {
+          "count": 27,
+          "maeMmOrDeg": 9803.76237284889,
+          "p95MmOrDeg": 49453.48923421012,
+          "maxMmOrDeg": 72923.18940250923
+        },
+        "angle": {
+          "count": 27,
+          "maeMmOrDeg": 81.61862973418562,
+          "p95MmOrDeg": 165.54047736779998,
+          "maxMmOrDeg": 168.72387512137942
+        },
+        "worst": {
+          "truth": [
+            2100,
+            30.0
+          ],
+          "estimateDistanceMm": 75023.18940250923,
+          "estimateAngleDeg": -138.72387512137942,
+          "distanceErrorMm": 72923.18940250923,
+          "angleErrorDeg": 168.72387512137942
+        }
+      },
+      "knn": {
+        "distance": {
+          "count": 27,
+          "maeMmOrDeg": 32.66373597538225,
+          "p95MmOrDeg": 111.82960446988336,
+          "maxMmOrDeg": 147.07647135640786
+        },
+        "angle": {
+          "count": 27,
+          "maeMmOrDeg": 27.770003698305867,
+          "p95MmOrDeg": 61.646248338597644,
+          "maxMmOrDeg": 66.21006992924086
+        },
+        "worst": {
+          "truth": [
+            1500,
+            0.0
+          ],
+          "estimateDistanceMm": 1352.9235286435921,
+          "estimateAngleDeg": -21.002128796061328,
+          "distanceErrorMm": 147.07647135640786,
+          "angleErrorDeg": 21.002128796061328
+        }
+      },
+      "hybrid": {
+        "distance": {
+          "count": 27,
+          "maeMmOrDeg": 40.10638258642753,
+          "p95MmOrDeg": 104.77835615794439,
+          "maxMmOrDeg": 142.09495255909587
+        },
+        "angle": {
+          "count": 27,
+          "maeMmOrDeg": 42.92522004216472,
+          "p95MmOrDeg": 110.26171512606865,
+          "maxMmOrDeg": 127.20232559399363
+        },
+        "worst": {
+          "truth": [
+            2300,
+            30.0
+          ],
+          "estimateDistanceMm": 2442.094952559096,
+          "estimateAngleDeg": -10.668614726601545,
+          "distanceErrorMm": 142.09495255909587,
+          "angleErrorDeg": 40.66861472660155
+        }
+      },
+      "knn_linear_angle": {
+        "distance": {
+          "count": 27,
+          "maeMmOrDeg": 32.66373597538225,
+          "p95MmOrDeg": 111.82960446988336,
+          "maxMmOrDeg": 147.07647135640786
+        },
+        "angle": {
+          "count": 27,
+          "maeMmOrDeg": 19.845651280397867,
+          "p95MmOrDeg": 42.21405050037442,
+          "maxMmOrDeg": 44.367123653768836
+        },
+        "worst": {
+          "truth": [
+            1500,
+            0.0
+          ],
+          "estimateDistanceMm": 1352.9235286435921,
+          "estimateAngleDeg": 0.8560539575172696,
+          "distanceErrorMm": 147.07647135640786,
+          "angleErrorDeg": 0.8560539575172696
+        }
+      },
+      "runtime_selected": {
+        "distance": {
+          "count": 27,
+          "maeMmOrDeg": 30.86621975991443,
+          "p95MmOrDeg": 118.50777707993623,
+          "maxMmOrDeg": 132.57014907198732
+        },
+        "angle": {
+          "count": 27,
+          "maeMmOrDeg": 19.845651280397867,
+          "p95MmOrDeg": 42.21405050037442,
+          "maxMmOrDeg": 44.367123653768836
+        },
+        "worst": {
+          "truth": [
+            1500,
+            0.0
+          ],
+          "estimateDistanceMm": 1367.4298509280127,
+          "estimateAngleDeg": 0.8560539575172696,
+          "distanceErrorMm": 132.57014907198732,
+          "angleErrorDeg": 0.8560539575172696
+        }
+      }
+    }
+  },
+  "prototypes": [
+    {
+      "boundaryDistanceMm": 800,
+      "centerDistanceMm": 1100,
+      "angleDeg": -15.0,
+      "rangesMm": [
+        713,
+        693,
+        703,
+        630
+      ],
+      "captureIds": [
+        "capture-2026-08-01T06-55-29-973Z"
+      ],
+      "repeatCount": 1
+    },
+    {
+      "boundaryDistanceMm": 800,
+      "centerDistanceMm": 1100,
+      "angleDeg": 0.0,
+      "rangesMm": [
+        767,
+        687,
+        803,
+        677
+      ],
+      "captureIds": [
+        "capture-2026-08-01T05-48-03-621Z"
+      ],
+      "repeatCount": 1
+    },
+    {
+      "boundaryDistanceMm": 1000,
+      "centerDistanceMm": 1300,
+      "angleDeg": -45.0,
+      "rangesMm": [
+        887,
+        1050,
+        1037,
+        940
+      ],
+      "captureIds": [
+        "capture-2026-08-01T06-59-30-246Z"
+      ],
+      "repeatCount": 1
+    },
+    {
+      "boundaryDistanceMm": 1000,
+      "centerDistanceMm": 1300,
+      "angleDeg": -30.0,
+      "rangesMm": [
+        964,
+        1161,
+        1302,
+        825
+      ],
+      "captureIds": [
+        "capture-2026-08-01T06-57-03-979Z",
+        "capture-2026-08-01T06-58-06-666Z"
+      ],
+      "repeatCount": 2
+    },
+    {
+      "boundaryDistanceMm": 1000,
+      "centerDistanceMm": 1300,
+      "angleDeg": -15.0,
+      "rangesMm": [
+        873,
+        910,
+        1303,
+        797
+      ],
+      "captureIds": [
+        "capture-2026-08-01T06-54-32-676Z"
+      ],
+      "repeatCount": 1
+    },
+    {
+      "boundaryDistanceMm": 1000,
+      "centerDistanceMm": 1300,
+      "angleDeg": 0.0,
+      "rangesMm": [
+        925,
+        870,
+        965,
+        844
+      ],
+      "captureIds": [
+        "capture-2026-08-01T05-49-02-242Z",
+        "capture-2026-08-01T05-49-53-145Z"
+      ],
+      "repeatCount": 2
+    },
+    {
+      "boundaryDistanceMm": 1000,
+      "centerDistanceMm": 1300,
+      "angleDeg": 15.0,
+      "rangesMm": [
+        903,
+        767,
+        1120,
+        953
+      ],
+      "captureIds": [
+        "capture-2026-08-01T06-53-16-656Z"
+      ],
+      "repeatCount": 1
+    },
+    {
+      "boundaryDistanceMm": 1000,
+      "centerDistanceMm": 1300,
+      "angleDeg": 30.0,
+      "rangesMm": [
+        847,
+        873,
+        1280,
+        907
+      ],
+      "captureIds": [
+        "capture-2026-08-01T06-52-12-208Z"
+      ],
+      "repeatCount": 1
+    },
+    {
+      "boundaryDistanceMm": 1000,
+      "centerDistanceMm": 1300,
+      "angleDeg": 45.0,
+      "rangesMm": [
+        1022,
+        883,
+        938,
+        937
+      ],
+      "captureIds": [
+        "capture-2026-08-01T06-49-28-302Z",
+        "capture-2026-08-01T06-51-03-683Z"
+      ],
+      "repeatCount": 2
+    },
+    {
+      "boundaryDistanceMm": 1200,
+      "centerDistanceMm": 1500,
+      "angleDeg": -45.0,
+      "rangesMm": [
+        1040,
+        1193,
+        1500,
+        1190
+      ],
+      "captureIds": [
+        "capture-2026-08-01T07-00-42-740Z"
+      ],
+      "repeatCount": 1
+    },
+    {
+      "boundaryDistanceMm": 1200,
+      "centerDistanceMm": 1500,
+      "angleDeg": 0.0,
+      "rangesMm": [
+        1085,
+        1046,
+        1205,
+        1104
+      ],
+      "captureIds": [
+        "capture-2026-08-01T05-50-49-521Z",
+        "capture-2026-08-01T05-51-40-888Z"
+      ],
+      "repeatCount": 2
+    },
+    {
+      "boundaryDistanceMm": 1800,
+      "centerDistanceMm": 2100,
+      "angleDeg": -45.0,
+      "rangesMm": [
+        1610,
+        1860,
+        1784,
+        1684
+      ],
+      "captureIds": [
+        "capture-2026-08-01T06-29-14-428Z",
+        "capture-2026-08-01T06-30-14-811Z"
+      ],
+      "repeatCount": 2
+    },
+    {
+      "boundaryDistanceMm": 1800,
+      "centerDistanceMm": 2100,
+      "angleDeg": -30.0,
+      "rangesMm": [
+        1633,
+        2327,
+        1557,
+        1510
+      ],
+      "captureIds": [
+        "capture-2026-08-01T06-20-12-425Z",
+        "capture-2026-08-01T06-21-13-103Z",
+        "capture-2026-08-01T06-22-22-292Z"
+      ],
+      "repeatCount": 3
+    },
+    {
+      "boundaryDistanceMm": 1800,
+      "centerDistanceMm": 2100,
+      "angleDeg": -22.5,
+      "rangesMm": [
+        1770,
+        1893,
+        2200,
+        1593
+      ],
+      "captureIds": [
+        "capture-2026-08-01T05-58-03-036Z"
+      ],
+      "repeatCount": 1
+    },
+    {
+      "boundaryDistanceMm": 1800,
+      "centerDistanceMm": 2100,
+      "angleDeg": -15.0,
+      "rangesMm": [
+        1620,
+        1655,
+        1612,
+        1602
+      ],
+      "captureIds": [
+        "capture-2026-08-01T06-18-13-001Z",
+        "capture-2026-08-01T06-19-03-814Z"
+      ],
+      "repeatCount": 2
+    },
+    {
+      "boundaryDistanceMm": 1800,
+      "centerDistanceMm": 2100,
+      "angleDeg": 0.0,
+      "rangesMm": [
+        1743,
+        1567,
+        1753,
+        1710
+      ],
+      "captureIds": [
+        "capture-2026-08-01T05-52-38-029Z"
+      ],
+      "repeatCount": 1
+    },
+    {
+      "boundaryDistanceMm": 1800,
+      "centerDistanceMm": 2100,
+      "angleDeg": 15.0,
+      "rangesMm": [
+        1782,
+        1725,
+        2006,
+        1695
+      ],
+      "captureIds": [
+        "capture-2026-08-01T06-31-38-755Z",
+        "capture-2026-08-01T06-32-26-665Z"
+      ],
+      "repeatCount": 2
+    },
+    {
+      "boundaryDistanceMm": 1800,
+      "centerDistanceMm": 2100,
+      "angleDeg": 22.5,
+      "rangesMm": [
+        1700,
+        1763,
+        1753,
+        1657
+      ],
+      "captureIds": [
+        "capture-2026-08-01T06-41-21-379Z"
+      ],
+      "repeatCount": 1
+    },
+    {
+      "boundaryDistanceMm": 1800,
+      "centerDistanceMm": 2100,
+      "angleDeg": 30.0,
+      "rangesMm": [
+        1683,
+        1597,
+        2563,
+        1700
+      ],
+      "captureIds": [
+        "capture-2026-08-01T06-42-43-710Z"
+      ],
+      "repeatCount": 1
+    },
+    {
+      "boundaryDistanceMm": 1800,
+      "centerDistanceMm": 2100,
+      "angleDeg": 45.0,
+      "rangesMm": [
+        1790,
+        1623,
+        1813,
+        1697
+      ],
+      "captureIds": [
+        "capture-2026-08-01T06-48-10-430Z"
+      ],
+      "repeatCount": 1
+    },
+    {
+      "boundaryDistanceMm": 2000,
+      "centerDistanceMm": 2300,
+      "angleDeg": -45.0,
+      "rangesMm": [
+        1900,
+        2140,
+        2207,
+        1997
+      ],
+      "captureIds": [
+        "capture-2026-08-01T06-26-25-216Z",
+        "capture-2026-08-01T06-27-19-883Z",
+        "capture-2026-08-01T06-28-11-071Z"
+      ],
+      "repeatCount": 3
+    },
+    {
+      "boundaryDistanceMm": 2000,
+      "centerDistanceMm": 2300,
+      "angleDeg": -30.0,
+      "rangesMm": [
+        1842,
+        2618,
+        1965,
+        1760
+      ],
+      "captureIds": [
+        "capture-2026-08-01T06-24-34-051Z",
+        "capture-2026-08-01T06-25-22-097Z"
+      ],
+      "repeatCount": 2
+    },
+    {
+      "boundaryDistanceMm": 2000,
+      "centerDistanceMm": 2300,
+      "angleDeg": -15.0,
+      "rangesMm": [
+        1900,
+        2028,
+        2139,
+        1862
+      ],
+      "captureIds": [
+        "capture-2026-08-01T06-16-02-094Z",
+        "capture-2026-08-01T06-17-03-144Z"
+      ],
+      "repeatCount": 2
+    },
+    {
+      "boundaryDistanceMm": 2000,
+      "centerDistanceMm": 2300,
+      "angleDeg": 0.0,
+      "rangesMm": [
+        2052,
+        2083,
+        2115,
+        1654
+      ],
+      "captureIds": [
+        "capture-2026-08-01T06-08-11-521Z",
+        "capture-2026-08-01T06-09-03-190Z"
+      ],
+      "repeatCount": 2
+    },
+    {
+      "boundaryDistanceMm": 2000,
+      "centerDistanceMm": 2300,
+      "angleDeg": 15.0,
+      "rangesMm": [
+        1963,
+        1853,
+        2797,
+        1927
+      ],
+      "captureIds": [
+        "capture-2026-08-01T06-33-18-263Z",
+        "capture-2026-08-01T06-34-14-995Z",
+        "capture-2026-08-01T06-35-15-985Z"
+      ],
+      "repeatCount": 3
+    },
+    {
+      "boundaryDistanceMm": 2000,
+      "centerDistanceMm": 2300,
+      "angleDeg": 30.0,
+      "rangesMm": [
+        2318,
+        2200,
+        2140,
+        2226
+      ],
+      "captureIds": [
+        "capture-2026-08-01T06-43-57-596Z",
+        "capture-2026-08-01T06-44-48-178Z"
+      ],
+      "repeatCount": 2
+    },
+    {
+      "boundaryDistanceMm": 2000,
+      "centerDistanceMm": 2300,
+      "angleDeg": 45.0,
+      "rangesMm": [
+        2075,
+        1885,
+        1932,
+        2037
+      ],
+      "captureIds": [
+        "capture-2026-08-01T06-46-02-009Z",
+        "capture-2026-08-01T06-47-05-572Z"
+      ],
+      "repeatCount": 2
+    }
+  ],
+  "captures": [
+    {
+      "captureId": "capture-2026-08-01T05-48-03-621Z",
+      "sessionId": "2026-08-01T05-47-59-003Z",
+      "label": "0.8m 0度",
+      "startedAt": "2026-08-01T05:48:03.621Z",
+      "endedAt": "2026-08-01T05:48:48.625Z",
+      "boundaryDistanceMm": 800,
+      "centerDistanceMm": 1100,
+      "angleDeg": 0.0,
+      "stationFeatures": [
+        {
+          "address": "0100",
+          "count": 450,
+          "featureMm": 767,
+          "windowFeatureP05Mm": 750,
+          "windowFeatureP95Mm": 787,
+          "medianMm": 780,
+          "madMm": 10.0,
+          "snrDb": 16.0,
+          "latestElapsedMs": 49602
+        },
+        {
+          "address": "0200",
+          "count": 450,
+          "featureMm": 687,
+          "windowFeatureP05Mm": 680,
+          "windowFeatureP95Mm": 700,
+          "medianMm": 700,
+          "madMm": 10.0,
+          "snrDb": 11.0,
+          "latestElapsedMs": 49602
+        },
+        {
+          "address": "0300",
+          "count": 448,
+          "featureMm": 803,
+          "windowFeatureP05Mm": 767,
+          "windowFeatureP95Mm": 817,
+          "medianMm": 810,
+          "madMm": 10.0,
+          "snrDb": 17.0,
+          "latestElapsedMs": 49602
+        },
+        {
+          "address": "0400",
+          "count": 450,
+          "featureMm": 677,
+          "windowFeatureP05Mm": 660,
+          "windowFeatureP95Mm": 683,
+          "medianMm": 680,
+          "madMm": 10.0,
+          "snrDb": 17.0,
+          "latestElapsedMs": 49603
+        }
+      ],
+      "frameCounts": {
+        "0100": 450,
+        "0200": 450,
+        "0300": 448,
+        "0400": 450
+      },
+      "malformedFrameCount": 0,
+      "sourceFiles": [
+        {
+          "name": "capture-2026-08-01T05-48-03-621Z.meta.json",
+          "bytes": 310,
+          "sha256": "fea1a1240340780ceb99571458961c00e789c4ed89cc653bea587ce84a748fa5"
+        },
+        {
+          "name": "capture-2026-08-01T05-48-03-621Z.jsonl",
+          "bytes": 324634,
+          "sha256": "d26d729f62164be46684220862761face49973c6ed0becbc41124cea3c7908bf"
+        }
+      ]
+    },
+    {
+      "captureId": "capture-2026-08-01T05-49-02-242Z",
+      "sessionId": "2026-08-01T05-47-59-003Z",
+      "label": "1m 0度",
+      "startedAt": "2026-08-01T05:49:02.242Z",
+      "endedAt": "2026-08-01T05:49:47.244Z",
+      "boundaryDistanceMm": 1000,
+      "centerDistanceMm": 1300,
+      "angleDeg": 0.0,
+      "stationFeatures": [
+        {
+          "address": "0100",
+          "count": 447,
+          "featureMm": 927,
+          "windowFeatureP05Mm": 897,
+          "windowFeatureP95Mm": 990,
+          "medianMm": 950,
+          "madMm": 30,
+          "snrDb": 16,
+          "latestElapsedMs": 108205
+        },
+        {
+          "address": "0200",
+          "count": 450,
+          "featureMm": 870,
+          "windowFeatureP05Mm": 837,
+          "windowFeatureP95Mm": 903,
+          "medianMm": 890,
+          "madMm": 10.0,
+          "snrDb": 8.0,
+          "latestElapsedMs": 108206
+        },
+        {
+          "address": "0300",
+          "count": 448,
+          "featureMm": 963,
+          "windowFeatureP05Mm": 920,
+          "windowFeatureP95Mm": 1033,
+          "medianMm": 980,
+          "madMm": 30.0,
+          "snrDb": 17.0,
+          "latestElapsedMs": 108206
+        },
+        {
+          "address": "0400",
+          "count": 450,
+          "featureMm": 840,
+          "windowFeatureP05Mm": 813,
+          "windowFeatureP95Mm": 870,
+          "medianMm": 860,
+          "madMm": 20.0,
+          "snrDb": 17.0,
+          "latestElapsedMs": 108206
+        }
+      ],
+      "frameCounts": {
+        "0100": 447,
+        "0200": 450,
+        "0300": 448,
+        "0400": 450
+      },
+      "malformedFrameCount": 0,
+      "sourceFiles": [
+        {
+          "name": "capture-2026-08-01T05-49-02-242Z.meta.json",
+          "bytes": 308,
+          "sha256": "23ad6cbf0ace35524ef892bf9d727133867a43ecba2ad1cb35b58cf42c7d38d8"
+        },
+        {
+          "name": "capture-2026-08-01T05-49-02-242Z.jsonl",
+          "bytes": 324883,
+          "sha256": "7ccf78306ae832a06f7d3196fd23d467840973d3c4d009434edb1b3d87b8451a"
+        }
+      ]
+    },
+    {
+      "captureId": "capture-2026-08-01T05-49-53-145Z",
+      "sessionId": "2026-08-01T05-47-59-003Z",
+      "label": "1m 0度 -2",
+      "startedAt": "2026-08-01T05:49:53.145Z",
+      "endedAt": "2026-08-01T05:50:38.149Z",
+      "boundaryDistanceMm": 1000,
+      "centerDistanceMm": 1300,
+      "angleDeg": 0.0,
+      "stationFeatures": [
+        {
+          "address": "0100",
+          "count": 449,
+          "featureMm": 923,
+          "windowFeatureP05Mm": 883,
+          "windowFeatureP95Mm": 933,
+          "medianMm": 930,
+          "madMm": 10,
+          "snrDb": 16,
+          "latestElapsedMs": 159101
+        },
+        {
+          "address": "0200",
+          "count": 450,
+          "featureMm": 870,
+          "windowFeatureP05Mm": 860,
+          "windowFeatureP95Mm": 887,
+          "medianMm": 890,
+          "madMm": 10.0,
+          "snrDb": 8.0,
+          "latestElapsedMs": 159101
+        },
+        {
+          "address": "0300",
+          "count": 446,
+          "featureMm": 967,
+          "windowFeatureP05Mm": 890,
+          "windowFeatureP95Mm": 970,
+          "medianMm": 970,
+          "madMm": 0.0,
+          "snrDb": 17.0,
+          "latestElapsedMs": 159101
+        },
+        {
+          "address": "0400",
+          "count": 450,
+          "featureMm": 847,
+          "windowFeatureP05Mm": 830,
+          "windowFeatureP95Mm": 857,
+          "medianMm": 860,
+          "madMm": 10.0,
+          "snrDb": 17.0,
+          "latestElapsedMs": 159102
+        }
+      ],
+      "frameCounts": {
+        "0100": 449,
+        "0200": 450,
+        "0300": 446,
+        "0400": 450
+      },
+      "malformedFrameCount": 0,
+      "sourceFiles": [
+        {
+          "name": "capture-2026-08-01T05-49-53-145Z.meta.json",
+          "bytes": 311,
+          "sha256": "e3dde521188ffdfe4188d0513c6938aa4294e7351a871238c57ae2b1d005d6ec"
+        },
+        {
+          "name": "capture-2026-08-01T05-49-53-145Z.jsonl",
+          "bytes": 326002,
+          "sha256": "e93e1fa284b1d7bcdbedcace7c69820dc282b9c297a436b4832ba06ea51985fd"
+        }
+      ]
+    },
+    {
+      "captureId": "capture-2026-08-01T05-50-49-521Z",
+      "sessionId": "2026-08-01T05-47-59-003Z",
+      "label": "1。2m 0度 -2",
+      "startedAt": "2026-08-01T05:50:49.521Z",
+      "endedAt": "2026-08-01T05:51:34.523Z",
+      "boundaryDistanceMm": 1200,
+      "centerDistanceMm": 1500,
+      "angleDeg": 0.0,
+      "stationFeatures": [
+        {
+          "address": "0100",
+          "count": 450,
+          "featureMm": 1077,
+          "windowFeatureP05Mm": 1043,
+          "windowFeatureP95Mm": 1117,
+          "medianMm": 1090,
+          "madMm": 20.0,
+          "snrDb": 17.0,
+          "latestElapsedMs": 215505
+        },
+        {
+          "address": "0200",
+          "count": 443,
+          "featureMm": 1053,
+          "windowFeatureP05Mm": 1027,
+          "windowFeatureP95Mm": 1073,
+          "medianMm": 1060,
+          "madMm": 10,
+          "snrDb": 7,
+          "latestElapsedMs": 215505
+        },
+        {
+          "address": "0300",
+          "count": 447,
+          "featureMm": 1197,
+          "windowFeatureP05Mm": 1113,
+          "windowFeatureP95Mm": 1330,
+          "medianMm": 1230,
+          "madMm": 40,
+          "snrDb": 17,
+          "latestElapsedMs": 215505
+        },
+        {
+          "address": "0400",
+          "count": 446,
+          "featureMm": 1103,
+          "windowFeatureP05Mm": 1077,
+          "windowFeatureP95Mm": 1120,
+          "medianMm": 1120,
+          "madMm": 10.0,
+          "snrDb": 17.0,
+          "latestElapsedMs": 215505
+        }
+      ],
+      "frameCounts": {
+        "0100": 450,
+        "0200": 443,
+        "0300": 447,
+        "0400": 446
+      },
+      "malformedFrameCount": 0,
+      "sourceFiles": [
+        {
+          "name": "capture-2026-08-01T05-50-49-521Z.meta.json",
+          "bytes": 315,
+          "sha256": "9b7549188b575d02f230b3c87933139627adb644a784b2d05d78f41a2e6151fa"
+        },
+        {
+          "name": "capture-2026-08-01T05-50-49-521Z.jsonl",
+          "bytes": 327752,
+          "sha256": "309aa0a728bdd587b97d76d824a3203742a4432dfb6a06f51dc70d13426d8600"
+        }
+      ]
+    },
+    {
+      "captureId": "capture-2026-08-01T05-51-40-888Z",
+      "sessionId": "2026-08-01T05-47-59-003Z",
+      "label": "1。2m 0度",
+      "startedAt": "2026-08-01T05:51:40.888Z",
+      "endedAt": "2026-08-01T05:52:25.888Z",
+      "boundaryDistanceMm": 1200,
+      "centerDistanceMm": 1500,
+      "angleDeg": 0.0,
+      "stationFeatures": [
+        {
+          "address": "0100",
+          "count": 448,
+          "featureMm": 1093,
+          "windowFeatureP05Mm": 1060,
+          "windowFeatureP95Mm": 1177,
+          "medianMm": 1120,
+          "madMm": 30.0,
+          "snrDb": 17.0,
+          "latestElapsedMs": 266801
+        },
+        {
+          "address": "0200",
+          "count": 441,
+          "featureMm": 1040,
+          "windowFeatureP05Mm": 1007,
+          "windowFeatureP95Mm": 1077,
+          "medianMm": 1060,
+          "madMm": 10,
+          "snrDb": 8,
+          "latestElapsedMs": 266801
+        },
+        {
+          "address": "0300",
+          "count": 444,
+          "featureMm": 1213,
+          "windowFeatureP05Mm": 1140,
+          "windowFeatureP95Mm": 1283,
+          "medianMm": 1240,
+          "madMm": 30.0,
+          "snrDb": 18.0,
+          "latestElapsedMs": 266801
+        },
+        {
+          "address": "0400",
+          "count": 449,
+          "featureMm": 1105,
+          "windowFeatureP05Mm": 1067,
+          "windowFeatureP95Mm": 1130,
+          "medianMm": 1120,
+          "madMm": 10,
+          "snrDb": 17,
+          "latestElapsedMs": 266802
+        }
+      ],
+      "frameCounts": {
+        "0100": 448,
+        "0200": 441,
+        "0300": 444,
+        "0400": 449
+      },
+      "malformedFrameCount": 0,
+      "sourceFiles": [
+        {
+          "name": "capture-2026-08-01T05-51-40-888Z.meta.json",
+          "bytes": 312,
+          "sha256": "3a83f3aa57355d9a72c0aa8867679b84aac4a742dba64be379816439c5e5893c"
+        },
+        {
+          "name": "capture-2026-08-01T05-51-40-888Z.jsonl",
+          "bytes": 327030,
+          "sha256": "9bdf139b17b025be905fab53f7d3f32b6a25d542f7c54016cdc487be12655668"
+        }
+      ]
+    },
+    {
+      "captureId": "capture-2026-08-01T05-52-38-029Z",
+      "sessionId": "2026-08-01T05-47-59-003Z",
+      "label": "1。8m 0度",
+      "startedAt": "2026-08-01T05:52:38.029Z",
+      "endedAt": "2026-08-01T05:53:23.031Z",
+      "boundaryDistanceMm": 1800,
+      "centerDistanceMm": 2100,
+      "angleDeg": 0.0,
+      "stationFeatures": [
+        {
+          "address": "0100",
+          "count": 447,
+          "featureMm": 1743,
+          "windowFeatureP05Mm": 1687,
+          "windowFeatureP95Mm": 1767,
+          "medianMm": 1760,
+          "madMm": 20,
+          "snrDb": 18,
+          "latestElapsedMs": 324013
+        },
+        {
+          "address": "0200",
+          "count": 441,
+          "featureMm": 1567,
+          "windowFeatureP05Mm": 1533,
+          "windowFeatureP95Mm": 1680,
+          "medianMm": 1650,
+          "madMm": 50,
+          "snrDb": 2,
+          "latestElapsedMs": 324013
+        },
+        {
+          "address": "0300",
+          "count": 450,
+          "featureMm": 1753,
+          "windowFeatureP05Mm": 1723,
+          "windowFeatureP95Mm": 1790,
+          "medianMm": 1790,
+          "madMm": 30.0,
+          "snrDb": 17.0,
+          "latestElapsedMs": 324013
+        },
+        {
+          "address": "0400",
+          "count": 448,
+          "featureMm": 1710,
+          "windowFeatureP05Mm": 1663,
+          "windowFeatureP95Mm": 1733,
+          "medianMm": 1725,
+          "madMm": 15.0,
+          "snrDb": 16.0,
+          "latestElapsedMs": 324013
+        }
+      ],
+      "frameCounts": {
+        "0100": 447,
+        "0200": 441,
+        "0300": 450,
+        "0400": 448
+      },
+      "malformedFrameCount": 0,
+      "sourceFiles": [
+        {
+          "name": "capture-2026-08-01T05-52-38-029Z.meta.json",
+          "bytes": 312,
+          "sha256": "3f0d3680849d28ea84e68e33910176ae6410641e5d33a0e456399fb767f07ad7"
+        },
+        {
+          "name": "capture-2026-08-01T05-52-38-029Z.jsonl",
+          "bytes": 327962,
+          "sha256": "bfa8d018bab79b48ce57bdfefaa04e236cfda15fbd2673f2ee6f87b4e928bb39"
+        }
+      ]
+    },
+    {
+      "captureId": "capture-2026-08-01T05-58-03-036Z",
+      "sessionId": "2026-08-01T05-55-49-935Z",
+      "label": "1。8m -22.5度",
+      "startedAt": "2026-08-01T05:58:03.036Z",
+      "endedAt": "2026-08-01T05:58:48.039Z",
+      "boundaryDistanceMm": 1800,
+      "centerDistanceMm": 2100,
+      "angleDeg": -22.5,
+      "stationFeatures": [
+        {
+          "address": "0100",
+          "count": 426,
+          "featureMm": 1770,
+          "windowFeatureP05Mm": 1560,
+          "windowFeatureP95Mm": 2117,
+          "medianMm": 1950,
+          "madMm": 140.0,
+          "snrDb": 17.0,
+          "latestElapsedMs": 178015
+        },
+        {
+          "address": "0200",
+          "count": 350,
+          "featureMm": 1893,
+          "windowFeatureP05Mm": 1640,
+          "windowFeatureP95Mm": 2233,
+          "medianMm": 2040,
+          "madMm": 160.0,
+          "snrDb": 4.5,
+          "latestElapsedMs": 177815
+        },
+        {
+          "address": "0300",
+          "count": 407,
+          "featureMm": 2200,
+          "windowFeatureP05Mm": 1860,
+          "windowFeatureP95Mm": 2610,
+          "medianMm": 2350,
+          "madMm": 190,
+          "snrDb": 17,
+          "latestElapsedMs": 178015
+        },
+        {
+          "address": "0400",
+          "count": 434,
+          "featureMm": 1593,
+          "windowFeatureP05Mm": 1327,
+          "windowFeatureP95Mm": 2047,
+          "medianMm": 1800,
+          "madMm": 215.0,
+          "snrDb": 17.0,
+          "latestElapsedMs": 178015
+        }
+      ],
+      "frameCounts": {
+        "0100": 426,
+        "0200": 350,
+        "0300": 407,
+        "0400": 434
+      },
+      "malformedFrameCount": 0,
+      "sourceFiles": [
+        {
+          "name": "capture-2026-08-01T05-58-03-036Z.meta.json",
+          "bytes": 316,
+          "sha256": "c643c6acd6dd38850081d3f30e89354cd4172df26332430700989f50d107bf87"
+        },
+        {
+          "name": "capture-2026-08-01T05-58-03-036Z.jsonl",
+          "bytes": 296954,
+          "sha256": "6d662e9a6cee5ddf79ed2e2e67f51bc1f1005f1642b79709b3069465f9f5d5b9"
+        }
+      ]
+    },
+    {
+      "captureId": "capture-2026-08-01T06-08-11-521Z",
+      "sessionId": "2026-08-01T06-07-57-224Z",
+      "label": "2m 0 度",
+      "startedAt": "2026-08-01T06:08:11.521Z",
+      "endedAt": "2026-08-01T06:08:56.522Z",
+      "boundaryDistanceMm": 2000,
+      "centerDistanceMm": 2300,
+      "angleDeg": 0.0,
+      "stationFeatures": [
+        {
+          "address": "0100",
+          "count": 235,
+          "featureMm": 1977,
+          "windowFeatureP05Mm": 1633,
+          "windowFeatureP95Mm": 2223,
+          "medianMm": 2050,
+          "madMm": 140,
+          "snrDb": 17,
+          "latestElapsedMs": 59215
+        },
+        {
+          "address": "0200",
+          "count": 442,
+          "featureMm": 2113,
+          "windowFeatureP05Mm": 1840,
+          "windowFeatureP95Mm": 2233,
+          "medianMm": 2180,
+          "madMm": 90.0,
+          "snrDb": 4.0,
+          "latestElapsedMs": 59215
+        },
+        {
+          "address": "0300",
+          "count": 448,
+          "featureMm": 2153,
+          "windowFeatureP05Mm": 1967,
+          "windowFeatureP95Mm": 2457,
+          "medianMm": 2370,
+          "madMm": 190.0,
+          "snrDb": 17.0,
+          "latestElapsedMs": 59215
+        },
+        {
+          "address": "0400",
+          "count": 433,
+          "featureMm": 1550,
+          "windowFeatureP05Mm": 1437,
+          "windowFeatureP95Mm": 1877,
+          "medianMm": 1670,
+          "madMm": 110,
+          "snrDb": 17,
+          "latestElapsedMs": 59216
+        }
+      ],
+      "frameCounts": {
+        "0100": 235,
+        "0200": 442,
+        "0300": 448,
+        "0400": 433
+      },
+      "malformedFrameCount": 0,
+      "sourceFiles": [
+        {
+          "name": "capture-2026-08-01T06-08-11-521Z.meta.json",
+          "bytes": 309,
+          "sha256": "60abf1a2da6ecf2e8e3aa1963cbd2dec956fd895786ea9a9cb84227f700fd62d"
+        },
+        {
+          "name": "capture-2026-08-01T06-08-11-521Z.jsonl",
+          "bytes": 284288,
+          "sha256": "f8cc6409e66194c1fc611b537b52df64f44135a0f6484ed57907b3354dc6b610"
+        }
+      ]
+    },
+    {
+      "captureId": "capture-2026-08-01T06-09-03-190Z",
+      "sessionId": "2026-08-01T06-07-57-224Z",
+      "label": "2m 0 度 -2",
+      "startedAt": "2026-08-01T06:09:03.190Z",
+      "endedAt": "2026-08-01T06:09:48.191Z",
+      "boundaryDistanceMm": 2000,
+      "centerDistanceMm": 2300,
+      "angleDeg": 0.0,
+      "stationFeatures": [
+        {
+          "address": "0100",
+          "count": 326,
+          "featureMm": 2127,
+          "windowFeatureP05Mm": 1763,
+          "windowFeatureP95Mm": 2333,
+          "medianMm": 2210,
+          "madMm": 100.0,
+          "snrDb": 17.0,
+          "latestElapsedMs": 110414
+        },
+        {
+          "address": "0200",
+          "count": 443,
+          "featureMm": 2053,
+          "windowFeatureP05Mm": 1827,
+          "windowFeatureP95Mm": 2140,
+          "medianMm": 2090,
+          "madMm": 50,
+          "snrDb": 4,
+          "latestElapsedMs": 110914
+        },
+        {
+          "address": "0300",
+          "count": 445,
+          "featureMm": 2077,
+          "windowFeatureP05Mm": 1920,
+          "windowFeatureP95Mm": 2277,
+          "medianMm": 2260,
+          "madMm": 160,
+          "snrDb": 17,
+          "latestElapsedMs": 110914
+        },
+        {
+          "address": "0400",
+          "count": 430,
+          "featureMm": 1757,
+          "windowFeatureP05Mm": 1593,
+          "windowFeatureP95Mm": 1963,
+          "medianMm": 1860,
+          "madMm": 100.0,
+          "snrDb": 17.0,
+          "latestElapsedMs": 110914
+        }
+      ],
+      "frameCounts": {
+        "0100": 326,
+        "0200": 443,
+        "0300": 445,
+        "0400": 430
+      },
+      "malformedFrameCount": 0,
+      "sourceFiles": [
+        {
+          "name": "capture-2026-08-01T06-09-03-190Z.meta.json",
+          "bytes": 312,
+          "sha256": "31ed256c7f8b546093f2055d6b1c3929f26b11bb7e00b299392c2af66be2b598"
+        },
+        {
+          "name": "capture-2026-08-01T06-09-03-190Z.jsonl",
+          "bytes": 300512,
+          "sha256": "659714573eef15c1c30597b0e64268ebe289fe9f83450382ce8cb6baaae1c587"
+        }
+      ]
+    },
+    {
+      "captureId": "capture-2026-08-01T06-16-02-094Z",
+      "sessionId": "2026-08-01T06-16-00-115Z",
+      "label": "2m -15 度",
+      "startedAt": "2026-08-01T06:16:02.094Z",
+      "endedAt": "2026-08-01T06:16:47.095Z",
+      "boundaryDistanceMm": 2000,
+      "centerDistanceMm": 2300,
+      "angleDeg": -15.0,
+      "stationFeatures": [
+        {
+          "address": "0100",
+          "count": 432,
+          "featureMm": 1643,
+          "windowFeatureP05Mm": 1433,
+          "windowFeatureP95Mm": 2013,
+          "medianMm": 1910,
+          "madMm": 210.0,
+          "snrDb": 17.0,
+          "latestElapsedMs": 46931
+        },
+        {
+          "address": "0200",
+          "count": 426,
+          "featureMm": 2078,
+          "windowFeatureP05Mm": 1850,
+          "windowFeatureP95Mm": 2213,
+          "medianMm": 2150,
+          "madMm": 120.0,
+          "snrDb": -1.0,
+          "latestElapsedMs": 46931
+        },
+        {
+          "address": "0300",
+          "count": 444,
+          "featureMm": 2073,
+          "windowFeatureP05Mm": 1960,
+          "windowFeatureP95Mm": 2240,
+          "medianMm": 2210,
+          "madMm": 110.0,
+          "snrDb": 17.0,
+          "latestElapsedMs": 46931
+        },
+        {
+          "address": "0400",
+          "count": 397,
+          "featureMm": 2003,
+          "windowFeatureP05Mm": 1733,
+          "windowFeatureP95Mm": 2093,
+          "medianMm": 2040,
+          "madMm": 50,
+          "snrDb": 16,
+          "latestElapsedMs": 46931
+        }
+      ],
+      "frameCounts": {
+        "0100": 432,
+        "0200": 426,
+        "0300": 444,
+        "0400": 397
+      },
+      "malformedFrameCount": 0,
+      "sourceFiles": [
+        {
+          "name": "capture-2026-08-01T06-16-02-094Z.meta.json",
+          "bytes": 311,
+          "sha256": "a65f71f1748d6f11eb5ae6467dd9706bb7fa3ff8848e0ea2264a932befc534cb"
+        },
+        {
+          "name": "capture-2026-08-01T06-16-02-094Z.jsonl",
+          "bytes": 310255,
+          "sha256": "ba39275e531d4c4e56a6fc159ee8de974d85ec37ffddc370f71344bc5c64aa36"
+        }
+      ]
+    },
+    {
+      "captureId": "capture-2026-08-01T06-17-03-144Z",
+      "sessionId": "2026-08-01T06-16-00-115Z",
+      "label": "2m -15 度 -2",
+      "startedAt": "2026-08-01T06:17:03.144Z",
+      "endedAt": "2026-08-01T06:17:48.145Z",
+      "boundaryDistanceMm": 2000,
+      "centerDistanceMm": 2300,
+      "angleDeg": -15.0,
+      "stationFeatures": [
+        {
+          "address": "0100",
+          "count": 418,
+          "featureMm": 2157,
+          "windowFeatureP05Mm": 1697,
+          "windowFeatureP95Mm": 2217,
+          "medianMm": 2190,
+          "madMm": 65.0,
+          "snrDb": 16.0,
+          "latestElapsedMs": 108028
+        },
+        {
+          "address": "0200",
+          "count": 189,
+          "featureMm": 1977,
+          "windowFeatureP05Mm": 1830,
+          "windowFeatureP95Mm": 2190,
+          "medianMm": 2040,
+          "madMm": 90,
+          "snrDb": -2,
+          "latestElapsedMs": 108028
+        },
+        {
+          "address": "0300",
+          "count": 447,
+          "featureMm": 2205,
+          "windowFeatureP05Mm": 2000,
+          "windowFeatureP95Mm": 2263,
+          "medianMm": 2250,
+          "madMm": 50,
+          "snrDb": 17,
+          "latestElapsedMs": 108028
+        },
+        {
+          "address": "0400",
+          "count": 403,
+          "featureMm": 1720,
+          "windowFeatureP05Mm": 1657,
+          "windowFeatureP95Mm": 1990,
+          "medianMm": 1760,
+          "madMm": 70,
+          "snrDb": 14,
+          "latestElapsedMs": 108029
+        }
+      ],
+      "frameCounts": {
+        "0100": 418,
+        "0200": 189,
+        "0300": 447,
+        "0400": 403
+      },
+      "malformedFrameCount": 0,
+      "sourceFiles": [
+        {
+          "name": "capture-2026-08-01T06-17-03-144Z.meta.json",
+          "bytes": 314,
+          "sha256": "a77fe45e0e0901a8acbdb1e2f4380a7491a2184e50c4eb82de0e74ef817274c3"
+        },
+        {
+          "name": "capture-2026-08-01T06-17-03-144Z.jsonl",
+          "bytes": 266764,
+          "sha256": "72bece52dea775f780c86efbe0f3218fa8ce6a6df6fada533dd3fd61c2bd5fb7"
+        }
+      ]
+    },
+    {
+      "captureId": "capture-2026-08-01T06-18-13-001Z",
+      "sessionId": "2026-08-01T06-16-00-115Z",
+      "label": "1.8m -15 度",
+      "startedAt": "2026-08-01T06:18:13.001Z",
+      "endedAt": "2026-08-01T06:18:58.005Z",
+      "boundaryDistanceMm": 1800,
+      "centerDistanceMm": 2100,
+      "angleDeg": -15.0,
+      "stationFeatures": [
+        {
+          "address": "0100",
+          "count": 420,
+          "featureMm": 1648,
+          "windowFeatureP05Mm": 1560,
+          "windowFeatureP95Mm": 1723,
+          "medianMm": 1690,
+          "madMm": 50.0,
+          "snrDb": 17.0,
+          "latestElapsedMs": 177826
+        },
+        {
+          "address": "0200",
+          "count": 446,
+          "featureMm": 1670,
+          "windowFeatureP05Mm": 1570,
+          "windowFeatureP95Mm": 1737,
+          "medianMm": 1720,
+          "madMm": 40.0,
+          "snrDb": 3.0,
+          "latestElapsedMs": 177826
+        },
+        {
+          "address": "0300",
+          "count": 448,
+          "featureMm": 1647,
+          "windowFeatureP05Mm": 1467,
+          "windowFeatureP95Mm": 1750,
+          "medianMm": 1705,
+          "madMm": 65.0,
+          "snrDb": 17.0,
+          "latestElapsedMs": 177826
+        },
+        {
+          "address": "0400",
+          "count": 373,
+          "featureMm": 1573,
+          "windowFeatureP05Mm": 1453,
+          "windowFeatureP95Mm": 1663,
+          "medianMm": 1630,
+          "madMm": 40,
+          "snrDb": 17,
+          "latestElapsedMs": 177827
+        }
+      ],
+      "frameCounts": {
+        "0100": 420,
+        "0200": 446,
+        "0300": 448,
+        "0400": 373
+      },
+      "malformedFrameCount": 0,
+      "sourceFiles": [
+        {
+          "name": "capture-2026-08-01T06-18-13-001Z.meta.json",
+          "bytes": 313,
+          "sha256": "9adc7c943da700757d882c7bbfd999731016f630f26fa18a9af01db2f7324344"
+        },
+        {
+          "name": "capture-2026-08-01T06-18-13-001Z.jsonl",
+          "bytes": 310088,
+          "sha256": "b02ac07bcdb8bf8ed6f7f2057cb8e73b18c5ad07bbb6dc82bd7c58248887b76e"
+        }
+      ]
+    },
+    {
+      "captureId": "capture-2026-08-01T06-19-03-814Z",
+      "sessionId": "2026-08-01T06-16-00-115Z",
+      "label": "1.8m -15 度 -2",
+      "startedAt": "2026-08-01T06:19:03.814Z",
+      "endedAt": "2026-08-01T06:19:48.815Z",
+      "boundaryDistanceMm": 1800,
+      "centerDistanceMm": 2100,
+      "angleDeg": -15.0,
+      "stationFeatures": [
+        {
+          "address": "0100",
+          "count": 441,
+          "featureMm": 1593,
+          "windowFeatureP05Mm": 1560,
+          "windowFeatureP95Mm": 1753,
+          "medianMm": 1650,
+          "madMm": 50,
+          "snrDb": 17,
+          "latestElapsedMs": 228625
+        },
+        {
+          "address": "0200",
+          "count": 438,
+          "featureMm": 1640,
+          "windowFeatureP05Mm": 1573,
+          "windowFeatureP95Mm": 1683,
+          "medianMm": 1690,
+          "madMm": 40.0,
+          "snrDb": 2.0,
+          "latestElapsedMs": 228625
+        },
+        {
+          "address": "0300",
+          "count": 445,
+          "featureMm": 1577,
+          "windowFeatureP05Mm": 1483,
+          "windowFeatureP95Mm": 1760,
+          "medianMm": 1690,
+          "madMm": 110,
+          "snrDb": 17,
+          "latestElapsedMs": 228625
+        },
+        {
+          "address": "0400",
+          "count": 375,
+          "featureMm": 1630,
+          "windowFeatureP05Mm": 1593,
+          "windowFeatureP95Mm": 1717,
+          "medianMm": 1680,
+          "madMm": 50,
+          "snrDb": 17,
+          "latestElapsedMs": 228627
+        }
+      ],
+      "frameCounts": {
+        "0100": 441,
+        "0200": 438,
+        "0300": 445,
+        "0400": 375
+      },
+      "malformedFrameCount": 0,
+      "sourceFiles": [
+        {
+          "name": "capture-2026-08-01T06-19-03-814Z.meta.json",
+          "bytes": 316,
+          "sha256": "19893a10d26e9b3c8ab88f7fc9effa890c786d4a4a545cc9d411cd4a46aca5e6"
+        },
+        {
+          "name": "capture-2026-08-01T06-19-03-814Z.jsonl",
+          "bytes": 312116,
+          "sha256": "9747742470cd1c54bfbf7ae8781fe2bba3b649346e81ca2080b59778dd9c826d"
+        }
+      ]
+    },
+    {
+      "captureId": "capture-2026-08-01T06-20-12-425Z",
+      "sessionId": "2026-08-01T06-16-00-115Z",
+      "label": "1.8m -30 度",
+      "startedAt": "2026-08-01T06:20:12.425Z",
+      "endedAt": "2026-08-01T06:20:57.426Z",
+      "boundaryDistanceMm": 1800,
+      "centerDistanceMm": 2100,
+      "angleDeg": -30.0,
+      "stationFeatures": [
+        {
+          "address": "0100",
+          "count": 394,
+          "featureMm": 1633,
+          "windowFeatureP05Mm": 1590,
+          "windowFeatureP95Mm": 1660,
+          "medianMm": 1650,
+          "madMm": 20.0,
+          "snrDb": 17.0,
+          "latestElapsedMs": 297222
+        },
+        {
+          "address": "0200",
+          "count": 408,
+          "featureMm": 2538,
+          "windowFeatureP05Mm": 2173,
+          "windowFeatureP95Mm": 3210,
+          "medianMm": 2810,
+          "madMm": 370.0,
+          "snrDb": 4.0,
+          "latestElapsedMs": 297123
+        },
+        {
+          "address": "0300",
+          "count": 406,
+          "featureMm": 1677,
+          "windowFeatureP05Mm": 1523,
+          "windowFeatureP95Mm": 2017,
+          "medianMm": 1875,
+          "madMm": 205.0,
+          "snrDb": 18.0,
+          "latestElapsedMs": 297222
+        },
+        {
+          "address": "0400",
+          "count": 402,
+          "featureMm": 1503,
+          "windowFeatureP05Mm": 1460,
+          "windowFeatureP95Mm": 1567,
+          "medianMm": 1560,
+          "madMm": 40.0,
+          "snrDb": 17.0,
+          "latestElapsedMs": 297222
+        }
+      ],
+      "frameCounts": {
+        "0100": 394,
+        "0200": 408,
+        "0300": 406,
+        "0400": 402
+      },
+      "malformedFrameCount": 0,
+      "sourceFiles": [
+        {
+          "name": "capture-2026-08-01T06-20-12-425Z.meta.json",
+          "bytes": 313,
+          "sha256": "24735a748feb37261cd8f2db5ce8571601f2bb7d385ff1980bb44c7b3664f11b"
+        },
+        {
+          "name": "capture-2026-08-01T06-20-12-425Z.jsonl",
+          "bytes": 295510,
+          "sha256": "90778459f211fd14059ec33bbb2bd547fd4e8d2a7f764dbc4b171dad7d5c4cf1"
+        }
+      ]
+    },
+    {
+      "captureId": "capture-2026-08-01T06-21-13-103Z",
+      "sessionId": "2026-08-01T06-16-00-115Z",
+      "label": "1.8m -30 度 -2",
+      "startedAt": "2026-08-01T06:21:13.103Z",
+      "endedAt": "2026-08-01T06:21:58.103Z",
+      "boundaryDistanceMm": 1800,
+      "centerDistanceMm": 2100,
+      "angleDeg": -30.0,
+      "stationFeatures": [
+        {
+          "address": "0100",
+          "count": 375,
+          "featureMm": 1632,
+          "windowFeatureP05Mm": 1570,
+          "windowFeatureP95Mm": 1667,
+          "medianMm": 1650,
+          "madMm": 20,
+          "snrDb": 17,
+          "latestElapsedMs": 357821
+        },
+        {
+          "address": "0200",
+          "count": 445,
+          "featureMm": 2323,
+          "windowFeatureP05Mm": 2103,
+          "windowFeatureP95Mm": 3390,
+          "medianMm": 2650,
+          "madMm": 400,
+          "snrDb": 4,
+          "latestElapsedMs": 357921
+        },
+        {
+          "address": "0300",
+          "count": 438,
+          "featureMm": 1557,
+          "windowFeatureP05Mm": 1483,
+          "windowFeatureP95Mm": 1630,
+          "medianMm": 1640,
+          "madMm": 80.0,
+          "snrDb": 17.0,
+          "latestElapsedMs": 357921
+        },
+        {
+          "address": "0400",
+          "count": 431,
+          "featureMm": 1510,
+          "windowFeatureP05Mm": 1463,
+          "windowFeatureP95Mm": 1577,
+          "medianMm": 1580,
+          "madMm": 50,
+          "snrDb": 17,
+          "latestElapsedMs": 357921
+        }
+      ],
+      "frameCounts": {
+        "0100": 375,
+        "0200": 445,
+        "0300": 438,
+        "0400": 431
+      },
+      "malformedFrameCount": 0,
+      "sourceFiles": [
+        {
+          "name": "capture-2026-08-01T06-21-13-103Z.meta.json",
+          "bytes": 316,
+          "sha256": "e679056d4fea5354f9d3e224d9017e33353118b26ffb7cec518ef12446993c65"
+        },
+        {
+          "name": "capture-2026-08-01T06-21-13-103Z.jsonl",
+          "bytes": 309930,
+          "sha256": "4c9fe41374ed035c89f4758225a751383a04aad996c4f4bbf63d5a1495a06027"
+        }
+      ]
+    },
+    {
+      "captureId": "capture-2026-08-01T06-22-22-292Z",
+      "sessionId": "2026-08-01T06-16-00-115Z",
+      "label": "1.8m -30 度 -3",
+      "startedAt": "2026-08-01T06:22:22.292Z",
+      "endedAt": "2026-08-01T06:23:07.293Z",
+      "boundaryDistanceMm": 1800,
+      "centerDistanceMm": 2100,
+      "angleDeg": -30.0,
+      "stationFeatures": [
+        {
+          "address": "0100",
+          "count": 390,
+          "featureMm": 1660,
+          "windowFeatureP05Mm": 1580,
+          "windowFeatureP95Mm": 1680,
+          "medianMm": 1670,
+          "madMm": 20.0,
+          "snrDb": 17.0,
+          "latestElapsedMs": 427120
+        },
+        {
+          "address": "0200",
+          "count": 446,
+          "featureMm": 2327,
+          "windowFeatureP05Mm": 2157,
+          "windowFeatureP95Mm": 2733,
+          "medianMm": 2520,
+          "madMm": 205.0,
+          "snrDb": 1.0,
+          "latestElapsedMs": 427120
+        },
+        {
+          "address": "0300",
+          "count": 437,
+          "featureMm": 1557,
+          "windowFeatureP05Mm": 1497,
+          "windowFeatureP95Mm": 1707,
+          "medianMm": 1640,
+          "madMm": 90,
+          "snrDb": 17,
+          "latestElapsedMs": 427120
+        },
+        {
+          "address": "0400",
+          "count": 434,
+          "featureMm": 1543,
+          "windowFeatureP05Mm": 1480,
+          "windowFeatureP95Mm": 1587,
+          "medianMm": 1590,
+          "madMm": 40.0,
+          "snrDb": 17.0,
+          "latestElapsedMs": 427121
+        }
+      ],
+      "frameCounts": {
+        "0100": 390,
+        "0200": 446,
+        "0300": 437,
+        "0400": 434
+      },
+      "malformedFrameCount": 0,
+      "sourceFiles": [
+        {
+          "name": "capture-2026-08-01T06-22-22-292Z.meta.json",
+          "bytes": 316,
+          "sha256": "915764af0ba4167cd59d04f7d712bf3c2627adedd8a29c403c4b07be39a14dbb"
+        },
+        {
+          "name": "capture-2026-08-01T06-22-22-292Z.jsonl",
+          "bytes": 313506,
+          "sha256": "378d5070e1c3456bb29910b5f6583a5e0206c866f7c45e74f5881313f3ce332e"
+        }
+      ]
+    },
+    {
+      "captureId": "capture-2026-08-01T06-24-34-051Z",
+      "sessionId": "2026-08-01T06-16-00-115Z",
+      "label": "2m -30 度 -3",
+      "startedAt": "2026-08-01T06:24:34.051Z",
+      "endedAt": "2026-08-01T06:25:19.051Z",
+      "boundaryDistanceMm": 2000,
+      "centerDistanceMm": 2300,
+      "angleDeg": -30.0,
+      "stationFeatures": [
+        {
+          "address": "0100",
+          "count": 436,
+          "featureMm": 1847,
+          "windowFeatureP05Mm": 1733,
+          "windowFeatureP95Mm": 1950,
+          "medianMm": 1890,
+          "madMm": 50.0,
+          "snrDb": 17.0,
+          "latestElapsedMs": 558918
+        },
+        {
+          "address": "0200",
+          "count": 436,
+          "featureMm": 2575,
+          "windowFeatureP05Mm": 2350,
+          "windowFeatureP95Mm": 2977,
+          "medianMm": 2720,
+          "madMm": 160.0,
+          "snrDb": -2.0,
+          "latestElapsedMs": 558918
+        },
+        {
+          "address": "0300",
+          "count": 413,
+          "featureMm": 2037,
+          "windowFeatureP05Mm": 1700,
+          "windowFeatureP95Mm": 2247,
+          "medianMm": 2170,
+          "madMm": 180,
+          "snrDb": 15,
+          "latestElapsedMs": 558918
+        },
+        {
+          "address": "0400",
+          "count": 449,
+          "featureMm": 1717,
+          "windowFeatureP05Mm": 1597,
+          "windowFeatureP95Mm": 1993,
+          "medianMm": 1850,
+          "madMm": 120,
+          "snrDb": 16,
+          "latestElapsedMs": 558919
+        }
+      ],
+      "frameCounts": {
+        "0100": 436,
+        "0200": 436,
+        "0300": 413,
+        "0400": 449
+      },
+      "malformedFrameCount": 0,
+      "sourceFiles": [
+        {
+          "name": "capture-2026-08-01T06-24-34-051Z.meta.json",
+          "bytes": 314,
+          "sha256": "39bd9c42451ebac6f8c853062964b8df2fe70a63f5aa4cc5d892d8513d2efc4e"
+        },
+        {
+          "name": "capture-2026-08-01T06-24-34-051Z.jsonl",
+          "bytes": 318684,
+          "sha256": "81b3fbf4ea88ce21be64ef4345ae6991694a019ceff84f62e59e844feb4a6d0a"
+        }
+      ]
+    },
+    {
+      "captureId": "capture-2026-08-01T06-25-22-097Z",
+      "sessionId": "2026-08-01T06-16-00-115Z",
+      "label": "2m -30 度",
+      "startedAt": "2026-08-01T06:25:22.097Z",
+      "endedAt": "2026-08-01T06:26:07.097Z",
+      "boundaryDistanceMm": 2000,
+      "centerDistanceMm": 2300,
+      "angleDeg": -30.0,
+      "stationFeatures": [
+        {
+          "address": "0100",
+          "count": 430,
+          "featureMm": 1837,
+          "windowFeatureP05Mm": 1677,
+          "windowFeatureP95Mm": 1950,
+          "medianMm": 1900,
+          "madMm": 60.0,
+          "snrDb": 17.0,
+          "latestElapsedMs": 606915
+        },
+        {
+          "address": "0200",
+          "count": 424,
+          "featureMm": 2660,
+          "windowFeatureP05Mm": 2440,
+          "windowFeatureP95Mm": 2973,
+          "medianMm": 2800,
+          "madMm": 150.0,
+          "snrDb": -2.0,
+          "latestElapsedMs": 606915
+        },
+        {
+          "address": "0300",
+          "count": 431,
+          "featureMm": 1893,
+          "windowFeatureP05Mm": 1727,
+          "windowFeatureP95Mm": 2213,
+          "medianMm": 2030,
+          "madMm": 160,
+          "snrDb": 15,
+          "latestElapsedMs": 606915
+        },
+        {
+          "address": "0400",
+          "count": 442,
+          "featureMm": 1803,
+          "windowFeatureP05Mm": 1647,
+          "windowFeatureP95Mm": 1963,
+          "medianMm": 1950,
+          "madMm": 155.0,
+          "snrDb": 17.0,
+          "latestElapsedMs": 606916
+        }
+      ],
+      "frameCounts": {
+        "0100": 430,
+        "0200": 424,
+        "0300": 431,
+        "0400": 442
+      },
+      "malformedFrameCount": 0,
+      "sourceFiles": [
+        {
+          "name": "capture-2026-08-01T06-25-22-097Z.meta.json",
+          "bytes": 311,
+          "sha256": "aa970caac2def8ff0d5c927b7b87d3bdeee4c916b1ced2e1c712d205fddf8c90"
+        },
+        {
+          "name": "capture-2026-08-01T06-25-22-097Z.jsonl",
+          "bytes": 317574,
+          "sha256": "ee4a3223e473c5fba740d6db5c851bc56f7c7916389900e95950ee246278a1ac"
+        }
+      ]
+    },
+    {
+      "captureId": "capture-2026-08-01T06-26-25-216Z",
+      "sessionId": "2026-08-01T06-16-00-115Z",
+      "label": "2m -45 度",
+      "startedAt": "2026-08-01T06:26:25.216Z",
+      "endedAt": "2026-08-01T06:27:10.209Z",
+      "boundaryDistanceMm": 2000,
+      "centerDistanceMm": 2300,
+      "angleDeg": -45.0,
+      "stationFeatures": [
+        {
+          "address": "0100",
+          "count": 326,
+          "featureMm": 1900,
+          "windowFeatureP05Mm": 1723,
+          "windowFeatureP95Mm": 2130,
+          "medianMm": 2000,
+          "madMm": 115.0,
+          "snrDb": 17.0,
+          "latestElapsedMs": 670003
+        },
+        {
+          "address": "0200",
+          "count": 402,
+          "featureMm": 2035,
+          "windowFeatureP05Mm": 1890,
+          "windowFeatureP95Mm": 2280,
+          "medianMm": 2190,
+          "madMm": 140.0,
+          "snrDb": -2.0,
+          "latestElapsedMs": 670005
+        },
+        {
+          "address": "0300",
+          "count": 445,
+          "featureMm": 2277,
+          "windowFeatureP05Mm": 2067,
+          "windowFeatureP95Mm": 2437,
+          "medianMm": 2410,
+          "madMm": 90,
+          "snrDb": 16,
+          "latestElapsedMs": 670005
+        },
+        {
+          "address": "0400",
+          "count": 429,
+          "featureMm": 1940,
+          "windowFeatureP05Mm": 1677,
+          "windowFeatureP95Mm": 2220,
+          "medianMm": 2140,
+          "madMm": 130,
+          "snrDb": 15,
+          "latestElapsedMs": 670005
+        }
+      ],
+      "frameCounts": {
+        "0100": 326,
+        "0200": 402,
+        "0300": 445,
+        "0400": 429
+      },
+      "malformedFrameCount": 0,
+      "sourceFiles": [
+        {
+          "name": "capture-2026-08-01T06-26-25-216Z.meta.json",
+          "bytes": 311,
+          "sha256": "db45c741f3fad3c9e1ae19efafedec386de75b977546054e068f480f4b9ab00d"
+        },
+        {
+          "name": "capture-2026-08-01T06-26-25-216Z.jsonl",
+          "bytes": 294520,
+          "sha256": "3a9035f05e5ab3d82d231bf1b3c90233b01735a1a09db8d4e17e7e401312e263"
+        }
+      ]
+    },
+    {
+      "captureId": "capture-2026-08-01T06-27-19-883Z",
+      "sessionId": "2026-08-01T06-16-00-115Z",
+      "label": "2m -45 度 -2",
+      "startedAt": "2026-08-01T06:27:19.883Z",
+      "endedAt": "2026-08-01T06:28:04.888Z",
+      "boundaryDistanceMm": 2000,
+      "centerDistanceMm": 2300,
+      "angleDeg": -45.0,
+      "stationFeatures": [
+        {
+          "address": "0100",
+          "count": 399,
+          "featureMm": 1947,
+          "windowFeatureP05Mm": 1693,
+          "windowFeatureP95Mm": 2063,
+          "medianMm": 2020,
+          "madMm": 80,
+          "snrDb": 17,
+          "latestElapsedMs": 724701
+        },
+        {
+          "address": "0200",
+          "count": 277,
+          "featureMm": 2140,
+          "windowFeatureP05Mm": 1743,
+          "windowFeatureP95Mm": 2313,
+          "medianMm": 2230,
+          "madMm": 100,
+          "snrDb": -3,
+          "latestElapsedMs": 724703
+        },
+        {
+          "address": "0300",
+          "count": 443,
+          "featureMm": 2207,
+          "windowFeatureP05Mm": 1930,
+          "windowFeatureP95Mm": 2513,
+          "medianMm": 2340,
+          "madMm": 150,
+          "snrDb": 16,
+          "latestElapsedMs": 724704
+        },
+        {
+          "address": "0400",
+          "count": 408,
+          "featureMm": 1997,
+          "windowFeatureP05Mm": 1650,
+          "windowFeatureP95Mm": 2147,
+          "medianMm": 2090,
+          "madMm": 90.0,
+          "snrDb": 16.0,
+          "latestElapsedMs": 724704
+        }
+      ],
+      "frameCounts": {
+        "0100": 399,
+        "0200": 277,
+        "0300": 443,
+        "0400": 408
+      },
+      "malformedFrameCount": 0,
+      "sourceFiles": [
+        {
+          "name": "capture-2026-08-01T06-27-19-883Z.meta.json",
+          "bytes": 314,
+          "sha256": "a2d806b0b73ec5abe4d8ce34d14fa9a7ecd9c58366b35a345b57b98e411b81af"
+        },
+        {
+          "name": "capture-2026-08-01T06-27-19-883Z.jsonl",
+          "bytes": 280788,
+          "sha256": "d9f87fd33d41aa845dfa24bc80a15c001743c8f8ac9bc00b04de3a840406e03f"
+        }
+      ]
+    },
+    {
+      "captureId": "capture-2026-08-01T06-28-11-071Z",
+      "sessionId": "2026-08-01T06-16-00-115Z",
+      "label": "2m -45 度 -3",
+      "startedAt": "2026-08-01T06:28:11.071Z",
+      "endedAt": "2026-08-01T06:28:56.072Z",
+      "boundaryDistanceMm": 2000,
+      "centerDistanceMm": 2300,
+      "angleDeg": -45.0,
+      "stationFeatures": [
+        {
+          "address": "0100",
+          "count": 409,
+          "featureMm": 1790,
+          "windowFeatureP05Mm": 1567,
+          "windowFeatureP95Mm": 2013,
+          "medianMm": 2010,
+          "madMm": 110,
+          "snrDb": 17,
+          "latestElapsedMs": 775902
+        },
+        {
+          "address": "0200",
+          "count": 227,
+          "featureMm": 2370,
+          "windowFeatureP05Mm": 1910,
+          "windowFeatureP95Mm": 2523,
+          "medianMm": 2390,
+          "madMm": 140,
+          "snrDb": -3,
+          "latestElapsedMs": 775902
+        },
+        {
+          "address": "0300",
+          "count": 444,
+          "featureMm": 1880,
+          "windowFeatureP05Mm": 1750,
+          "windowFeatureP95Mm": 2210,
+          "medianMm": 2070,
+          "madMm": 150.0,
+          "snrDb": 16.0,
+          "latestElapsedMs": 775902
+        },
+        {
+          "address": "0400",
+          "count": 229,
+          "featureMm": 2123,
+          "windowFeatureP05Mm": 1757,
+          "windowFeatureP95Mm": 2317,
+          "medianMm": 2170,
+          "madMm": 120,
+          "snrDb": 16,
+          "latestElapsedMs": 775702
+        }
+      ],
+      "frameCounts": {
+        "0100": 409,
+        "0200": 227,
+        "0300": 444,
+        "0400": 229
+      },
+      "malformedFrameCount": 0,
+      "sourceFiles": [
+        {
+          "name": "capture-2026-08-01T06-28-11-071Z.meta.json",
+          "bytes": 314,
+          "sha256": "f33cb8f5c26d3025b04538dd9b3993f36d79cf09dbd07338f435a2a8f1147918"
+        },
+        {
+          "name": "capture-2026-08-01T06-28-11-071Z.jsonl",
+          "bytes": 240714,
+          "sha256": "eeffa4014b43f6cf60df885ae4e2b329289d6dcd9be857661d6361cd7d972497"
+        }
+      ]
+    },
+    {
+      "captureId": "capture-2026-08-01T06-29-14-428Z",
+      "sessionId": "2026-08-01T06-16-00-115Z",
+      "label": "1.8m -45 度",
+      "startedAt": "2026-08-01T06:29:14.428Z",
+      "endedAt": "2026-08-01T06:29:59.431Z",
+      "boundaryDistanceMm": 1800,
+      "centerDistanceMm": 2100,
+      "angleDeg": -45.0,
+      "stationFeatures": [
+        {
+          "address": "0100",
+          "count": 440,
+          "featureMm": 1617,
+          "windowFeatureP05Mm": 1463,
+          "windowFeatureP95Mm": 1693,
+          "medianMm": 1680,
+          "madMm": 40.0,
+          "snrDb": 16.0,
+          "latestElapsedMs": 839302
+        },
+        {
+          "address": "0200",
+          "count": 431,
+          "featureMm": 1873,
+          "windowFeatureP05Mm": 1790,
+          "windowFeatureP95Mm": 1983,
+          "medianMm": 1950,
+          "madMm": 60,
+          "snrDb": -2,
+          "latestElapsedMs": 839302
+        },
+        {
+          "address": "0300",
+          "count": 440,
+          "featureMm": 1787,
+          "windowFeatureP05Mm": 1640,
+          "windowFeatureP95Mm": 1910,
+          "medianMm": 1850,
+          "madMm": 80.0,
+          "snrDb": 17.0,
+          "latestElapsedMs": 839302
+        },
+        {
+          "address": "0400",
+          "count": 394,
+          "featureMm": 1665,
+          "windowFeatureP05Mm": 1520,
+          "windowFeatureP95Mm": 1873,
+          "medianMm": 1730,
+          "madMm": 80.0,
+          "snrDb": 16.0,
+          "latestElapsedMs": 839302
+        }
+      ],
+      "frameCounts": {
+        "0100": 440,
+        "0200": 431,
+        "0300": 440,
+        "0400": 394
+      },
+      "malformedFrameCount": 0,
+      "sourceFiles": [
+        {
+          "name": "capture-2026-08-01T06-29-14-428Z.meta.json",
+          "bytes": 313,
+          "sha256": "528463a47f01a4163f074e29c52697fc519b55387925bba23922782cf361780f"
+        },
+        {
+          "name": "capture-2026-08-01T06-29-14-428Z.jsonl",
+          "bytes": 313376,
+          "sha256": "5882aec9c14b7ef32fd8c1c8f9a4d63062fb5b42cf6b93867f1454f0f3ca2a4c"
+        }
+      ]
+    },
+    {
+      "captureId": "capture-2026-08-01T06-30-14-811Z",
+      "sessionId": "2026-08-01T06-16-00-115Z",
+      "label": "1.8m -45 度 -2",
+      "startedAt": "2026-08-01T06:30:14.811Z",
+      "endedAt": "2026-08-01T06:30:59.813Z",
+      "boundaryDistanceMm": 1800,
+      "centerDistanceMm": 2100,
+      "angleDeg": -45.0,
+      "stationFeatures": [
+        {
+          "address": "0100",
+          "count": 442,
+          "featureMm": 1603,
+          "windowFeatureP05Mm": 1500,
+          "windowFeatureP95Mm": 1660,
+          "medianMm": 1620,
+          "madMm": 30.0,
+          "snrDb": 17.0,
+          "latestElapsedMs": 899598
+        },
+        {
+          "address": "0200",
+          "count": 426,
+          "featureMm": 1847,
+          "windowFeatureP05Mm": 1670,
+          "windowFeatureP95Mm": 1943,
+          "medianMm": 1920,
+          "madMm": 60.0,
+          "snrDb": -1.0,
+          "latestElapsedMs": 899598
+        },
+        {
+          "address": "0300",
+          "count": 443,
+          "featureMm": 1780,
+          "windowFeatureP05Mm": 1580,
+          "windowFeatureP95Mm": 2027,
+          "medianMm": 1880,
+          "madMm": 160,
+          "snrDb": 17,
+          "latestElapsedMs": 899599
+        },
+        {
+          "address": "0400",
+          "count": 401,
+          "featureMm": 1703,
+          "windowFeatureP05Mm": 1580,
+          "windowFeatureP95Mm": 1800,
+          "medianMm": 1770,
+          "madMm": 50,
+          "snrDb": 17,
+          "latestElapsedMs": 899599
+        }
+      ],
+      "frameCounts": {
+        "0100": 442,
+        "0200": 426,
+        "0300": 443,
+        "0400": 401
+      },
+      "malformedFrameCount": 0,
+      "sourceFiles": [
+        {
+          "name": "capture-2026-08-01T06-30-14-811Z.meta.json",
+          "bytes": 316,
+          "sha256": "4c88259791e89b531aef80fae61698768ff5392c5022f0e53a3ef02a34d835ab"
+        },
+        {
+          "name": "capture-2026-08-01T06-30-14-811Z.jsonl",
+          "bytes": 314620,
+          "sha256": "76d56f48c0a10b438efc227ee595ffc7e33e07b95494aefccd9b6d40b4a71fa3"
+        }
+      ]
+    },
+    {
+      "captureId": "capture-2026-08-01T06-31-38-755Z",
+      "sessionId": "2026-08-01T06-16-00-115Z",
+      "label": "1.8m 15 度",
+      "startedAt": "2026-08-01T06:31:38.755Z",
+      "endedAt": "2026-08-01T06:32:23.755Z",
+      "boundaryDistanceMm": 1800,
+      "centerDistanceMm": 2100,
+      "angleDeg": 15.0,
+      "stationFeatures": [
+        {
+          "address": "0100",
+          "count": 450,
+          "featureMm": 1740,
+          "windowFeatureP05Mm": 1687,
+          "windowFeatureP95Mm": 1797,
+          "medianMm": 1760,
+          "madMm": 20.0,
+          "snrDb": 17.0,
+          "latestElapsedMs": 983596
+        },
+        {
+          "address": "0200",
+          "count": 450,
+          "featureMm": 1737,
+          "windowFeatureP05Mm": 1677,
+          "windowFeatureP95Mm": 1763,
+          "medianMm": 1750,
+          "madMm": 20.0,
+          "snrDb": 8.0,
+          "latestElapsedMs": 983596
+        },
+        {
+          "address": "0300",
+          "count": 448,
+          "featureMm": 1890,
+          "windowFeatureP05Mm": 1693,
+          "windowFeatureP95Mm": 2110,
+          "medianMm": 2020,
+          "madMm": 120.0,
+          "snrDb": 17.0,
+          "latestElapsedMs": 983596
+        },
+        {
+          "address": "0400",
+          "count": 350,
+          "featureMm": 1720,
+          "windowFeatureP05Mm": 1640,
+          "windowFeatureP95Mm": 1790,
+          "medianMm": 1760,
+          "madMm": 50.0,
+          "snrDb": 17.0,
+          "latestElapsedMs": 983596
+        }
+      ],
+      "frameCounts": {
+        "0100": 450,
+        "0200": 450,
+        "0300": 448,
+        "0400": 350
+      },
+      "malformedFrameCount": 0,
+      "sourceFiles": [
+        {
+          "name": "capture-2026-08-01T06-31-38-755Z.meta.json",
+          "bytes": 312,
+          "sha256": "7b6114f3b48f655b46d2f3615a588ce2ac9dcc37f8304a74edfa3bdc25d506bc"
+        },
+        {
+          "name": "capture-2026-08-01T06-31-38-755Z.jsonl",
+          "bytes": 311606,
+          "sha256": "51f120a742db469f4c430fc9b2647a524204a5d4501cf126127b28ef33713806"
+        }
+      ]
+    },
+    {
+      "captureId": "capture-2026-08-01T06-32-26-665Z",
+      "sessionId": "2026-08-01T06-16-00-115Z",
+      "label": "1.8m 15 度 -2",
+      "startedAt": "2026-08-01T06:32:26.665Z",
+      "endedAt": "2026-08-01T06:33:11.665Z",
+      "boundaryDistanceMm": 1800,
+      "centerDistanceMm": 2100,
+      "angleDeg": 15.0,
+      "stationFeatures": [
+        {
+          "address": "0100",
+          "count": 449,
+          "featureMm": 1823,
+          "windowFeatureP05Mm": 1670,
+          "windowFeatureP95Mm": 1860,
+          "medianMm": 1840,
+          "madMm": 20,
+          "snrDb": 17,
+          "latestElapsedMs": 1031495
+        },
+        {
+          "address": "0200",
+          "count": 430,
+          "featureMm": 1713,
+          "windowFeatureP05Mm": 1687,
+          "windowFeatureP95Mm": 1740,
+          "medianMm": 1730,
+          "madMm": 10.0,
+          "snrDb": 8.0,
+          "latestElapsedMs": 1031495
+        },
+        {
+          "address": "0300",
+          "count": 449,
+          "featureMm": 2123,
+          "windowFeatureP05Mm": 1773,
+          "windowFeatureP95Mm": 2173,
+          "medianMm": 2170,
+          "madMm": 50,
+          "snrDb": 18,
+          "latestElapsedMs": 1031495
+        },
+        {
+          "address": "0400",
+          "count": 359,
+          "featureMm": 1670,
+          "windowFeatureP05Mm": 1640,
+          "windowFeatureP95Mm": 1830,
+          "medianMm": 1710,
+          "madMm": 40,
+          "snrDb": 17,
+          "latestElapsedMs": 1031495
+        }
+      ],
+      "frameCounts": {
+        "0100": 449,
+        "0200": 430,
+        "0300": 449,
+        "0400": 359
+      },
+      "malformedFrameCount": 0,
+      "sourceFiles": [
+        {
+          "name": "capture-2026-08-01T06-32-26-665Z.meta.json",
+          "bytes": 315,
+          "sha256": "5845d15ec99d69be3217490504bc990c5f2cae9f690a6d83bf95bb8d2caf21b4"
+        },
+        {
+          "name": "capture-2026-08-01T06-32-26-665Z.jsonl",
+          "bytes": 310778,
+          "sha256": "59151be662892c12506e41b95f7e51a7d64822853a1bd5d10eb90d89bfe44066"
+        }
+      ]
+    },
+    {
+      "captureId": "capture-2026-08-01T06-33-18-263Z",
+      "sessionId": "2026-08-01T06-16-00-115Z",
+      "label": "2m 15 度 -2",
+      "startedAt": "2026-08-01T06:33:18.263Z",
+      "endedAt": "2026-08-01T06:34:03.263Z",
+      "boundaryDistanceMm": 2000,
+      "centerDistanceMm": 2300,
+      "angleDeg": 15.0,
+      "stationFeatures": [
+        {
+          "address": "0100",
+          "count": 440,
+          "featureMm": 1963,
+          "windowFeatureP05Mm": 1737,
+          "windowFeatureP95Mm": 2333,
+          "medianMm": 2270,
+          "madMm": 200.0,
+          "snrDb": 17.0,
+          "latestElapsedMs": 1083093
+        },
+        {
+          "address": "0200",
+          "count": 286,
+          "featureMm": 1767,
+          "windowFeatureP05Mm": 1687,
+          "windowFeatureP95Mm": 1897,
+          "medianMm": 1810,
+          "madMm": 70.0,
+          "snrDb": 6.0,
+          "latestElapsedMs": 1083093
+        },
+        {
+          "address": "0300",
+          "count": 447,
+          "featureMm": 3077,
+          "windowFeatureP05Mm": 2380,
+          "windowFeatureP95Mm": 3330,
+          "medianMm": 3250,
+          "madMm": 140,
+          "snrDb": 16,
+          "latestElapsedMs": 1083093
+        },
+        {
+          "address": "0400",
+          "count": 311,
+          "featureMm": 1927,
+          "windowFeatureP05Mm": 1723,
+          "windowFeatureP95Mm": 2063,
+          "medianMm": 2010,
+          "madMm": 90,
+          "snrDb": 16,
+          "latestElapsedMs": 1082893
+        }
+      ],
+      "frameCounts": {
+        "0100": 440,
+        "0200": 286,
+        "0300": 447,
+        "0400": 311
+      },
+      "malformedFrameCount": 0,
+      "sourceFiles": [
+        {
+          "name": "capture-2026-08-01T06-33-18-263Z.meta.json",
+          "bytes": 313,
+          "sha256": "9c7c81b7022c60550b065f9e8a90269214a9c93f0ae7cc980befbefb5875868a"
+        },
+        {
+          "name": "capture-2026-08-01T06-33-18-263Z.jsonl",
+          "bytes": 273950,
+          "sha256": "9149e848de3f97297d72b915f44493d66a3fe25c87b95c40133047424e6e10f6"
+        }
+      ]
+    },
+    {
+      "captureId": "capture-2026-08-01T06-34-14-995Z",
+      "sessionId": "2026-08-01T06-16-00-115Z",
+      "label": "2m 15 度",
+      "startedAt": "2026-08-01T06:34:14.995Z",
+      "endedAt": "2026-08-01T06:34:59.995Z",
+      "boundaryDistanceMm": 2000,
+      "centerDistanceMm": 2300,
+      "angleDeg": 15.0,
+      "stationFeatures": [
+        {
+          "address": "0100",
+          "count": 437,
+          "featureMm": 1867,
+          "windowFeatureP05Mm": 1767,
+          "windowFeatureP95Mm": 2307,
+          "medianMm": 1950,
+          "madMm": 90,
+          "snrDb": 17,
+          "latestElapsedMs": 1139791
+        },
+        {
+          "address": "0200",
+          "count": 412,
+          "featureMm": 1877,
+          "windowFeatureP05Mm": 1847,
+          "windowFeatureP95Mm": 1890,
+          "medianMm": 1890,
+          "madMm": 10.0,
+          "snrDb": 6.0,
+          "latestElapsedMs": 1139791
+        },
+        {
+          "address": "0300",
+          "count": 450,
+          "featureMm": 2797,
+          "windowFeatureP05Mm": 2670,
+          "windowFeatureP95Mm": 3370,
+          "medianMm": 2980,
+          "madMm": 200.0,
+          "snrDb": 17.0,
+          "latestElapsedMs": 1139792
+        },
+        {
+          "address": "0400",
+          "count": 323,
+          "featureMm": 1920,
+          "windowFeatureP05Mm": 1703,
+          "windowFeatureP95Mm": 2107,
+          "medianMm": 2040,
+          "madMm": 90,
+          "snrDb": 17,
+          "latestElapsedMs": 1139792
+        }
+      ],
+      "frameCounts": {
+        "0100": 437,
+        "0200": 412,
+        "0300": 450,
+        "0400": 323
+      },
+      "malformedFrameCount": 0,
+      "sourceFiles": [
+        {
+          "name": "capture-2026-08-01T06-34-14-995Z.meta.json",
+          "bytes": 310,
+          "sha256": "3c8e2dd8e5c2281253990af52ed37fea83f1cd082387d06b63f534f9a66a79d4"
+        },
+        {
+          "name": "capture-2026-08-01T06-34-14-995Z.jsonl",
+          "bytes": 299236,
+          "sha256": "782a7db25c49a1715d52331874256f55bbde606db05e9edd2233167541ad290e"
+        }
+      ]
+    },
+    {
+      "captureId": "capture-2026-08-01T06-35-15-985Z",
+      "sessionId": "2026-08-01T06-16-00-115Z",
+      "label": "2m 15 度 -3",
+      "startedAt": "2026-08-01T06:35:15.985Z",
+      "endedAt": "2026-08-01T06:36:00.987Z",
+      "boundaryDistanceMm": 2000,
+      "centerDistanceMm": 2300,
+      "angleDeg": 15.0,
+      "stationFeatures": [
+        {
+          "address": "0100",
+          "count": 426,
+          "featureMm": 2087,
+          "windowFeatureP05Mm": 1750,
+          "windowFeatureP95Mm": 2440,
+          "medianMm": 2380,
+          "madMm": 130.0,
+          "snrDb": 17.0,
+          "latestElapsedMs": 1200789
+        },
+        {
+          "address": "0200",
+          "count": 265,
+          "featureMm": 1853,
+          "windowFeatureP05Mm": 1767,
+          "windowFeatureP95Mm": 2060,
+          "medianMm": 1880,
+          "madMm": 60,
+          "snrDb": 6,
+          "latestElapsedMs": 1200789
+        },
+        {
+          "address": "0300",
+          "count": 449,
+          "featureMm": 2540,
+          "windowFeatureP05Mm": 2243,
+          "windowFeatureP95Mm": 3127,
+          "medianMm": 2610,
+          "madMm": 170,
+          "snrDb": 17,
+          "latestElapsedMs": 1200789
+        },
+        {
+          "address": "0400",
+          "count": 404,
+          "featureMm": 1977,
+          "windowFeatureP05Mm": 1763,
+          "windowFeatureP95Mm": 2210,
+          "medianMm": 2125,
+          "madMm": 125.0,
+          "snrDb": 17.0,
+          "latestElapsedMs": 1200790
+        }
+      ],
+      "frameCounts": {
+        "0100": 426,
+        "0200": 265,
+        "0300": 449,
+        "0400": 404
+      },
+      "malformedFrameCount": 0,
+      "sourceFiles": [
+        {
+          "name": "capture-2026-08-01T06-35-15-985Z.meta.json",
+          "bytes": 313,
+          "sha256": "a83df889110b5cdf1f97fc1236be1e3351605b29efca7bc2d07259802658af72"
+        },
+        {
+          "name": "capture-2026-08-01T06-35-15-985Z.jsonl",
+          "bytes": 285291,
+          "sha256": "6ad4c437578756cad78bf5512adeb7e92e91ec949cd24c30d7b7f74fb5fe4e15"
+        }
+      ]
+    },
+    {
+      "captureId": "capture-2026-08-01T06-41-21-379Z",
+      "sessionId": "2026-08-01T06-16-00-115Z",
+      "label": "1.8m 22.5 度",
+      "startedAt": "2026-08-01T06:41:21.379Z",
+      "endedAt": "2026-08-01T06:42:06.383Z",
+      "boundaryDistanceMm": 1800,
+      "centerDistanceMm": 2100,
+      "angleDeg": 22.5,
+      "stationFeatures": [
+        {
+          "address": "0100",
+          "count": 386,
+          "featureMm": 1700,
+          "windowFeatureP05Mm": 1563,
+          "windowFeatureP95Mm": 1777,
+          "medianMm": 1740,
+          "madMm": 60.0,
+          "snrDb": 16.0,
+          "latestElapsedMs": 1566179
+        },
+        {
+          "address": "0200",
+          "count": 398,
+          "featureMm": 1763,
+          "windowFeatureP05Mm": 1730,
+          "windowFeatureP95Mm": 1810,
+          "medianMm": 1800,
+          "madMm": 20.0,
+          "snrDb": 7.0,
+          "latestElapsedMs": 1566179
+        },
+        {
+          "address": "0300",
+          "count": 450,
+          "featureMm": 1753,
+          "windowFeatureP05Mm": 1657,
+          "windowFeatureP95Mm": 2127,
+          "medianMm": 1850,
+          "madMm": 110.0,
+          "snrDb": 16.0,
+          "latestElapsedMs": 1566180
+        },
+        {
+          "address": "0400",
+          "count": 352,
+          "featureMm": 1657,
+          "windowFeatureP05Mm": 1383,
+          "windowFeatureP95Mm": 1847,
+          "medianMm": 1810,
+          "madMm": 130.0,
+          "snrDb": 18.0,
+          "latestElapsedMs": 1566180
+        }
+      ],
+      "frameCounts": {
+        "0100": 386,
+        "0200": 398,
+        "0300": 450,
+        "0400": 352
+      },
+      "malformedFrameCount": 0,
+      "sourceFiles": [
+        {
+          "name": "capture-2026-08-01T06-41-21-379Z.meta.json",
+          "bytes": 314,
+          "sha256": "ee76a11d29e7cd70f04947629f63078c2bc1d8f12a46dd785997335417f261a5"
+        },
+        {
+          "name": "capture-2026-08-01T06-41-21-379Z.jsonl",
+          "bytes": 292606,
+          "sha256": "469740992519cbfc87d89a43189f2771e5d7d6d169f49cc684685a8e4bb54b36"
+        }
+      ]
+    },
+    {
+      "captureId": "capture-2026-08-01T06-42-43-710Z",
+      "sessionId": "2026-08-01T06-16-00-115Z",
+      "label": "1.8m 30 度",
+      "startedAt": "2026-08-01T06:42:43.710Z",
+      "endedAt": "2026-08-01T06:43:28.714Z",
+      "boundaryDistanceMm": 1800,
+      "centerDistanceMm": 2100,
+      "angleDeg": 30.0,
+      "stationFeatures": [
+        {
+          "address": "0100",
+          "count": 392,
+          "featureMm": 1683,
+          "windowFeatureP05Mm": 1543,
+          "windowFeatureP95Mm": 2033,
+          "medianMm": 1770,
+          "madMm": 150.0,
+          "snrDb": 17.0,
+          "latestElapsedMs": 1648586
+        },
+        {
+          "address": "0200",
+          "count": 439,
+          "featureMm": 1597,
+          "windowFeatureP05Mm": 1547,
+          "windowFeatureP95Mm": 1747,
+          "medianMm": 1630,
+          "madMm": 40,
+          "snrDb": 6,
+          "latestElapsedMs": 1648586
+        },
+        {
+          "address": "0300",
+          "count": 425,
+          "featureMm": 2563,
+          "windowFeatureP05Mm": 2073,
+          "windowFeatureP95Mm": 2883,
+          "medianMm": 2870,
+          "madMm": 230,
+          "snrDb": 15,
+          "latestElapsedMs": 1648587
+        },
+        {
+          "address": "0400",
+          "count": 383,
+          "featureMm": 1700,
+          "windowFeatureP05Mm": 1587,
+          "windowFeatureP95Mm": 1807,
+          "medianMm": 1750,
+          "madMm": 50,
+          "snrDb": 14,
+          "latestElapsedMs": 1648588
+        }
+      ],
+      "frameCounts": {
+        "0100": 392,
+        "0200": 439,
+        "0300": 425,
+        "0400": 383
+      },
+      "malformedFrameCount": 0,
+      "sourceFiles": [
+        {
+          "name": "capture-2026-08-01T06-42-43-710Z.meta.json",
+          "bytes": 312,
+          "sha256": "2470bd2f7eb8dc1794cdc86e0ee26fa4128bf930d96d297e62c2bffbb2a40bab"
+        },
+        {
+          "name": "capture-2026-08-01T06-42-43-710Z.jsonl",
+          "bytes": 302281,
+          "sha256": "d8d81412b2e158771e74968a10923d2c04ad8f510b668fd7e443010ce09d8509"
+        }
+      ]
+    },
+    {
+      "captureId": "capture-2026-08-01T06-43-57-596Z",
+      "sessionId": "2026-08-01T06-16-00-115Z",
+      "label": "2m 30 度",
+      "startedAt": "2026-08-01T06:43:57.596Z",
+      "endedAt": "2026-08-01T06:44:42.598Z",
+      "boundaryDistanceMm": 2000,
+      "centerDistanceMm": 2300,
+      "angleDeg": 30.0,
+      "stationFeatures": [
+        {
+          "address": "0100",
+          "count": 448,
+          "featureMm": 2427,
+          "windowFeatureP05Mm": 2400,
+          "windowFeatureP95Mm": 2497,
+          "medianMm": 2430,
+          "madMm": 10.0,
+          "snrDb": 17.0,
+          "latestElapsedMs": 1722387
+        },
+        {
+          "address": "0200",
+          "count": 443,
+          "featureMm": 2213,
+          "windowFeatureP05Mm": 1863,
+          "windowFeatureP95Mm": 2257,
+          "medianMm": 2240,
+          "madMm": 30,
+          "snrDb": 8,
+          "latestElapsedMs": 1722388
+        },
+        {
+          "address": "0300",
+          "count": 448,
+          "featureMm": 2117,
+          "windowFeatureP05Mm": 2043,
+          "windowFeatureP95Mm": 2277,
+          "medianMm": 2190,
+          "madMm": 60.0,
+          "snrDb": 17.0,
+          "latestElapsedMs": 1722388
+        },
+        {
+          "address": "0400",
+          "count": 443,
+          "featureMm": 2300,
+          "windowFeatureP05Mm": 2013,
+          "windowFeatureP95Mm": 2363,
+          "medianMm": 2350,
+          "madMm": 40,
+          "snrDb": 18,
+          "latestElapsedMs": 1722388
+        }
+      ],
+      "frameCounts": {
+        "0100": 448,
+        "0200": 443,
+        "0300": 448,
+        "0400": 443
+      },
+      "malformedFrameCount": 0,
+      "sourceFiles": [
+        {
+          "name": "capture-2026-08-01T06-43-57-596Z.meta.json",
+          "bytes": 310,
+          "sha256": "e63a53bc718de3affbb90a1a8de9ff0b9598ff42f3629e38e68f708a8a2949ab"
+        },
+        {
+          "name": "capture-2026-08-01T06-43-57-596Z.jsonl",
+          "bytes": 328800,
+          "sha256": "b653fffb42ae1fe2d896b03fd92c842ba200cddd959e49c267da53f4b99d46a5"
+        }
+      ]
+    },
+    {
+      "captureId": "capture-2026-08-01T06-44-48-178Z",
+      "sessionId": "2026-08-01T06-16-00-115Z",
+      "label": "2m 30 度 -2",
+      "startedAt": "2026-08-01T06:44:48.178Z",
+      "endedAt": "2026-08-01T06:45:33.179Z",
+      "boundaryDistanceMm": 2000,
+      "centerDistanceMm": 2300,
+      "angleDeg": 30.0,
+      "stationFeatures": [
+        {
+          "address": "0100",
+          "count": 444,
+          "featureMm": 2210,
+          "windowFeatureP05Mm": 2060,
+          "windowFeatureP95Mm": 2457,
+          "medianMm": 2360,
+          "madMm": 90.0,
+          "snrDb": 14.0,
+          "latestElapsedMs": 1772985
+        },
+        {
+          "address": "0200",
+          "count": 450,
+          "featureMm": 2187,
+          "windowFeatureP05Mm": 2113,
+          "windowFeatureP95Mm": 2257,
+          "medianMm": 2220,
+          "madMm": 40.0,
+          "snrDb": 7.0,
+          "latestElapsedMs": 1772985
+        },
+        {
+          "address": "0300",
+          "count": 450,
+          "featureMm": 2163,
+          "windowFeatureP05Mm": 2107,
+          "windowFeatureP95Mm": 2293,
+          "medianMm": 2250,
+          "madMm": 70.0,
+          "snrDb": 16.0,
+          "latestElapsedMs": 1772985
+        },
+        {
+          "address": "0400",
+          "count": 448,
+          "featureMm": 2153,
+          "windowFeatureP05Mm": 1977,
+          "windowFeatureP95Mm": 2410,
+          "medianMm": 2360,
+          "madMm": 90.0,
+          "snrDb": 18.0,
+          "latestElapsedMs": 1772985
+        }
+      ],
+      "frameCounts": {
+        "0100": 444,
+        "0200": 450,
+        "0300": 450,
+        "0400": 448
+      },
+      "malformedFrameCount": 0,
+      "sourceFiles": [
+        {
+          "name": "capture-2026-08-01T06-44-48-178Z.meta.json",
+          "bytes": 313,
+          "sha256": "0a6c4241cdadcccd851e447a1bf00a122ebc8b1bc0a50173fdbaad57c02bd232"
+        },
+        {
+          "name": "capture-2026-08-01T06-44-48-178Z.jsonl",
+          "bytes": 332414,
+          "sha256": "c47d7be617a20e088b229a2f39cf0fdc5f5a5dadffc90003562eb25026cff8ce"
+        }
+      ]
+    },
+    {
+      "captureId": "capture-2026-08-01T06-46-02-009Z",
+      "sessionId": "2026-08-01T06-16-00-115Z",
+      "label": "2m 45 度",
+      "startedAt": "2026-08-01T06:46:02.009Z",
+      "endedAt": "2026-08-01T06:46:47.010Z",
+      "boundaryDistanceMm": 2000,
+      "centerDistanceMm": 2300,
+      "angleDeg": 45.0,
+      "stationFeatures": [
+        {
+          "address": "0100",
+          "count": 443,
+          "featureMm": 2100,
+          "windowFeatureP05Mm": 1990,
+          "windowFeatureP95Mm": 2207,
+          "medianMm": 2180,
+          "madMm": 120,
+          "snrDb": 15,
+          "latestElapsedMs": 1846883
+        },
+        {
+          "address": "0200",
+          "count": 439,
+          "featureMm": 1813,
+          "windowFeatureP05Mm": 1797,
+          "windowFeatureP95Mm": 1843,
+          "medianMm": 1830,
+          "madMm": 20,
+          "snrDb": -1,
+          "latestElapsedMs": 1846884
+        },
+        {
+          "address": "0300",
+          "count": 411,
+          "featureMm": 1987,
+          "windowFeatureP05Mm": 1920,
+          "windowFeatureP95Mm": 2063,
+          "medianMm": 2050,
+          "madMm": 70,
+          "snrDb": 12,
+          "latestElapsedMs": 1846884
+        },
+        {
+          "address": "0400",
+          "count": 430,
+          "featureMm": 1917,
+          "windowFeatureP05Mm": 1867,
+          "windowFeatureP95Mm": 1987,
+          "medianMm": 1980,
+          "madMm": 60.0,
+          "snrDb": 15.0,
+          "latestElapsedMs": 1846887
+        }
+      ],
+      "frameCounts": {
+        "0100": 443,
+        "0200": 439,
+        "0300": 411,
+        "0400": 430
+      },
+      "malformedFrameCount": 0,
+      "sourceFiles": [
+        {
+          "name": "capture-2026-08-01T06-46-02-009Z.meta.json",
+          "bytes": 310,
+          "sha256": "62af323506d8195d510b239f6680cdefbb35ae2e2ebb8c6764c4e3666fdf3137"
+        },
+        {
+          "name": "capture-2026-08-01T06-46-02-009Z.jsonl",
+          "bytes": 319972,
+          "sha256": "f31996d0dbffd5138221dabd782d93e22b42b70edb5f8b6c18ad30bef93a00a3"
+        }
+      ]
+    },
+    {
+      "captureId": "capture-2026-08-01T06-47-05-572Z",
+      "sessionId": "2026-08-01T06-16-00-115Z",
+      "label": "2m 45 度 -2",
+      "startedAt": "2026-08-01T06:47:05.572Z",
+      "endedAt": "2026-08-01T06:47:50.572Z",
+      "boundaryDistanceMm": 2000,
+      "centerDistanceMm": 2300,
+      "angleDeg": 45.0,
+      "stationFeatures": [
+        {
+          "address": "0100",
+          "count": 398,
+          "featureMm": 2050,
+          "windowFeatureP05Mm": 1910,
+          "windowFeatureP95Mm": 2143,
+          "medianMm": 2170,
+          "madMm": 105.0,
+          "snrDb": 15.0,
+          "latestElapsedMs": 1910384
+        },
+        {
+          "address": "0200",
+          "count": 449,
+          "featureMm": 1957,
+          "windowFeatureP05Mm": 1950,
+          "windowFeatureP95Mm": 1963,
+          "medianMm": 1960,
+          "madMm": 10,
+          "snrDb": 0,
+          "latestElapsedMs": 1910384
+        },
+        {
+          "address": "0300",
+          "count": 443,
+          "featureMm": 1877,
+          "windowFeatureP05Mm": 1817,
+          "windowFeatureP95Mm": 1920,
+          "medianMm": 1930,
+          "madMm": 40,
+          "snrDb": 13,
+          "latestElapsedMs": 1910384
+        },
+        {
+          "address": "0400",
+          "count": 359,
+          "featureMm": 2157,
+          "windowFeatureP05Mm": 1917,
+          "windowFeatureP95Mm": 2333,
+          "medianMm": 2300,
+          "madMm": 120,
+          "snrDb": 14,
+          "latestElapsedMs": 1910384
+        }
+      ],
+      "frameCounts": {
+        "0100": 398,
+        "0200": 449,
+        "0300": 443,
+        "0400": 359
+      },
+      "malformedFrameCount": 0,
+      "sourceFiles": [
+        {
+          "name": "capture-2026-08-01T06-47-05-572Z.meta.json",
+          "bytes": 313,
+          "sha256": "ad605d5b2a767458f721d66ccea87109374f6807ae7d04fbe85c784bcdba84d5"
+        },
+        {
+          "name": "capture-2026-08-01T06-47-05-572Z.jsonl",
+          "bytes": 306042,
+          "sha256": "5fc8a53aa19639451e01c9b83be2ea8148c08ea78fca6449d00abe77e5ac9f06"
+        }
+      ]
+    },
+    {
+      "captureId": "capture-2026-08-01T06-48-10-430Z",
+      "sessionId": "2026-08-01T06-16-00-115Z",
+      "label": "1.8m 45 度",
+      "startedAt": "2026-08-01T06:48:10.430Z",
+      "endedAt": "2026-08-01T06:48:55.431Z",
+      "boundaryDistanceMm": 1800,
+      "centerDistanceMm": 2100,
+      "angleDeg": 45.0,
+      "stationFeatures": [
+        {
+          "address": "0100",
+          "count": 432,
+          "featureMm": 1790,
+          "windowFeatureP05Mm": 1707,
+          "windowFeatureP95Mm": 1887,
+          "medianMm": 1860,
+          "madMm": 70.0,
+          "snrDb": 16.0,
+          "latestElapsedMs": 1975280
+        },
+        {
+          "address": "0200",
+          "count": 436,
+          "featureMm": 1623,
+          "windowFeatureP05Mm": 1567,
+          "windowFeatureP95Mm": 1807,
+          "medianMm": 1680,
+          "madMm": 60.0,
+          "snrDb": 4.0,
+          "latestElapsedMs": 1975280
+        },
+        {
+          "address": "0300",
+          "count": 438,
+          "featureMm": 1813,
+          "windowFeatureP05Mm": 1750,
+          "windowFeatureP95Mm": 1887,
+          "medianMm": 1880,
+          "madMm": 60.0,
+          "snrDb": 15.0,
+          "latestElapsedMs": 1975280
+        },
+        {
+          "address": "0400",
+          "count": 262,
+          "featureMm": 1697,
+          "windowFeatureP05Mm": 1517,
+          "windowFeatureP95Mm": 1870,
+          "medianMm": 1780,
+          "madMm": 105.0,
+          "snrDb": 16.0,
+          "latestElapsedMs": 1975116
+        }
+      ],
+      "frameCounts": {
+        "0100": 432,
+        "0200": 436,
+        "0300": 438,
+        "0400": 262
+      },
+      "malformedFrameCount": 0,
+      "sourceFiles": [
+        {
+          "name": "capture-2026-08-01T06-48-10-430Z.meta.json",
+          "bytes": 312,
+          "sha256": "e7dda1818b2c04d001cef71da814092a6ca76ad67ea476b0cbc119e40d668f17"
+        },
+        {
+          "name": "capture-2026-08-01T06-48-10-430Z.jsonl",
+          "bytes": 290806,
+          "sha256": "8289ee719b92c2e004dd642af997b75cfb12d86f0c56cd227051bb3bd359ad7e"
+        }
+      ]
+    },
+    {
+      "captureId": "capture-2026-08-01T06-49-28-302Z",
+      "sessionId": "2026-08-01T06-16-00-115Z",
+      "label": "1m 45 度",
+      "startedAt": "2026-08-01T06:49:28.302Z",
+      "endedAt": "2026-08-01T06:50:13.303Z",
+      "boundaryDistanceMm": 1000,
+      "centerDistanceMm": 1300,
+      "angleDeg": 45.0,
+      "stationFeatures": [
+        {
+          "address": "0100",
+          "count": 448,
+          "featureMm": 1030,
+          "windowFeatureP05Mm": 1017,
+          "windowFeatureP95Mm": 1040,
+          "medianMm": 1040,
+          "madMm": 10.0,
+          "snrDb": 17.0,
+          "latestElapsedMs": 2053179
+        },
+        {
+          "address": "0200",
+          "count": 450,
+          "featureMm": 883,
+          "windowFeatureP05Mm": 867,
+          "windowFeatureP95Mm": 893,
+          "medianMm": 890,
+          "madMm": 10.0,
+          "snrDb": 8.0,
+          "latestElapsedMs": 2053179
+        },
+        {
+          "address": "0300",
+          "count": 448,
+          "featureMm": 937,
+          "windowFeatureP05Mm": 927,
+          "windowFeatureP95Mm": 943,
+          "medianMm": 940,
+          "madMm": 10.0,
+          "snrDb": 17.0,
+          "latestElapsedMs": 2053179
+        },
+        {
+          "address": "0400",
+          "count": 449,
+          "featureMm": 917,
+          "windowFeatureP05Mm": 890,
+          "windowFeatureP95Mm": 950,
+          "medianMm": 960,
+          "madMm": 20,
+          "snrDb": 17,
+          "latestElapsedMs": 2053180
+        }
+      ],
+      "frameCounts": {
+        "0100": 448,
+        "0200": 450,
+        "0300": 448,
+        "0400": 449
+      },
+      "malformedFrameCount": 0,
+      "sourceFiles": [
+        {
+          "name": "capture-2026-08-01T06-49-28-302Z.meta.json",
+          "bytes": 310,
+          "sha256": "b77ab6bd3e2607a93af7a4027c00961731a14f36f98f9ded5af81108fdf70052"
+        },
+        {
+          "name": "capture-2026-08-01T06-49-28-302Z.jsonl",
+          "bytes": 330438,
+          "sha256": "19b75ad0cb3a7ca83e475d5abaef3c47ea2284b0c4b22c320cd7a441cf44657b"
+        }
+      ]
+    },
+    {
+      "captureId": "capture-2026-08-01T06-51-03-683Z",
+      "sessionId": "2026-08-01T06-16-00-115Z",
+      "label": "1m 45 度 -2",
+      "startedAt": "2026-08-01T06:51:03.683Z",
+      "endedAt": "2026-08-01T06:51:48.685Z",
+      "boundaryDistanceMm": 1000,
+      "centerDistanceMm": 1300,
+      "angleDeg": 45.0,
+      "stationFeatures": [
+        {
+          "address": "0100",
+          "count": 445,
+          "featureMm": 1013,
+          "windowFeatureP05Mm": 987,
+          "windowFeatureP95Mm": 1027,
+          "medianMm": 1020,
+          "madMm": 10,
+          "snrDb": 17,
+          "latestElapsedMs": 2148477
+        },
+        {
+          "address": "0200",
+          "count": 450,
+          "featureMm": 883,
+          "windowFeatureP05Mm": 860,
+          "windowFeatureP95Mm": 893,
+          "medianMm": 900,
+          "madMm": 10.0,
+          "snrDb": 8.0,
+          "latestElapsedMs": 2148477
+        },
+        {
+          "address": "0300",
+          "count": 450,
+          "featureMm": 940,
+          "windowFeatureP05Mm": 933,
+          "windowFeatureP95Mm": 950,
+          "medianMm": 950,
+          "madMm": 10.0,
+          "snrDb": 17.0,
+          "latestElapsedMs": 2148477
+        },
+        {
+          "address": "0400",
+          "count": 385,
+          "featureMm": 957,
+          "windowFeatureP05Mm": 920,
+          "windowFeatureP95Mm": 1017,
+          "medianMm": 970,
+          "madMm": 20,
+          "snrDb": 17,
+          "latestElapsedMs": 2148478
+        }
+      ],
+      "frameCounts": {
+        "0100": 445,
+        "0200": 450,
+        "0300": 450,
+        "0400": 385
+      },
+      "malformedFrameCount": 0,
+      "sourceFiles": [
+        {
+          "name": "capture-2026-08-01T06-51-03-683Z.meta.json",
+          "bytes": 313,
+          "sha256": "6a7bda0a95c0361893fd19f7766fe1d1deac65a95a7b09cce4333ec0906a6d5a"
+        },
+        {
+          "name": "capture-2026-08-01T06-51-03-683Z.jsonl",
+          "bytes": 318666,
+          "sha256": "a2df8e19b0b5a6b1029f3f3890c88a20e5224a0e0e011da5de8c6c9d832190ab"
+        }
+      ]
+    },
+    {
+      "captureId": "capture-2026-08-01T06-52-12-208Z",
+      "sessionId": "2026-08-01T06-16-00-115Z",
+      "label": "1m 30 度",
+      "startedAt": "2026-08-01T06:52:12.208Z",
+      "endedAt": "2026-08-01T06:52:57.212Z",
+      "boundaryDistanceMm": 1000,
+      "centerDistanceMm": 1300,
+      "angleDeg": 30.0,
+      "stationFeatures": [
+        {
+          "address": "0100",
+          "count": 416,
+          "featureMm": 847,
+          "windowFeatureP05Mm": 827,
+          "windowFeatureP95Mm": 867,
+          "medianMm": 870,
+          "madMm": 20.0,
+          "snrDb": 17.0,
+          "latestElapsedMs": 2217076
+        },
+        {
+          "address": "0200",
+          "count": 450,
+          "featureMm": 873,
+          "windowFeatureP05Mm": 860,
+          "windowFeatureP95Mm": 880,
+          "medianMm": 880,
+          "madMm": 0.0,
+          "snrDb": 10.0,
+          "latestElapsedMs": 2217076
+        },
+        {
+          "address": "0300",
+          "count": 277,
+          "featureMm": 1280,
+          "windowFeatureP05Mm": 1183,
+          "windowFeatureP95Mm": 1417,
+          "medianMm": 1370,
+          "madMm": 110,
+          "snrDb": 16,
+          "latestElapsedMs": 2217076
+        },
+        {
+          "address": "0400",
+          "count": 450,
+          "featureMm": 907,
+          "windowFeatureP05Mm": 900,
+          "windowFeatureP95Mm": 913,
+          "medianMm": 920,
+          "madMm": 10.0,
+          "snrDb": 17.0,
+          "latestElapsedMs": 2217077
+        }
+      ],
+      "frameCounts": {
+        "0100": 416,
+        "0200": 450,
+        "0300": 277,
+        "0400": 450
+      },
+      "malformedFrameCount": 0,
+      "sourceFiles": [
+        {
+          "name": "capture-2026-08-01T06-52-12-208Z.meta.json",
+          "bytes": 310,
+          "sha256": "e98022639db6c4b84e2e031b9d14532c791a089194cc35651221e3692566be47"
+        },
+        {
+          "name": "capture-2026-08-01T06-52-12-208Z.jsonl",
+          "bytes": 293336,
+          "sha256": "f981248309fe93d096b9439511b411db4c26834586b272117ffc4d290cdcd10e"
+        }
+      ]
+    },
+    {
+      "captureId": "capture-2026-08-01T06-53-16-656Z",
+      "sessionId": "2026-08-01T06-16-00-115Z",
+      "label": "1m 15 度",
+      "startedAt": "2026-08-01T06:53:16.656Z",
+      "endedAt": "2026-08-01T06:54:01.661Z",
+      "boundaryDistanceMm": 1000,
+      "centerDistanceMm": 1300,
+      "angleDeg": 15.0,
+      "stationFeatures": [
+        {
+          "address": "0100",
+          "count": 449,
+          "featureMm": 903,
+          "windowFeatureP05Mm": 893,
+          "windowFeatureP95Mm": 920,
+          "medianMm": 920,
+          "madMm": 10,
+          "snrDb": 17,
+          "latestElapsedMs": 2281475
+        },
+        {
+          "address": "0200",
+          "count": 450,
+          "featureMm": 767,
+          "windowFeatureP05Mm": 750,
+          "windowFeatureP95Mm": 787,
+          "medianMm": 790,
+          "madMm": 20.0,
+          "snrDb": 10.0,
+          "latestElapsedMs": 2281475
+        },
+        {
+          "address": "0300",
+          "count": 440,
+          "featureMm": 1120,
+          "windowFeatureP05Mm": 1043,
+          "windowFeatureP95Mm": 1223,
+          "medianMm": 1200,
+          "madMm": 80.0,
+          "snrDb": 17.0,
+          "latestElapsedMs": 2281475
+        },
+        {
+          "address": "0400",
+          "count": 450,
+          "featureMm": 953,
+          "windowFeatureP05Mm": 943,
+          "windowFeatureP95Mm": 967,
+          "medianMm": 970,
+          "madMm": 10.0,
+          "snrDb": 16.0,
+          "latestElapsedMs": 2281475
+        }
+      ],
+      "frameCounts": {
+        "0100": 449,
+        "0200": 450,
+        "0300": 440,
+        "0400": 450
+      },
+      "malformedFrameCount": 0,
+      "sourceFiles": [
+        {
+          "name": "capture-2026-08-01T06-53-16-656Z.meta.json",
+          "bytes": 310,
+          "sha256": "fa3ee958a0c0a2ce62c6c42d8ca43b0eaa59472e180b6a0228a4c7320e6cb21c"
+        },
+        {
+          "name": "capture-2026-08-01T06-53-16-656Z.jsonl",
+          "bytes": 329874,
+          "sha256": "05b923e475fc699136107109a96a68fdc0dbf76774dbd6447b59542e5d4b3d15"
+        }
+      ]
+    },
+    {
+      "captureId": "capture-2026-08-01T06-54-32-676Z",
+      "sessionId": "2026-08-01T06-16-00-115Z",
+      "label": "1m -15 度",
+      "startedAt": "2026-08-01T06:54:32.676Z",
+      "endedAt": "2026-08-01T06:55:17.678Z",
+      "boundaryDistanceMm": 1000,
+      "centerDistanceMm": 1300,
+      "angleDeg": -15.0,
+      "stationFeatures": [
+        {
+          "address": "0100",
+          "count": 447,
+          "featureMm": 873,
+          "windowFeatureP05Mm": 793,
+          "windowFeatureP95Mm": 970,
+          "medianMm": 890,
+          "madMm": 30,
+          "snrDb": 17,
+          "latestElapsedMs": 2357473
+        },
+        {
+          "address": "0200",
+          "count": 448,
+          "featureMm": 910,
+          "windowFeatureP05Mm": 863,
+          "windowFeatureP95Mm": 973,
+          "medianMm": 930,
+          "madMm": 20.0,
+          "snrDb": 7.0,
+          "latestElapsedMs": 2357473
+        },
+        {
+          "address": "0300",
+          "count": 432,
+          "featureMm": 1303,
+          "windowFeatureP05Mm": 1227,
+          "windowFeatureP95Mm": 1733,
+          "medianMm": 1410,
+          "madMm": 150.0,
+          "snrDb": 17.0,
+          "latestElapsedMs": 2357473
+        },
+        {
+          "address": "0400",
+          "count": 447,
+          "featureMm": 797,
+          "windowFeatureP05Mm": 750,
+          "windowFeatureP95Mm": 863,
+          "medianMm": 820,
+          "madMm": 30,
+          "snrDb": 18,
+          "latestElapsedMs": 2357474
+        }
+      ],
+      "frameCounts": {
+        "0100": 447,
+        "0200": 448,
+        "0300": 432,
+        "0400": 447
+      },
+      "malformedFrameCount": 0,
+      "sourceFiles": [
+        {
+          "name": "capture-2026-08-01T06-54-32-676Z.meta.json",
+          "bytes": 311,
+          "sha256": "5c2436b4624250d1727ece7908f0f47935220aaf3929799e5d130df049e51e93"
+        },
+        {
+          "name": "capture-2026-08-01T06-54-32-676Z.jsonl",
+          "bytes": 326526,
+          "sha256": "c830840ec215c7bfb046b3b0b6f1009ddbed06baa3b92bf22ef713675e7e510c"
+        }
+      ]
+    },
+    {
+      "captureId": "capture-2026-08-01T06-55-29-973Z",
+      "sessionId": "2026-08-01T06-16-00-115Z",
+      "label": "0.8m -15 度",
+      "startedAt": "2026-08-01T06:55:29.973Z",
+      "endedAt": "2026-08-01T06:56:14.975Z",
+      "boundaryDistanceMm": 800,
+      "centerDistanceMm": 1100,
+      "angleDeg": -15.0,
+      "stationFeatures": [
+        {
+          "address": "0100",
+          "count": 449,
+          "featureMm": 713,
+          "windowFeatureP05Mm": 700,
+          "windowFeatureP95Mm": 730,
+          "medianMm": 730,
+          "madMm": 10,
+          "snrDb": 16,
+          "latestElapsedMs": 2414775
+        },
+        {
+          "address": "0200",
+          "count": 450,
+          "featureMm": 693,
+          "windowFeatureP05Mm": 680,
+          "windowFeatureP95Mm": 717,
+          "medianMm": 710,
+          "madMm": 10.0,
+          "snrDb": 9.0,
+          "latestElapsedMs": 2414775
+        },
+        {
+          "address": "0300",
+          "count": 439,
+          "featureMm": 703,
+          "windowFeatureP05Mm": 630,
+          "windowFeatureP95Mm": 740,
+          "medianMm": 750,
+          "madMm": 20,
+          "snrDb": 16,
+          "latestElapsedMs": 2414775
+        },
+        {
+          "address": "0400",
+          "count": 450,
+          "featureMm": 630,
+          "windowFeatureP05Mm": 620,
+          "windowFeatureP95Mm": 637,
+          "medianMm": 640,
+          "madMm": 10.0,
+          "snrDb": 17.0,
+          "latestElapsedMs": 2414775
+        }
+      ],
+      "frameCounts": {
+        "0100": 449,
+        "0200": 450,
+        "0300": 439,
+        "0400": 450
+      },
+      "malformedFrameCount": 0,
+      "sourceFiles": [
+        {
+          "name": "capture-2026-08-01T06-55-29-973Z.meta.json",
+          "bytes": 313,
+          "sha256": "b5e0db457c72e51e762afe8c54f0eaa867c7605475324aa003c0792187dc3345"
+        },
+        {
+          "name": "capture-2026-08-01T06-55-29-973Z.jsonl",
+          "bytes": 328558,
+          "sha256": "b8065d4b720a6edf595741faefbfded91fa8a64e3bbbefc93d05d04714f287b8"
+        }
+      ]
+    },
+    {
+      "captureId": "capture-2026-08-01T06-57-03-979Z",
+      "sessionId": "2026-08-01T06-16-00-115Z",
+      "label": "1m -30度",
+      "startedAt": "2026-08-01T06:57:03.979Z",
+      "endedAt": "2026-08-01T06:57:48.982Z",
+      "boundaryDistanceMm": 1000,
+      "centerDistanceMm": 1300,
+      "angleDeg": -30.0,
+      "stationFeatures": [
+        {
+          "address": "0100",
+          "count": 449,
+          "featureMm": 967,
+          "windowFeatureP05Mm": 933,
+          "windowFeatureP95Mm": 983,
+          "medianMm": 980,
+          "madMm": 10,
+          "snrDb": 16,
+          "latestElapsedMs": 2508770
+        },
+        {
+          "address": "0200",
+          "count": 432,
+          "featureMm": 1165,
+          "windowFeatureP05Mm": 1020,
+          "windowFeatureP95Mm": 1400,
+          "medianMm": 1295,
+          "madMm": 160.0,
+          "snrDb": 3.0,
+          "latestElapsedMs": 2508772
+        },
+        {
+          "address": "0300",
+          "count": 437,
+          "featureMm": 1298,
+          "windowFeatureP05Mm": 1207,
+          "windowFeatureP95Mm": 1387,
+          "medianMm": 1360,
+          "madMm": 70,
+          "snrDb": 18,
+          "latestElapsedMs": 2508772
+        },
+        {
+          "address": "0400",
+          "count": 444,
+          "featureMm": 820,
+          "windowFeatureP05Mm": 753,
+          "windowFeatureP95Mm": 840,
+          "medianMm": 830,
+          "madMm": 10.0,
+          "snrDb": 18.0,
+          "latestElapsedMs": 2508772
+        }
+      ],
+      "frameCounts": {
+        "0100": 449,
+        "0200": 432,
+        "0300": 437,
+        "0400": 444
+      },
+      "malformedFrameCount": 0,
+      "sourceFiles": [
+        {
+          "name": "capture-2026-08-01T06-57-03-979Z.meta.json",
+          "bytes": 310,
+          "sha256": "06648015ac41f8f96a769ec8a96c571dbbd1b3cdc4baf139dc080d044c0cbbe9"
+        },
+        {
+          "name": "capture-2026-08-01T06-57-03-979Z.jsonl",
+          "bytes": 325552,
+          "sha256": "e350ce76d3e03c754f17cc3ae8f76c2d3f05c0e3c24f6a33bcdad73084197cee"
+        }
+      ]
+    },
+    {
+      "captureId": "capture-2026-08-01T06-58-06-666Z",
+      "sessionId": "2026-08-01T06-16-00-115Z",
+      "label": "1m -30度 -2",
+      "startedAt": "2026-08-01T06:58:06.666Z",
+      "endedAt": "2026-08-01T06:58:51.722Z",
+      "boundaryDistanceMm": 1000,
+      "centerDistanceMm": 1300,
+      "angleDeg": -30.0,
+      "stationFeatures": [
+        {
+          "address": "0100",
+          "count": 450,
+          "featureMm": 960,
+          "windowFeatureP05Mm": 947,
+          "windowFeatureP95Mm": 970,
+          "medianMm": 970,
+          "madMm": 10.0,
+          "snrDb": 16.0,
+          "latestElapsedMs": 2571523
+        },
+        {
+          "address": "0200",
+          "count": 446,
+          "featureMm": 1157,
+          "windowFeatureP05Mm": 1083,
+          "windowFeatureP95Mm": 1310,
+          "medianMm": 1265,
+          "madMm": 135.0,
+          "snrDb": 3.0,
+          "latestElapsedMs": 2571523
+        },
+        {
+          "address": "0300",
+          "count": 438,
+          "featureMm": 1307,
+          "windowFeatureP05Mm": 1250,
+          "windowFeatureP95Mm": 1327,
+          "medianMm": 1340,
+          "madMm": 20.0,
+          "snrDb": 18.0,
+          "latestElapsedMs": 2571523
+        },
+        {
+          "address": "0400",
+          "count": 450,
+          "featureMm": 830,
+          "windowFeatureP05Mm": 820,
+          "windowFeatureP95Mm": 837,
+          "medianMm": 840,
+          "madMm": 10.0,
+          "snrDb": 18.0,
+          "latestElapsedMs": 2571524
+        }
+      ],
+      "frameCounts": {
+        "0100": 450,
+        "0200": 446,
+        "0300": 438,
+        "0400": 450
+      },
+      "malformedFrameCount": 0,
+      "sourceFiles": [
+        {
+          "name": "capture-2026-08-01T06-58-06-666Z.meta.json",
+          "bytes": 313,
+          "sha256": "a4aab9556734771d5a06196078cf78f510606a60d94da65d6902519ddbe5d910"
+        },
+        {
+          "name": "capture-2026-08-01T06-58-06-666Z.jsonl",
+          "bytes": 329360,
+          "sha256": "8cdac4cc33a2c471a1e1a454d7beb015bb47a54a4e3e052016ca4b64e8c90329"
+        }
+      ]
+    },
+    {
+      "captureId": "capture-2026-08-01T06-59-30-246Z",
+      "sessionId": "2026-08-01T06-16-00-115Z",
+      "label": "1m -45度 -2",
+      "startedAt": "2026-08-01T06:59:30.246Z",
+      "endedAt": "2026-08-01T07:00:15.247Z",
+      "boundaryDistanceMm": 1000,
+      "centerDistanceMm": 1300,
+      "angleDeg": -45.0,
+      "stationFeatures": [
+        {
+          "address": "0100",
+          "count": 449,
+          "featureMm": 887,
+          "windowFeatureP05Mm": 857,
+          "windowFeatureP95Mm": 897,
+          "medianMm": 900,
+          "madMm": 10,
+          "snrDb": 16,
+          "latestElapsedMs": 2655122
+        },
+        {
+          "address": "0200",
+          "count": 450,
+          "featureMm": 1050,
+          "windowFeatureP05Mm": 1020,
+          "windowFeatureP95Mm": 1060,
+          "medianMm": 1060,
+          "madMm": 10.0,
+          "snrDb": 6.0,
+          "latestElapsedMs": 2655122
+        },
+        {
+          "address": "0300",
+          "count": 450,
+          "featureMm": 1037,
+          "windowFeatureP05Mm": 973,
+          "windowFeatureP95Mm": 1050,
+          "medianMm": 1040,
+          "madMm": 20.0,
+          "snrDb": 16.0,
+          "latestElapsedMs": 2655122
+        },
+        {
+          "address": "0400",
+          "count": 449,
+          "featureMm": 940,
+          "windowFeatureP05Mm": 887,
+          "windowFeatureP95Mm": 950,
+          "medianMm": 940,
+          "madMm": 10,
+          "snrDb": 17,
+          "latestElapsedMs": 2655123
+        }
+      ],
+      "frameCounts": {
+        "0100": 449,
+        "0200": 450,
+        "0300": 450,
+        "0400": 449
+      },
+      "malformedFrameCount": 0,
+      "sourceFiles": [
+        {
+          "name": "capture-2026-08-01T06-59-30-246Z.meta.json",
+          "bytes": 313,
+          "sha256": "896c3d270ffec72fde56a0cef92b861cfc171e5aa58cf689cfa05b0ac532447e"
+        },
+        {
+          "name": "capture-2026-08-01T06-59-30-246Z.jsonl",
+          "bytes": 331676,
+          "sha256": "bcadaaba8fc112a585cf02f74837513ac0bec69239ec84e1736c50d0523142ec"
+        }
+      ]
+    },
+    {
+      "captureId": "capture-2026-08-01T07-00-42-740Z",
+      "sessionId": "2026-08-01T06-16-00-115Z",
+      "label": "1.2m -45度 -2",
+      "startedAt": "2026-08-01T07:00:42.740Z",
+      "endedAt": "2026-08-01T07:01:27.740Z",
+      "boundaryDistanceMm": 1200,
+      "centerDistanceMm": 1500,
+      "angleDeg": -45.0,
+      "stationFeatures": [
+        {
+          "address": "0100",
+          "count": 444,
+          "featureMm": 1040,
+          "windowFeatureP05Mm": 787,
+          "windowFeatureP95Mm": 1197,
+          "medianMm": 1210,
+          "madMm": 110.0,
+          "snrDb": 17.0,
+          "latestElapsedMs": 2727621
+        },
+        {
+          "address": "0200",
+          "count": 447,
+          "featureMm": 1193,
+          "windowFeatureP05Mm": 1143,
+          "windowFeatureP95Mm": 1227,
+          "medianMm": 1220,
+          "madMm": 20,
+          "snrDb": 6,
+          "latestElapsedMs": 2727621
+        },
+        {
+          "address": "0300",
+          "count": 445,
+          "featureMm": 1500,
+          "windowFeatureP05Mm": 1220,
+          "windowFeatureP95Mm": 1527,
+          "medianMm": 1520,
+          "madMm": 30,
+          "snrDb": 17,
+          "latestElapsedMs": 2727621
+        },
+        {
+          "address": "0400",
+          "count": 387,
+          "featureMm": 1190,
+          "windowFeatureP05Mm": 1103,
+          "windowFeatureP95Mm": 1243,
+          "medianMm": 1240,
+          "madMm": 30,
+          "snrDb": 17,
+          "latestElapsedMs": 2727522
+        }
+      ],
+      "frameCounts": {
+        "0100": 444,
+        "0200": 447,
+        "0300": 445,
+        "0400": 387
+      },
+      "malformedFrameCount": 0,
+      "sourceFiles": [
+        {
+          "name": "capture-2026-08-01T07-00-42-740Z.meta.json",
+          "bytes": 315,
+          "sha256": "4d243d9d861d319612fc26de8db554b87ec238406ac8bfc369f07b58a6f117d6"
+        },
+        {
+          "name": "capture-2026-08-01T07-00-42-740Z.jsonl",
+          "bytes": 319468,
+          "sha256": "36df1baa89f1d6f7f6c66fd3c4e469d429d40799ae54061d9f4ea29e882784f0"
+        }
+      ]
+    }
+  ],
+  "modelCrc32": "71AD0942",
+  "modelSerializedBytes": 408
+}

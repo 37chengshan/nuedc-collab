@@ -1,7 +1,7 @@
 # 四路 UWB 串口采集监视工程
 
-独立 CCS/SysConfig 工程，只检查四个 UWB 串口是否持续返回数据。
-不解析 UWB 协议，不运行定位、标定、拨码、LED、蜂鸣器或门锁逻辑。
+独立 CCS/SysConfig 工程，只检查四个 UWB 串口是否持续返回数据并解析
+每路最新距离。不运行定位、拟合、标定、拨码、LED、蜂鸣器或门锁逻辑。
 
 ## 引脚
 
@@ -12,8 +12,9 @@
 | UWB3 | UART2 | PA23 | PA24 |
 | UWB4 | UART3 | PA26 | PA25 |
 
-UART 均为 `921600 8N1`。MCU TX 接 UWB RX，MCU RX 接 UWB TX，
+UART 均为 `115200 8N1`。MCU TX 接 UWB RX，MCU RX 接 UWB TX，
 所有模块与地猛星共地。
+
 
 屏幕使用：
 
@@ -30,10 +31,11 @@ UART 均为 `921600 8N1`。MCU TX 接 UWB RX，MCU RX 接 UWB TX，
 - `WAIT`：上电后从未收到数据。
 - `RX`：已经收到数据，但尚未达到连续增长确认条件。
 - `OK`：连续 3 个 500 ms 周期字节计数均增长。
-- `LOST`：曾经收到数据，但连续 1.5 s 未增长。
+- `LOST`：曾经收到数据，但连续 3 s 未增长。
 
-每个通道同时显示累计接收字节数。计数用于检查链路活动，不代表
-完整帧数或有效测距数量。
+每个通道下一行显示最近解析出的距离，例如 `D 1950MM`。状态判断使用
+累计接收字节数：连续 3 个 500 ms 周期增长后显示 `OK`。距离解析支持
+`P0,0100,195cm,19dB`、`DIST=1234`、`RANGE=2m` 等现场格式。
 
 ## 导入 CCS
 
@@ -44,6 +46,12 @@ code/c_uwb4_capture_monitor
 ```
 
 先打开 `empty.syscfg` 检查无未解释警告，再执行 Debug Build。
+
+本机已生成的烧录文件：
+
+```text
+build/c_uwb4_capture_monitor_current_wiring.hex
+```
 
 ## 验证边界
 

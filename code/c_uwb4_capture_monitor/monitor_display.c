@@ -413,13 +413,21 @@ static void format_monitor_text(const UwbMonitorSnapshot *snapshot,
             status_text(snapshot->status[channel]));
 
         length = 0U;
-        text_append(text->lines[count_row], &length, "N ");
-        text_append_u32(
-            text->lines[count_row], &length,
-            snapshot->byte_count[channel]);
+        text_append(text->lines[count_row], &length, "D ");
+        if (snapshot->distance_valid[channel]) {
+            uint32_t distance = snapshot->distance_mm[channel];
+
+            if (distance > 9999U) {
+                distance = 9999U;
+            }
+            text_append_u32(text->lines[count_row], &length, distance);
+            text_append(text->lines[count_row], &length, "MM");
+        } else {
+            text_append(text->lines[count_row], &length, "----");
+        }
     }
 
-    memcpy(text->lines[9], "921600 8N1", 10U);
+    memcpy(text->lines[9], "115200 8N1", 10U);
 }
 
 void monitor_display_init(void)

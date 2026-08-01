@@ -1,0 +1,47 @@
+#include "calibration_model_data.h"
+
+const CalibrationModelV1 g_calibration_model_v1 = {
+    .magic = CALIBRATION_MODEL_V1_MAGIC,
+    .version = CALIBRATION_MODEL_V1_VERSION,
+    .model_size_bytes = CALIBRATION_MODEL_V1_SERIALIZED_SIZE,
+    .anchor_count = 2U,
+    .enabled_anchor_mask = 0x03U,
+    .distance_axis_count = 0U,
+    .angle_axis_count = 0U,
+    .flags = 0U,
+    .anchors = {
+        {-125.0f, 40.0f},
+        {125.0f, 40.0f},
+        {0.0f, 0.0f},
+        {0.0f, 0.0f},
+    },
+    .range_models = {
+        {.type = CALIBRATION_RANGE_LINEAR,
+         .coefficients = {0.0f, 1.0f, 0.0f}},
+        {.type = CALIBRATION_RANGE_LINEAR,
+         .coefficients = {0.0f, 1.0f, 0.0f}},
+        {.type = CALIBRATION_RANGE_LINEAR,
+         .coefficients = {0.0f, 1.0f, 0.0f}},
+        {.type = CALIBRATION_RANGE_LINEAR,
+         .coefficients = {0.0f, 1.0f, 0.0f}},
+    },
+    .kalman = {
+        .process_noise_position = 25.0f,
+        .process_noise_velocity = 100.0f,
+        .measurement_noise_position = 2500.0f,
+        .initial_position_variance = 10000.0f,
+        .initial_velocity_variance = 40000.0f,
+        .max_dt_s = 0.5f,
+        .huber_delta_mm = 150.0f,
+        .nlos_threshold_mm = 180.0f,
+    },
+    .validation = {
+        .distance_p95_mm = 0.0f,
+        .distance_max_mm = 0.0f,
+        .bearing_p95_deg = 0.0f,
+        .bearing_max_deg = 0.0f,
+        .boundary_p95_mm = 0.0f,
+        .reserved = 0.0f,
+    },
+    .crc32 = 0x3DC9D1C1UL,
+};

@@ -1,0 +1,353 @@
+{
+  "reportVersion": "four_station_20260801_frozen_v1",
+  "currentModelLabel": "当前冻结 v1（2026-08-01；整物理点留出验证）；固件工程：c_digital_key_lock_190mm_four_station；四站模型：g_four_station_model_20260801",
+  "firmwareModelSource": {
+    "projectDirectory": "code/c_digital_key_lock_190mm_four_station",
+    "projectName": "c_digital_key_lock_190mm_four_station",
+    "fourStationModelHeader": "four_station_model_data.h",
+    "fourStationModelSymbol": "g_four_station_model_20260801",
+    "fourStationEstimatorSource": "uwb_four_station_estimator.c",
+    "dualOutputDistanceWording": null,
+    "dualOutputPresentInCurrentProject": false
+  },
+  "inputs": {
+    "manifest": "code/c_digital_key_lock/calibration/four_station_20260801.json",
+    "benchmark": "code/c_digital_key_lock/calibration/four_station_20260801_benchmark.json",
+    "capturesDirectory": "/private/tmp/nuedc-serial-pages.ksb2Ur/apps/uwb-recorder/data/captures",
+    "modelId": "four_station_20260801_v1",
+    "captureCount": 45,
+    "physicalPointCount": 27
+  },
+  "geometry": {
+    "competitionCircleDiameterMm": 600,
+    "competitionCircleRadiusMm": 300,
+    "boundaryDistanceToCenterOffsetMm": 300,
+    "stations": [
+      {
+        "index": 0,
+        "name": "right",
+        "address": "0100",
+        "xMm": 95,
+        "yMm": 0
+      },
+      {
+        "index": 1,
+        "name": "left",
+        "address": "0200",
+        "xMm": -95,
+        "yMm": 0
+      },
+      {
+        "index": 2,
+        "name": "up",
+        "address": "0300",
+        "xMm": 0,
+        "yMm": 70
+      },
+      {
+        "index": 3,
+        "name": "down",
+        "address": "0400",
+        "xMm": 0,
+        "yMm": -75
+      }
+    ],
+    "angleConvention": "atan2(x,y), FRONT=+y, right positive"
+  },
+  "reportGeometry": {
+    "source": "任务指定的四站报告几何",
+    "stations": [
+      {
+        "name": "UWB1",
+        "xMm": -95,
+        "yMm": 0
+      },
+      {
+        "name": "UWB2",
+        "xMm": 95,
+        "yMm": 0
+      },
+      {
+        "name": "UWB3",
+        "xMm": 0,
+        "yMm": -70
+      },
+      {
+        "name": "UWB4",
+        "xMm": 0,
+        "yMm": 75
+      }
+    ],
+    "competitionCircleRadiusMm": 300,
+    "boundaryDistanceToCenterOffsetMm": 300
+  },
+  "calibrationManifestGeometry": {
+    "competitionCircleDiameterMm": 600,
+    "competitionCircleRadiusMm": 300,
+    "boundaryDistanceToCenterOffsetMm": 300,
+    "stations": [
+      {
+        "index": 0,
+        "name": "right",
+        "address": "0100",
+        "xMm": 95,
+        "yMm": 0
+      },
+      {
+        "index": 1,
+        "name": "left",
+        "address": "0200",
+        "xMm": -95,
+        "yMm": 0
+      },
+      {
+        "index": 2,
+        "name": "up",
+        "address": "0300",
+        "xMm": 0,
+        "yMm": 70
+      },
+      {
+        "index": 3,
+        "name": "down",
+        "address": "0400",
+        "xMm": 0,
+        "yMm": -75
+      }
+    ],
+    "angleConvention": "atan2(x,y), FRONT=+y, right positive"
+  },
+  "deployedCandidate": {
+    "id": "knn-k3-p0.5-station+ridge-angle",
+    "description": "3-NN inverse-sqrt-q，station scales，ridge angle",
+    "runtime": {
+      "windowMs": 800,
+      "pairSkewMs": 120,
+      "updatePeriodMs": 100,
+      "displayPeriodMs": 500,
+      "holdMs": 500,
+      "minSamples": 3,
+      "neighborCount": 3,
+      "scaleMm": [
+        481.64051219804776,
+        549.7631139695364,
+        533.4917614486728,
+        465.22802055670627
+      ],
+      "qFloor": 0.0004,
+      "highNearestQ": 0.4,
+      "minimumDistanceMm": 800,
+      "maximumDistanceMm": 2300,
+      "modelSelection": "knn_k3_inverse_sqrt_q_plus_ridge_angle"
+    }
+  },
+  "validation": {
+    "recomputedFromReplay": {
+      "model": "knn-k3-p0.5-station+ridge-angle",
+      "validationSplit": "leave-one-physical-point-out",
+      "pointDistance": {
+        "count": 27,
+        "mae": 33.510525329899465,
+        "p95": 118.70810261840364,
+        "max": 132.6365927249501
+      },
+      "pointAngle": {
+        "count": 27,
+        "mae": 19.845651280397867,
+        "p95": 42.21405050037442,
+        "max": 44.367123653768836
+      },
+      "windowDistance": {
+        "count": 16931,
+        "mae": 37.901595009108796,
+        "p95": 144.7319697746434,
+        "max": 200.00000000000045
+      },
+      "windowAngle": {
+        "count": 16931,
+        "mae": 19.677051563490295,
+        "p95": 44.71256389589526,
+        "max": 74.06649455587828
+      },
+      "highCoverage": 0.4617565412556848,
+      "highDistance": {
+        "count": 7818,
+        "mae": 26.98194050745882,
+        "p95": 131.29400505625608,
+        "max": 200.00000000000045
+      },
+      "highAngle": {
+        "count": 7818,
+        "mae": 18.744715501622625,
+        "p95": 44.97327599160004,
+        "max": 56.091200985820514
+      },
+      "mediumCoverage": 0.6740889492646625,
+      "mediumDistance": {
+        "count": 11413,
+        "mae": 30.274892070298353,
+        "p95": 134.80503181239442,
+        "max": 200.00000000000045
+      }
+    },
+    "benchmarkWinner": {
+      "id": "knn-k3-p0.5-station+ridge-angle",
+      "parameters": {
+        "neighbors": 3,
+        "weightPower": 0.5,
+        "scaleMode": "station"
+      },
+      "pointDistance": {
+        "count": 27,
+        "mae": 33.510525329899465,
+        "p95": 118.70810261840364,
+        "max": 132.6365927249501
+      },
+      "pointAngle": {
+        "count": 27,
+        "mae": 19.845651280397867,
+        "p95": 42.21405050037442,
+        "max": 44.367123653768836
+      },
+      "windowDistance": {
+        "count": 16931,
+        "mae": 37.901595009108796,
+        "p95": 144.7319697746434,
+        "max": 200.00000000000045
+      },
+      "windowAngle": {
+        "count": 16931,
+        "mae": 19.677051563490295,
+        "p95": 44.71256389589526,
+        "max": 74.06649455587828
+      },
+      "highCoverage": 0.4617565412556848,
+      "highDistance": {
+        "count": 7818,
+        "mae": 26.98194050745882,
+        "p95": 131.29400505625608,
+        "max": 200.00000000000045
+      },
+      "highAngle": {
+        "count": 7818,
+        "mae": 18.744715501622625,
+        "p95": 44.97327599160004,
+        "max": 56.091200985820514
+      },
+      "mediumCoverage": 0.6740889492646625,
+      "mediumDistance": {
+        "count": 11413,
+        "mae": 30.274892070298353,
+        "p95": 134.80503181239442,
+        "max": 200.00000000000045
+      }
+    },
+    "pointRecordCount": 27,
+    "rollingWindowRecordCount": 16931
+  },
+  "boundaryValidation": {
+    "1000mm": {
+      "thresholdBoundaryDistanceMm": 1000,
+      "thresholdCenterDistanceMm": 1300,
+      "confusionRowsTruthColsPrediction": [
+        [
+          4364,
+          669
+        ],
+        [
+          221,
+          11677
+        ]
+      ],
+      "counts": {
+        "TN": 11677,
+        "FP": 221,
+        "FN": 669,
+        "TP": 4364
+      },
+      "accuracy": 0.9474337014943004,
+      "truthOutsideSampleCount": 11898,
+      "fullyBracketedByTruthData": true,
+      "validationScopeNote": "阈值内外均有真值样本。"
+    },
+    "2000mm": {
+      "thresholdBoundaryDistanceMm": 2000,
+      "thresholdCenterDistanceMm": 2300,
+      "confusionRowsTruthColsPrediction": [
+        [
+          16610,
+          321
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "counts": {
+        "TN": 0,
+        "FP": 0,
+        "FN": 321,
+        "TP": 16610
+      },
+      "accuracy": 0.9810406945838993,
+      "truthOutsideSampleCount": 0,
+      "fullyBracketedByTruthData": false,
+      "validationScopeNote": "阈值外没有真值样本；仅可评估阈值内漏报，不能视为完整边界判定验证。"
+    }
+  },
+  "plannedDualOutput": {
+    "status": "planned / not yet validated",
+    "description": "回归主输出 + 1 m 解锁、2 m 迎宾的边界专项校正；未训练、未验证、未报告 v2 指标。",
+    "rerunRequirement": "补录真实 1 m/2 m 边界附近数据后重跑本脚本。"
+  },
+  "rendering": {
+    "font": "Heiti TC",
+    "pngDpi": 300
+  },
+  "officialMapStyle": {
+    "source": "比赛文档/官方题目/C题_基于无线通信的数字钥匙实验系统.pdf",
+    "page": 3,
+    "implementation": "根据官方图 2 的分区、±45°边界、门锁圆体和正前方方向重绘矢量图层；未嵌入或放大低分辨率截图。",
+    "palette": {
+      "sensing": "#d8edf4",
+      "welcome": "#eeeeee",
+      "unlock": "#dcecc1",
+      "lock": "#dcecc1",
+      "edge": "#171717",
+      "ray": "#2d2d2d"
+    }
+  },
+  "generatedFiles": [
+    "01_geometry.pdf",
+    "01_geometry.png",
+    "01_geometry.svg",
+    "02_sample_coverage.pdf",
+    "02_sample_coverage.png",
+    "02_sample_coverage.svg",
+    "03_point_holdout_truth_vs_prediction.pdf",
+    "03_point_holdout_truth_vs_prediction.png",
+    "03_point_holdout_truth_vs_prediction.svg",
+    "04_rolling_window_error_distribution_cdf.pdf",
+    "04_rolling_window_error_distribution_cdf.png",
+    "04_rolling_window_error_distribution_cdf.svg",
+    "05_distance_angle_error_heatmaps.pdf",
+    "05_distance_angle_error_heatmaps.png",
+    "05_distance_angle_error_heatmaps.svg",
+    "06_algorithm_comparison.pdf",
+    "06_algorithm_comparison.png",
+    "06_algorithm_comparison.svg",
+    "07_quality_gate_coverage.pdf",
+    "07_quality_gate_coverage.png",
+    "07_quality_gate_coverage.svg",
+    "08_boundary_validation_1m_2m.pdf",
+    "08_boundary_validation_1m_2m.png",
+    "08_boundary_validation_1m_2m.svg",
+    "09_static_calibration_point_replay.gif",
+    "09_static_calibration_point_replay.pdf",
+    "09_static_calibration_point_replay.png",
+    "09_static_calibration_point_replay.svg",
+    "10_dual_output_distance_pipeline.pdf",
+    "10_dual_output_distance_pipeline.png",
+    "10_dual_output_distance_pipeline.svg"
+  ]
+}

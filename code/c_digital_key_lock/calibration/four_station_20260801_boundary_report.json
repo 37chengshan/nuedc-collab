@@ -1,0 +1,65 @@
+{
+  "modelId": "four_station_20260801_v1",
+  "selectedModel": "four-dimensional 3-NN, inverse sqrt(q)",
+  "windowCount": 16931,
+  "perTrueBoundaryDistance": {
+    "800": {
+      "count": 859,
+      "maeMm": 72.34045788408359,
+      "p95Mm": 84.51758180661682,
+      "maxMm": 89.06042561702793,
+      "estimateP05Mm": 858.6271417925002,
+      "estimateMedianMm": 873.1481949817662,
+      "estimateP95Mm": 884.5175818066168
+    },
+    "1000": {
+      "count": 4174,
+      "maeMm": 2.3145254154959134,
+      "p95Mm": 2.2737367544323206e-13,
+      "maxMm": 130.10775495129906,
+      "estimateP05Mm": 999.9999999999998,
+      "estimateMedianMm": 1000.0,
+      "estimateP95Mm": 1000.0000000000002
+    },
+    "1200": {
+      "count": 1277,
+      "maeMm": 137.95392713734734,
+      "p95Mm": 200.0,
+      "maxMm": 200.00000000000023,
+      "estimateP05Mm": 1000.0,
+      "estimateMedianMm": 1072.3624891587285,
+      "estimateP95Mm": 1093.3861249988981
+    },
+    "1800": {
+      "count": 5393,
+      "maeMm": 30.430196708775572,
+      "p95Mm": 146.23911078586423,
+      "maxMm": 200.00000000000045,
+      "estimateP05Mm": 1799.9999999999995,
+      "estimateMedianMm": 1800.0,
+      "estimateP95Mm": 1946.239110785864
+    },
+    "2000": {
+      "count": 5228,
+      "maeMm": 43.92375801218326,
+      "p95Mm": 144.82122789196478,
+      "maxMm": 200.00000000000045,
+      "estimateP05Mm": 1855.1787721080352,
+      "estimateMedianMm": 1999.9999999999995,
+      "estimateP95Mm": 2000.0000000000005
+    }
+  },
+  "zoneEntryThresholds": {
+    "unlockEntryMm": 900,
+    "unlockExitMm": 1000,
+    "welcomeEntryMm": 1900,
+    "welcomeExitMm": 2000,
+    "confirmationFrames": 3
+  },
+  "safetyChecks": {
+    "true1200EstimatedAtOrBelowUnlockEntry": 0,
+    "true1800EstimatedAboveWelcomeExit": 16,
+    "highCoverage": 0.4617565412556848
+  },
+  "knownLimitation": "No completed calibration point is beyond the 2 m boundary. The >2 m continuous-distance extrapolation is therefore not validated; authorization remains fail-closed outside the calibrated manifold."
+}

@@ -1,6 +1,6 @@
 /**
  * Four-UART UWB capture monitor for Tianmengxing MSPM0G3507.
- * Only UART0..3, the ST7735 SPI display and its RESET/DC GPIO are enabled.
+ * Only UART0..3 and the ST7735 SPI display/control GPIO are enabled.
  *
  * @cliArgs --device "MSPM0G350X" --part "Default" --package "LQFP-64(PM)" --product "mspm0_sdk@2.10.00.04"
  * @v2CliArgs --device "MSPM0G3507" --package "LQFP-64(PM)" --product "mspm0_sdk@2.10.00.04"
@@ -47,7 +47,7 @@ SYSCTL.forceDefaultClkConfig = true;
 SYSCTL.clockTreeEn           = true;
 
 UWB1.$name                            = "UWB1";
-UWB1.targetBaudRate                   = 921600;
+UWB1.targetBaudRate                   = 115200;
 UWB1.enableFIFO                       = true;
 UWB1.rxFifoThreshold                  = "DL_UART_RX_FIFO_LEVEL_ONE_ENTRY";
 UWB1.enabledInterrupts                = ["RX"];
@@ -56,7 +56,7 @@ UWB1.peripheral.rxPin.$assign         = "PA9";
 UWB1.peripheral.txPin.$assign         = "PA8";
 
 UWB2.$name                            = "UWB2";
-UWB2.targetBaudRate                   = 921600;
+UWB2.targetBaudRate                   = 115200;
 UWB2.enableFIFO                       = true;
 UWB2.rxFifoThreshold                  = "DL_UART_RX_FIFO_LEVEL_ONE_ENTRY";
 UWB2.enabledInterrupts                = ["RX"];
@@ -65,7 +65,7 @@ UWB2.peripheral.rxPin.$assign         = "PA1";
 UWB2.peripheral.txPin.$assign         = "PA0";
 
 UWB3.$name                            = "UWB3";
-UWB3.targetBaudRate                   = 921600;
+UWB3.targetBaudRate                   = 115200;
 UWB3.enableFIFO                       = true;
 UWB3.rxFifoThreshold                  = "DL_UART_RX_FIFO_LEVEL_ONE_ENTRY";
 UWB3.enabledInterrupts                = ["RX"];
@@ -74,7 +74,7 @@ UWB3.peripheral.rxPin.$assign         = "PA24";
 UWB3.peripheral.txPin.$assign         = "PA23";
 
 UWB4.$name                            = "UWB4";
-UWB4.targetBaudRate                   = 921600;
+UWB4.targetBaudRate                   = 115200;
 UWB4.enableFIFO                       = true;
 UWB4.rxFifoThreshold                  = "DL_UART_RX_FIFO_LEVEL_ONE_ENTRY";
 UWB4.enabledInterrupts                = ["RX"];
@@ -99,7 +99,6 @@ LCDSPI.peripheral.mosiPin.$assign    = "PB8";
 LCDSPI.peripheral.cs0Pin.$assign     = "PB6";
 LCDSPI.cs0PinConfig.enableConfig     = true;
 LCDSPI.cs0PinConfig.internalResistor = "PULL_UP";
-
 LCDControl.$name = "LCD_CONTROL";
 LCDControl.associatedPins.create(2);
 LCDControl.associatedPins[0].$name        = "RESET";

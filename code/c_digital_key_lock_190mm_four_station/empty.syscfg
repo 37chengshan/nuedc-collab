@@ -1,0 +1,215 @@
+/**
+ * These arguments were used when this file was generated. They will be automatically applied on subsequent loads
+ * via the GUI or CLI. Run CLI with '--help' for additional information on how to override these arguments.
+ * @cliArgs --device "MSPM0G350X" --part "Default" --package "LQFP-64(PM)" --product "mspm0_sdk@2.10.00.04"
+ * @v2CliArgs --device "MSPM0G3507" --package "LQFP-64(PM)" --product "mspm0_sdk@2.10.00.04"
+ * @versions {"tool":"1.26.2+4477"}
+ */
+
+const SYSCTL = scripting.addModule("/ti/driverlib/SYSCTL");
+const UART   = scripting.addModule("/ti/driverlib/UART", {}, false);
+const GPIO  = scripting.addModule("/ti/driverlib/GPIO", {}, false);
+const SPI   = scripting.addModule("/ti/driverlib/SPI", {}, false);
+const Board  = scripting.addModule("/ti/driverlib/Board", {}, false);
+const UWB1   = UART.addInstance();
+const UWB2   = UART.addInstance();
+const UWB3   = UART.addInstance();
+const UWB4   = UART.addInstance();
+const LCD_CONTROL = GPIO.addInstance();
+const SET_ID_INPUTS = GPIO.addInstance();
+const DIP_LEGACY_PROBE = GPIO.addInstance();
+const LOCK_OUTPUTS = GPIO.addInstance();
+const LOCK_RELAY = GPIO.addInstance();
+const LCD_SPI = SPI.addInstance();
+
+const divider9       = system.clockTree["UDIV"];
+divider9.divideValue = 2;
+
+const gate7  = system.clockTree["MFCLKGATE"];
+gate7.enable = true;
+
+const multiplier2         = system.clockTree["PLL_QDIV"];
+multiplier2.multiplyValue = 4;
+
+const mux4       = system.clockTree["EXHFMUX"];
+mux4.inputSelect = "EXHFMUX_XTAL";
+
+const mux8       = system.clockTree["HSCLKMUX"];
+mux8.inputSelect = "HSCLKMUX_SYSPLL0";
+
+const mux12       = system.clockTree["SYSPLLMUX"];
+mux12.inputSelect = "zSYSPLLMUX_HFCLK";
+
+const pinFunction4        = system.clockTree["HFXT"];
+pinFunction4.inputFreq    = 40;
+pinFunction4.enable       = true;
+pinFunction4.HFXTStartup  = 10;
+pinFunction4.HFCLKMonitor = true;
+
+SYSCTL.forceDefaultClkConfig = true;
+SYSCTL.clockTreeEn           = true;
+
+UWB1.$name                            = "UWB_CH1";
+UWB1.targetBaudRate                   = 115200;
+UWB1.enableFIFO                       = true;
+UWB1.rxFifoThreshold                  = "DL_UART_RX_FIFO_LEVEL_ONE_ENTRY";
+UWB1.enabledInterrupts                = ["RX"];
+UWB1.peripheral.$assign               = "UART1";
+UWB1.peripheral.rxPin.$assign         = "PA9";
+UWB1.peripheral.txPin.$assign         = "PA8";
+UWB1.txPinConfig.$name                = "UWB_CH1_TX";
+UWB1.txPinConfig.direction            = scripting.forceWrite("OUTPUT");
+UWB1.txPinConfig.hideOutputInversion  = scripting.forceWrite(false);
+UWB1.txPinConfig.onlyInternalResistor = scripting.forceWrite(false);
+UWB1.txPinConfig.passedPeripheralType = scripting.forceWrite("Digital");
+UWB1.rxPinConfig.$name                = "UWB_CH1_RX";
+UWB1.rxPinConfig.hideOutputInversion  = scripting.forceWrite(false);
+UWB1.rxPinConfig.onlyInternalResistor = scripting.forceWrite(false);
+UWB1.rxPinConfig.passedPeripheralType = scripting.forceWrite("Digital");
+
+UWB2.$name                            = "UWB_CH2";
+UWB2.targetBaudRate                   = 115200;
+UWB2.enableFIFO                       = true;
+UWB2.rxFifoThreshold                  = "DL_UART_RX_FIFO_LEVEL_ONE_ENTRY";
+UWB2.enabledInterrupts                = ["RX"];
+UWB2.peripheral.$assign               = "UART0";
+UWB2.peripheral.rxPin.$assign         = "PA1";
+UWB2.peripheral.txPin.$assign         = "PA0";
+UWB2.txPinConfig.$name                = "UWB_CH2_TX";
+UWB2.txPinConfig.direction            = scripting.forceWrite("OUTPUT");
+UWB2.txPinConfig.hideOutputInversion  = scripting.forceWrite(false);
+UWB2.txPinConfig.onlyInternalResistor = scripting.forceWrite(false);
+UWB2.txPinConfig.passedPeripheralType = scripting.forceWrite("Digital");
+UWB2.rxPinConfig.$name                = "UWB_CH2_RX";
+UWB2.rxPinConfig.hideOutputInversion  = scripting.forceWrite(false);
+UWB2.rxPinConfig.onlyInternalResistor = scripting.forceWrite(false);
+UWB2.rxPinConfig.passedPeripheralType = scripting.forceWrite("Digital");
+
+UWB3.$name                            = "UWB_CH3";
+UWB3.targetBaudRate                   = 115200;
+UWB3.enableFIFO                       = true;
+UWB3.rxFifoThreshold                  = "DL_UART_RX_FIFO_LEVEL_ONE_ENTRY";
+UWB3.enabledInterrupts                = ["RX"];
+UWB3.peripheral.$assign               = "UART2";
+UWB3.peripheral.rxPin.$assign         = "PA24";
+UWB3.peripheral.txPin.$assign         = "PA23";
+UWB3.txPinConfig.$name                = "UWB_CH3_TX";
+UWB3.txPinConfig.direction            = scripting.forceWrite("OUTPUT");
+UWB3.txPinConfig.hideOutputInversion  = scripting.forceWrite(false);
+UWB3.txPinConfig.onlyInternalResistor = scripting.forceWrite(false);
+UWB3.txPinConfig.passedPeripheralType = scripting.forceWrite("Digital");
+UWB3.rxPinConfig.$name                = "UWB_CH3_RX";
+UWB3.rxPinConfig.hideOutputInversion  = scripting.forceWrite(false);
+UWB3.rxPinConfig.onlyInternalResistor = scripting.forceWrite(false);
+UWB3.rxPinConfig.passedPeripheralType = scripting.forceWrite("Digital");
+
+UWB4.$name                            = "UWB_CH4";
+UWB4.targetBaudRate                   = 115200;
+UWB4.enableFIFO                       = true;
+UWB4.rxFifoThreshold                  = "DL_UART_RX_FIFO_LEVEL_ONE_ENTRY";
+UWB4.enabledInterrupts                = ["RX"];
+UWB4.peripheral.$assign               = "UART3";
+UWB4.peripheral.rxPin.$assign         = "PA25";
+UWB4.peripheral.txPin.$assign         = "PA26";
+UWB4.txPinConfig.$name                = "UWB_CH4_TX";
+UWB4.txPinConfig.direction            = scripting.forceWrite("OUTPUT");
+UWB4.txPinConfig.hideOutputInversion  = scripting.forceWrite(false);
+UWB4.txPinConfig.onlyInternalResistor = scripting.forceWrite(false);
+UWB4.txPinConfig.passedPeripheralType = scripting.forceWrite("Digital");
+UWB4.rxPinConfig.$name                = "UWB_CH4_RX";
+UWB4.rxPinConfig.hideOutputInversion  = scripting.forceWrite(false);
+UWB4.rxPinConfig.onlyInternalResistor = scripting.forceWrite(false);
+UWB4.rxPinConfig.passedPeripheralType = scripting.forceWrite("Digital");
+
+LCD_SPI.$name                      = "LCD_SPI";
+LCD_SPI.mode                       = "CONTROLLER";
+LCD_SPI.spiClkSrc                  = "BUSCLK";
+LCD_SPI.targetBitRate              = 8000000;
+LCD_SPI.frameFormat                = "MOTO3";
+LCD_SPI.polarity                   = "0";
+LCD_SPI.phase                      = "0";
+LCD_SPI.dataSize                   = 8;
+LCD_SPI.bitOrder                   = "MSB";
+LCD_SPI.direction                  = "PICO";
+LCD_SPI.chipSelect                 = [];
+LCD_SPI.peripheral.$assign         = "SPI1";
+LCD_SPI.peripheral.sclkPin.$assign = "PB9";
+LCD_SPI.peripheral.mosiPin.$assign = "PB8";
+
+LCD_CONTROL.$name = "LCD_CONTROL";
+LCD_CONTROL.associatedPins.create(3);
+LCD_CONTROL.associatedPins[0].$name        = "LCD_CS";
+LCD_CONTROL.associatedPins[0].initialValue = "SET";
+LCD_CONTROL.associatedPins[0].pin.$assign  = "PB6";
+LCD_CONTROL.associatedPins[1].$name        = "LCD_DC";
+LCD_CONTROL.associatedPins[1].initialValue = "SET";
+LCD_CONTROL.associatedPins[1].pin.$assign  = "PB24";
+LCD_CONTROL.associatedPins[2].$name        = "LCD_RESET";
+LCD_CONTROL.associatedPins[2].initialValue = "SET";
+LCD_CONTROL.associatedPins[2].pin.$assign  = "PB20";
+
+SET_ID_INPUTS.$name = "SET_ID_INPUTS";
+SET_ID_INPUTS.associatedPins.create(4);
+SET_ID_INPUTS.associatedPins[0].$name            = "SET_ID_BIT0";
+SET_ID_INPUTS.associatedPins[0].direction        = "INPUT";
+SET_ID_INPUTS.associatedPins[0].internalResistor = "PULL_UP";
+SET_ID_INPUTS.associatedPins[0].pin.$assign      = "PA28";
+SET_ID_INPUTS.associatedPins[1].$name            = "SET_ID_BIT1";
+SET_ID_INPUTS.associatedPins[1].direction        = "INPUT";
+SET_ID_INPUTS.associatedPins[1].internalResistor = "PULL_UP";
+SET_ID_INPUTS.associatedPins[1].pin.$assign      = "PA31";
+SET_ID_INPUTS.associatedPins[2].$name            = "SET_ID_BIT2";
+SET_ID_INPUTS.associatedPins[2].direction        = "INPUT";
+SET_ID_INPUTS.associatedPins[2].internalResistor = "PULL_UP";
+SET_ID_INPUTS.associatedPins[2].pin.$assign      = "PA13";
+SET_ID_INPUTS.associatedPins[3].$name            = "SET_ID_BIT3";
+SET_ID_INPUTS.associatedPins[3].direction        = "INPUT";
+SET_ID_INPUTS.associatedPins[3].internalResistor = "PULL_UP";
+SET_ID_INPUTS.associatedPins[3].pin.$assign      = "PA16";
+
+DIP_LEGACY_PROBE.$name = "DIP_LEGACY_PROBE";
+DIP_LEGACY_PROBE.associatedPins.create(4);
+DIP_LEGACY_PROBE.associatedPins[0].$name            = "PB0";
+DIP_LEGACY_PROBE.associatedPins[0].direction        = "INPUT";
+DIP_LEGACY_PROBE.associatedPins[0].internalResistor = "PULL_UP";
+DIP_LEGACY_PROBE.associatedPins[0].pin.$assign      = "PB0";
+DIP_LEGACY_PROBE.associatedPins[1].$name            = "PB1";
+DIP_LEGACY_PROBE.associatedPins[1].direction        = "INPUT";
+DIP_LEGACY_PROBE.associatedPins[1].internalResistor = "PULL_UP";
+DIP_LEGACY_PROBE.associatedPins[1].pin.$assign      = "PB1";
+DIP_LEGACY_PROBE.associatedPins[2].$name            = "PB2";
+DIP_LEGACY_PROBE.associatedPins[2].direction        = "INPUT";
+DIP_LEGACY_PROBE.associatedPins[2].internalResistor = "PULL_UP";
+DIP_LEGACY_PROBE.associatedPins[2].pin.$assign      = "PB2";
+DIP_LEGACY_PROBE.associatedPins[3].$name            = "PB3";
+DIP_LEGACY_PROBE.associatedPins[3].direction        = "INPUT";
+DIP_LEGACY_PROBE.associatedPins[3].internalResistor = "PULL_UP";
+DIP_LEGACY_PROBE.associatedPins[3].pin.$assign      = "PB3";
+
+LOCK_OUTPUTS.$name = "LOCK_OUTPUTS";
+LOCK_OUTPUTS.associatedPins.create(4);
+LOCK_OUTPUTS.associatedPins[0].$name        = "RED_LED";
+LOCK_OUTPUTS.associatedPins[0].initialValue = "CLEARED";
+LOCK_OUTPUTS.associatedPins[0].pin.$assign  = "PA14";
+LOCK_OUTPUTS.associatedPins[1].$name        = "GREEN_LED";
+LOCK_OUTPUTS.associatedPins[1].initialValue = "CLEARED";
+LOCK_OUTPUTS.associatedPins[1].pin.$assign  = "PA15";
+LOCK_OUTPUTS.associatedPins[2].$name        = "BUZZER";
+LOCK_OUTPUTS.associatedPins[2].initialValue = "SET";
+LOCK_OUTPUTS.associatedPins[2].pin.$assign  = "PA12";
+LOCK_OUTPUTS.associatedPins[3].$name        = "WELCOME_LED";
+LOCK_OUTPUTS.associatedPins[3].initialValue = "CLEARED";
+LOCK_OUTPUTS.associatedPins[3].pin.$assign  = "PA7";
+
+LOCK_RELAY.$name = "LOCK_RELAY";
+LOCK_RELAY.associatedPins.create(1);
+LOCK_RELAY.associatedPins[0].$name        = "DRIVE";
+LOCK_RELAY.associatedPins[0].initialValue = "CLEARED";
+LOCK_RELAY.associatedPins[0].pin.$assign  = "PB19";
+
+pinFunction4.peripheral.$suggestSolution           = "SYSCTL";
+pinFunction4.peripheral.hfxInPin.$suggestSolution  = "PA5";
+pinFunction4.peripheral.hfxOutPin.$suggestSolution = "PA6";
+Board.peripheral.$suggestSolution                  = "DEBUGSS";
+Board.peripheral.swclkPin.$suggestSolution         = "PA20";
+Board.peripheral.swdioPin.$suggestSolution         = "PA19";

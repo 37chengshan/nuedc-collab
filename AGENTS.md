@@ -16,6 +16,23 @@
 - 不把参考代码当成已经验证的比赛代码。
 - 不提交 AI 或开发过程记录，例如 `task_plan.md`、`progress.md`、`findings.md`、`process.md`、临时审查报告和推理草稿；只提交最终规范、正式文档、代码与可复现验证。
 
+## C 题四站数字钥匙当前基线
+
+截至 2026-08-01，C 题正式固件工程为
+`code/c_digital_key_lock_190mm_four_station/`，旧
+`c_digital_key_lock_145mm_full` 仅保留为历史功能基线。当前正式发布文件为：
+
+`code/c_digital_key_lock_190mm_four_station/releases/2026-08-01/c_digital_key_lock_190mm_four_uwb_full_d6_near_blind_unlock_latch.hex`
+
+现场成员确认四路 UWB 接收、距离显示与区域判定、ID `0001`、拨码显示、
+ST7735S、声光提示、近距离盲区开锁保持和锁控功能均已完成；当前唯一保留的
+算法问题是方位角精度不足。角度继续如实显示，但不参与开锁与迎宾授权。
+
+上述“现场成员确认”与自动验证分开记录：Agent 仍需分别报告源码、单元测试、
+SysConfig、构建和实机证据；没有对应日志时不得把自动验证结果扩写成
+“上板通过”。四站模型、标定数据、MATLAB/Python 仿真和报告资产均以
+2026-08-01 版本为当前事实源。
+
 ## 开工顺序
 
 每次任务都按以下顺序开始：
