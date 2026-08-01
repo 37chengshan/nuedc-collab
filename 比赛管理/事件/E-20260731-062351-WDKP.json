@@ -1,0 +1,12 @@
+{
+  "actor": "37chengshan",
+  "createdAt": "2026-07-31T06:23:51+08:00",
+  "entityId": "T-20260729-4GQN",
+  "entityType": "task",
+  "id": "E-20260731-062351-WDKP",
+  "kind": "testResult",
+  "message": "更正事件时间：本记录取代因本机时钟越过午夜而误生成的 E-20260801-061834-NNQ2。2026-07-31 两站145 mm候选已完成源码实现与主机验证：仅使用sessionId=2026-07-31T17-42-29-827Z，59原始/56有效采集/43物理点；实现0.8 s lower-3、定点43点4NN、HIGH/MEDIUM/REJECT、500 ms仅显示保持、双角度诊断且angleValid/angleAuthValid固定false。0100/0200按站点地址处理，P0/P1无独立钥匙地址时即使HIGH也闭锁；两路同一key_addr且ID匹配才可授权。模型0x0100/384 B/CRC32 91F6EF14。验证：12/12估计器测试、11/11集成测试；1116向量最大定点差0.503 mm且质量一致；最终表留出P95=157.64 mm，滚动P95=178.04 mm，HIGH覆盖23.46%、P95=116.32 mm、max=273.81 mm。其余6会话79采集已归档；第二UART、CCS构建、烧录、目标板WCET和上板仍未验证。",
+  "recordType": "event",
+  "schemaVersion": 1,
+  "supersedesEventId": "E-20260801-061834-NNQ2"
+}

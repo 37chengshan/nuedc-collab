@@ -1,0 +1,12 @@
+{
+  "actor": "37chengshan",
+  "createdAt": "2026-07-30T15:57:51+08:00",
+  "entityId": "T-20260729-E7RP",
+  "entityType": "task",
+  "id": "E-20260730-155751-EKHG",
+  "kind": "testResult",
+  "message": "2026-07-30 C题 v0.4 打印验证：公差试片 C_problem_PETG_fit_test_arranged_v1.3mf 已完成实物打印，用户确认打印效果非常完美；但 0.25/0.35/0.45/0.55 mm 四档中最佳装配配合间隙尚未确定，暂不将其写成最终公差结论。独立部件 G-code 已生成 13 份、共 22 个实例，全部居中排布；13/13 文件通过温度、边界、对象数量与重叠校验。",
+  "recordType": "event",
+  "schemaVersion": 1,
+  "supersedesEventId": "E-20260730-115216-NEGJ"
+}

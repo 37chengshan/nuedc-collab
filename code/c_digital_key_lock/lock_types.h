@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define LOCK_UWB_CHANNEL_COUNT 3U
+#define LOCK_UWB_CHANNEL_COUNT 2U
 #define LOCK_UWB_RAW_LINE_CAPACITY 96U
 #define LOCK_ID_BIT_COUNT 4U
 
@@ -20,8 +20,13 @@ typedef struct {
 
 typedef struct {
     bool valid;
+    bool station_addr_valid;
+    bool key_addr_valid;
+    uint16_t station_addr;
     uint16_t key_addr;
     uint8_t key_id;
+    bool snr_valid;
+    int16_t snr_db;
     uint32_t distance_mm;
     uint32_t timestamp_ms;
     uint8_t raw_length;
@@ -32,15 +37,28 @@ typedef enum {
     LOCK_LOCALIZATION_NONE = 0,
     LOCK_LOCALIZATION_HOLD,
     LOCK_LOCALIZATION_TWO_ANCHOR,
-    LOCK_LOCALIZATION_THREE_ANCHOR
+    LOCK_LOCALIZATION_THREE_ANCHOR,
+    LOCK_LOCALIZATION_TWO_STATION_EMPIRICAL
 } LockLocalizationMode;
+
+typedef enum {
+    LOCK_DISTANCE_REJECT = 0,
+    LOCK_DISTANCE_MEDIUM,
+    LOCK_DISTANCE_HIGH
+} LockDistanceQuality;
 
 typedef struct {
     bool valid;
+    bool auth_distance_valid;
+    bool held;
+    bool angle_valid;
+    bool angle_auth_valid;
+    bool key_id_valid;
     uint16_t key_addr;
     uint8_t key_id;
     uint8_t valid_mask;
     uint8_t anchor_count;
+    LockDistanceQuality distance_quality;
     uint32_t updated_ms;
     float x_mm;
     float y_mm;
@@ -48,6 +66,20 @@ typedef struct {
     float radial_mm;
     float bearing_deg;
     float residual_mm;
+    int16_t angle_candidate_1_deg;
+    int16_t angle_candidate_2_deg;
+    uint8_t angle_confidence;
+    uint8_t angle_candidate_1_weight;
+    uint8_t angle_candidate_2_weight;
+    uint8_t angle_candidate_span_deg;
+    uint8_t sample_count[LOCK_UWB_CHANNEL_COUNT];
+    uint16_t mad_mm[LOCK_UWB_CHANNEL_COUNT];
+    int16_t snr_db[LOCK_UWB_CHANNEL_COUNT];
+    uint16_t age_ms;
+    uint16_t model_version;
+    uint16_t model_bytes;
+    uint32_t model_crc32;
+    uint32_t failure_flags;
     LockLocalizationMode mode;
 } LockPositionSolution;
 

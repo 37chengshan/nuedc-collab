@@ -15,11 +15,14 @@ typedef struct {
     LockPositionSolution position;
     LockOutputSnapshot outputs;
     LockDisplayModel display;
+    uint32_t last_display_update_ms;
+    bool display_initialized;
 } LockApp;
 
 void lock_app_init(LockApp *app, LockIdInputBackend backend);
 void lock_app_process_uart_byte(LockApp *app, uint8_t channel, uint8_t byte,
                                 uint32_t now_ms);
+void lock_app_report_uart_overflow(LockApp *app, uint8_t channel);
 void lock_app_update(LockApp *app, uint32_t now_ms,
                      uint8_t raw_id_low_active_bits);
 const LockOutputSnapshot *lock_app_outputs(const LockApp *app);

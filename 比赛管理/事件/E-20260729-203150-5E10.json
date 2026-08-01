@@ -1,0 +1,11 @@
+{
+  "actor": "37chengshan",
+  "createdAt": "2026-07-29T20:31:50+08:00",
+  "entityId": "T-20260729-E7RP",
+  "entityType": "task",
+  "id": "E-20260729-203150-5E10",
+  "kind": "decision",
+  "message": "采用 v0.3 单热床免拼壳方案替代 v0.2 的 596 mm 扇区拼壳：门锁收敛为 Ø276×100 mm，一体底壳 268×268×76 mm、一体上盖 266×266×17.2 mm；显示器冻结为 1.77 英寸 ST7735S PCB 56×34 mm、孔距 52×30 mm、孔径 2.5 mm；主壳使用定位唇边和卡扣快拆，不使用扇区粘接。A1/A2/A3 坐标仍为 design_candidate，装配后必须实测替换。",
+  "recordType": "event",
+  "schemaVersion": 1
+}

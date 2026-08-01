@@ -1,0 +1,12 @@
+{
+  "actor": "37chengshan",
+  "createdAt": "2026-07-30T08:17:20+08:00",
+  "entityId": "T-20260729-E7RP",
+  "entityType": "task",
+  "id": "E-20260730-081720-68ZB",
+  "kind": "testResult",
+  "message": "2026-07-30 v0.4 软件交付验证：新增可拆钥匙控制面板、真实贯通启动按键/LED/拨动槽、捕获式按键帽、拨动滑块、候选控制板导轨、钥匙内部至少 1 mm 占位净距、84×64 mm 背面板、bit3→bit0 与 ON 方向标记、M2.5 拨码固定笼、FRONT 标记和 8 根顶盖加强筋。22/22 Python CAD 回归通过；13/13 STL 重载无退化三角形和开放边界；13 种 STL、16 个实例按确定性三盘切片。3 份完整 G-code 与 3 份首层验证 G-code 均 3/3 通过，对象数 1/1/14，命名对象重叠、包含 7 mm brim 的实际足迹重叠及未归属首层挤出均为 0；三盘首层范围为 9.361～290.639 mm、10.361～289.639 mm、X 6.208～293.792/Y 40.858～259.142 mm。估算 631.04 g PETG、2d 1h 59m 24s。最终 ZIP、内部文件 SHA256 与压缩包完整性校验均通过；仓库 schemas、typecheck、test、validate 通过。该结果仅证明模型、网格、摆盘和 G-code 软件验证，不证明 v0.4 首层、整盘打印、公差、按键/拨动触发行程、身份 ID 操作、装配或 UWB 功能通过。",
+  "recordType": "event",
+  "schemaVersion": 1,
+  "supersedesEventId": "E-20260729-224201-BEM5"
+}

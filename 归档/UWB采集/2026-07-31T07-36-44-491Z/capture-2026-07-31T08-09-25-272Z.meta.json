@@ -1,0 +1,11 @@
+{
+  "id": "capture-2026-07-31T08-09-25-272Z",
+  "label": "line_r300cm_ap00_rep2",
+  "durationSeconds": 45,
+  "startedAt": "2026-07-31T08:09:25.272Z",
+  "endsAt": "2026-07-31T08:10:10.272Z",
+  "endedAt": "2026-07-31T08:10:10.302Z",
+  "sessionId": "2026-07-31T07-36-44-491Z",
+  "frameCount": 845,
+  "status": "completed"
+}

@@ -1,0 +1,147 @@
+{
+  "schema_version": 1,
+  "extends": "parameters_v0_4.json",
+  "revision": "0.6",
+  "design_variant": "EWT550 数字钥匙盒体 + 原 v0.4 上盖",
+  "status": "盒体参数化建模与软件网格验证候选；PCB 厚度、顶部器件包络和天线槽宽仍为 provisional，电池与稳压模块尺寸未知并由用户热熔胶固定",
+  "job_name": "C_problem_EWT550_key_box_v0_6",
+  "printer": {
+    "bed_x": 256.0,
+    "bed_y": 256.0,
+    "bed_z": 256.0
+  },
+  "key_box_v0_6": {
+    "body": {
+      "output_filename": "钥匙盒体_v0.6.stl",
+      "outer_x": 105.0,
+      "outer_y": 58.0,
+      "height": 35.0,
+      "corner_chamfer": 9.0,
+      "floor_thickness": 3.2,
+      "lower_wall_thickness": 2.4,
+      "cover_fit_wall_thickness": 1.8,
+      "cover_fit_depth": 4.0,
+      "cover_skirt_depth": 1.8,
+      "cover_plate_thickness": 3.0,
+      "assembled_outer_x": 105.0,
+      "assembled_outer_y": 58.0,
+      "assembled_height_with_cover": 38.0,
+      "official_limit_x": 120.0,
+      "official_limit_y": 80.0,
+      "official_height_limit": 40.0,
+      "margin_below_limit_x": 15.0,
+      "margin_below_limit_y": 22.0,
+      "margin_below_height_limit": 2.0,
+      "expected_top_opening_x": 101.4,
+      "expected_top_opening_y": 54.4
+    },
+    "cover_v0_4": {
+      "source_path_from_repository_root": "生成内容/3D打印/C题/v0.4/STL模型文件/compact_key_top_cover.stl",
+      "output_filename": "钥匙盒盖_v0.4.stl",
+      "source_sha256": "05317c264a8327e5853fb774c1f9568e3b9d3e38bddd5eb73f3069ae7fb398ef",
+      "source_stl_dimensions_mm": [
+        104.3,
+        57.3,
+        7.0
+      ],
+      "source_mesh_skirt_outer_x": 99.3,
+      "source_mesh_skirt_outer_y": 52.3,
+      "source_mesh_snap_width_x": 10.0,
+      "source_mesh_snap_thickness_y": 1.8,
+      "source_mesh_snap_height_z": 4.0,
+      "measured_skirt_outer_x": 98.0,
+      "measured_skirt_outer_y": 50.0,
+      "measured_snap_thickness": 2.0,
+      "measured_snap_width": 6.0,
+      "measured_snap_height": 4.0
+    },
+    "snap_fit": {
+      "retention_pad_enabled": false,
+      "measured_snap_outer_half_y": 27.0,
+      "top_opening_half_y": 27.2,
+      "insertion_clearance_y": 0.2,
+      "loose_cover_risk": true
+    },
+    "pcb": {
+      "x": 60.0,
+      "y": 31.0,
+      "datasheet_nominal_x": 58.0,
+      "datasheet_nominal_y": 30.0,
+      "thickness": 1.6,
+      "thickness_provisional": true,
+      "center_x": 18.5,
+      "center_y": 0.0,
+      "main_x_min": -11.5,
+      "main_x_max": 48.5,
+      "bottom_z": 23.0,
+      "component_envelope_from_bottom": 11.0,
+      "component_envelope_provisional": true,
+      "highest_z": 34.0,
+      "top_clearance": 1.0,
+      "expected_right_inner_wall_x": 50.1,
+      "right_wall_clearance": 1.6
+    },
+    "headers": {
+      "row_count": 2,
+      "pins_per_row": null,
+      "pin_count_provisional": true,
+      "pin_length": 12.0,
+      "row_center_spacing": 15.0,
+      "dupont_female_height": 15.0,
+      "active_x_min": 4.0,
+      "active_x_max": 34.0,
+      "active_x_range_provisional": true
+    },
+    "antenna": {
+      "tongue_start_x": 48.0,
+      "tongue_length": 9.0,
+      "tongue_end_x": 57.0,
+      "slot_width_y": 28.0,
+      "slot_width_provisional": true,
+      "slot_bottom_z": 21.0,
+      "slot_top_z": 27.0
+    },
+    "power_components": {
+      "battery_dimensions_known": false,
+      "regulator_dimensions_known": false,
+      "mount_method": "user_hot_melt_glue",
+      "printed_supports_enabled": false,
+      "reserved_cavity_only": true
+    },
+    "pcb_support_table": {
+      "mode": "single_central_rectangular_pedestal",
+      "x": 40.0,
+      "y": 8.0,
+      "center_x": 18.5,
+      "center_y": 0.0,
+      "bottom_z": 3.2,
+      "top_z": 23.0,
+      "height_z": 19.8,
+      "height_over_pin_length": 7.8
+    },
+    "wire_management": {
+      "row_channel_width": 6.0,
+      "row_channel_width_provisional": true,
+      "printed_rails_enabled": false,
+      "dupont_lowest_z": 8.0,
+      "dupont_floor_clearance": 4.8,
+      "pin_lowest_z": 11.0,
+      "pin_floor_clearance": 7.8
+    },
+    "internal_features": {
+      "uwb_support_only": true,
+      "battery_supports_enabled": false,
+      "regulator_supports_enabled": false,
+      "pcb_locator_columns_enabled": false,
+      "internal_snap_features_enabled": false
+    },
+    "provisional_fields": [
+      "pcb.thickness",
+      "pcb.component_envelope_from_bottom",
+      "headers.active_x_min",
+      "headers.active_x_max",
+      "antenna.slot_width_y",
+      "wire_management.row_channel_width"
+    ]
+  }
+}

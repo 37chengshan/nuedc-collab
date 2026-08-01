@@ -1,0 +1,11 @@
+{
+  "actor": "37chengshan",
+  "createdAt": "2026-08-01T06:18:34+08:00",
+  "entityId": "T-20260729-4GQN",
+  "entityType": "task",
+  "id": "E-20260801-061834-NNQ2",
+  "kind": "testResult",
+  "message": "2026-07-31 两站145 mm候选已完成源码实现与主机验证：仅使用sessionId=2026-07-31T17-42-29-827Z，审计为59原始/56有效采集/43物理点；实现0.8 s lower-3、定点43点4NN、HIGH/MEDIUM/REJECT、REJECT仅显示保持500 ms、双角度诊断且angleValid/angleAuthValid固定false。修复地址语义：0100/0200作为站点地址，不再取低4位冒充钥匙ID；P0/P1无独立钥匙地址时即使HIGH也闭锁，两路同一key_addr且ID匹配才可授权。模型version=0x0100、384 B、CRC32=91F6EF14，版本/长度/原型数/CRC错误闭锁。验证：估计器12/12 PASS（145断言）、协议/融合/FSM 11/11 PASS（364断言）、1116个定点/浮点向量最大差0.503 mm且质量等级一致；最终表物理点留出MAE/P95/max=41.92/157.64/183.81 mm，滚动P95=178.04 mm，HIGH覆盖23.46%、P95=116.32 mm、max=273.81 mm。主机静态估算LockApp+两路512 B环=2784 B；主机-O2平均0.202 us/更新，仅作复杂度证据。其余6会话79采集158文件已按会话归档并逐文件校验SHA-256，目标会话59采集原地保留。当前仍未配置第二路UART，未生成完整SysConfig/CCS构建产物，未烧录、未测目标板WCET、未上板。",
+  "recordType": "event",
+  "schemaVersion": 1
+}

@@ -1,0 +1,11 @@
+{
+  "actor": "37chengshan",
+  "createdAt": "2026-07-29T18:04:43+08:00",
+  "entityId": "T-20260729-E7RP",
+  "entityType": "task",
+  "id": "E-20260729-180443-RNC5",
+  "kind": "testResult",
+  "message": "v0.2 软件验证通过：22/22 STL 重载后无退化三角形和开放边界；钥匙 105×58×33 mm、门锁 Ø596×125 mm，均在题目包络内；9/9 G-code 的坐标、喷嘴 240/235 ℃、热床 80 ℃、最高速度 100 mm/s 和加速度边界通过静态检查；Orca 估算合计 1967.17 g PETG、5d 23h 37m 24s；GUI 稳定预览工程已在 OrcaSlicer 2.4.2 成功打开并显示 9 盘。尚未进行实机打印、装配和天线测试。",
+  "recordType": "event",
+  "schemaVersion": 1
+}

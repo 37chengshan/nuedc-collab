@@ -1,0 +1,11 @@
+{
+  "actor": "37chengshan",
+  "createdAt": "2026-07-31T23:31:07+00:00",
+  "entityId": "T-20260729-4GQN",
+  "entityType": "task",
+  "id": "E-20260731-233107-RS6Q",
+  "kind": "testResult",
+  "message": "2026-07-31 两站145 mm地猛星版本已完成源码、SysConfig和CCS构建：UART1 PA8/PA9右站、UART0 PA0/PA1左站；四位拨码PA28/PA31/PA13/PA16直读并30 ms去抖；ST7735S使用SPI1 PB9/PB8/PB6及PB24/PB20，每500 ms显示SET、RX、PAIR、距离质量和锁态；PA14/PA15/PA7、PA12、PB19已接入红绿/迎宾灯、有源蜂鸣器和锁控。仅使用sessionId=2026-07-31T17-42-29-827Z的56组有效采集、43物理点，模型0x0100/384 B/CRC32 0x91F6EF14；新增厂商标准无SNR钥匙帧受限兼容，仅两路均无SNR且同一key_addr有效时放行其余质量门，敏感性回放HIGH覆盖24.00%、P95 116.32 mm、最大273.81 mm。估计器13项173断言、协议/融合/FSM/UI 14项417断言、定点一致性1116向量18973断言全部通过。SysConfig 1.28.0 + SDK 2.10.00.04生成通过，TI Clang 5.1.1 CCS Debug全量构建0错误；FLASH 24912 B、静态SRAM 1811 B、栈512 B。尚未烧录、未验证两路921600实物接收/屏幕方向与偏移/蜂鸣器和PB19极性、未测目标板WCET；正式第三、第四站任务未完成。",
+  "recordType": "event",
+  "schemaVersion": 1
+}

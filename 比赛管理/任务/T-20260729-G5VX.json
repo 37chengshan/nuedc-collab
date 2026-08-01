@@ -1,0 +1,28 @@
+{
+  "acceptanceCriteria": [
+    "1 m、2 m、3 m 与 -45°、-30°、-15°、0°、15°、30°、45° 共 21 点每点至少记录 20 组有效结果",
+    "径向距离绝对误差不大于 0.30 m、方位角绝对误差不大于 10°，并保留原始 d1/d2/d3、位置、残差和异常数据",
+    "在 -45°、0°、45° 对 1 m 与 2 m 边界完成由外向内和由内向外测试，判定误差绝对值不大于 0.20 m",
+    "通信距离不小于 3 m，合法与非法 4 bit ID、背面显示、迎宾声光和开闭锁 LED 状态均有可复现证据",
+    "空旷、靠墙、靠桌、人员位于门锁背面和不同钥匙姿态的抗多径结果已归档并进入设计报告"
+  ],
+  "blockingIssueIds": [],
+  "completedAcceptanceCriteria": [],
+  "createdAt": "2026-07-29T15:19:46+08:00",
+  "dependencies": [
+    "T-20260729-4GQN",
+    "T-20260729-E7RP"
+  ],
+  "description": "在最终结构与目标固件上按官方评分场景留证，覆盖通信距离、定位误差、1 m/2 m 双向边界、合法/非法 ID、背面显示、声光锁态和抗多径；测试数据与代码、结构版本互相可追溯。",
+  "id": "T-20260729-G5VX",
+  "module": "C题系统联调",
+  "owner": "37chengshan",
+  "participants": [],
+  "priority": "critical",
+  "recordType": "task",
+  "relatedCommits": [],
+  "schemaVersion": 1,
+  "status": "todo",
+  "title": "完成 C 题定位、边界、抗多径与评分回归",
+  "updatedAt": "2026-07-29T15:19:46+08:00"
+}

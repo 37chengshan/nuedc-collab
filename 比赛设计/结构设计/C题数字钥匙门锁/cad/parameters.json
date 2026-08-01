@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "revision": "0.1",
+  "units": "mm",
+  "status": "打印机参数与部分接口尺寸待确认",
+  "printer": {
+    "provisional": true,
+    "bed_x": 180.0,
+    "bed_y": 180.0,
+    "bed_z": 180.0,
+    "nozzle": 0.4,
+    "layer_height": 0.2,
+    "material": "PLA"
+  },
+  "manufacturing": {
+    "wall": 2.4,
+    "floor": 2.8,
+    "clearance_xy": 0.35,
+    "clearance_z": 0.3,
+    "clip_wall": 2.2,
+    "minimum_feature": 1.2
+  },
+  "official_envelope": {
+    "key_x": 120.0,
+    "key_y": 80.0,
+    "key_z": 40.0,
+    "lock_diameter": 600.0,
+    "lock_height": 300.0
+  },
+  "uwb": {
+    "board_x": 24.0,
+    "board_y": 14.0,
+    "assembly_z": 8.0,
+    "assembly_z_upper_bound": 30.0,
+    "type_c_opening_x": 12.0,
+    "type_c_opening_z": 7.0,
+    "mounting_holes_known": false,
+    "port_direction": "+X（暂定，可在参数中反向）"
+  },
+  "key_battery": {
+    "x": 42.35,
+    "y": 30.54,
+    "z": 4.92
+  },
+  "lock_battery": {
+    "x": 68.0,
+    "y": 55.0,
+    "z": 19.0
+  },
+  "vehicle_pcb": {
+    "x": 100.0,
+    "y": 55.0,
+    "assembly_z": 18.0,
+    "mounting_holes_known": false,
+    "retention": "可调边夹"
+  },
+  "display": {
+    "board_x": 84.0,
+    "board_y": 50.0,
+    "assembly_z": 12.0,
+    "visible_x": 78.0,
+    "visible_y": 44.0,
+    "visible_size_provisional": true,
+    "mounting_holes_known": false,
+    "retention": "快拆卡匣与可替换前框"
+  },
+  "dip_switch": {
+    "x": 12.5,
+    "y": 11.72,
+    "z": 9.5,
+    "panel_clearance": 0.6
+  },
+  "key_shell": {
+    "outer_x": 92.0,
+    "outer_y": 50.0,
+    "outer_z": 38.0,
+    "lid_z": 2.4,
+    "service_window_x": 14.0,
+    "service_window_z": 10.0
+  },
+  "lock_structure": {
+    "zero_ring_outer_radius": 298.0,
+    "zero_ring_inner_radius": 290.0,
+    "zero_ring_z": 5.0,
+    "zero_ring_segment_deg": 30.0,
+    "electronics_tray_x": 168.0,
+    "electronics_tray_y": 130.0,
+    "electronics_tray_z": 70.0,
+    "rear_panel_z": 2.8,
+    "hub_radius": 58.0,
+    "hub_z": 4.0,
+    "beam_outer_y": 22.0,
+    "beam_z": 10.0,
+    "beam_wall": 3.0,
+    "maximum_beam_segment": 110.0,
+    "anchor_reference_z": 48.0
+  },
+  "anchors": [
+    { "id": "A1", "x": -250.0, "y": 80.0, "yaw_deg": 0.0 },
+    { "id": "A2", "x": 250.0, "y": 80.0, "yaw_deg": 0.0 },
+    { "id": "A3", "x": 0.0, "y": -200.0, "yaw_deg": 0.0 }
+  ],
+  "controls": {
+    "lock_led_diameter": 5.2,
+    "welcome_led_diameter": 5.2,
+    "debug_opening_x": 14.0,
+    "debug_opening_y": 8.0,
+    "buzzer_opening_known": false
+  }
+}

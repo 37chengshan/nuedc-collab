@@ -10,6 +10,7 @@ typedef enum {
 
 typedef struct {
     LockIdInputBackend backend;
+    bool direct_initialized;
     uint8_t logical_value;
     uint8_t stable_raw_bits;
     uint8_t last_raw_bits;

@@ -1,0 +1,11 @@
+{
+  "actor": "37chengshan",
+  "createdAt": "2026-07-29T18:04:40+08:00",
+  "entityId": "T-20260729-E7RP",
+  "entityType": "task",
+  "id": "E-20260729-180440-BF2D",
+  "kind": "decision",
+  "message": "结构方向冻结到 v0.2 产品化外观：废弃 v0.1 裸露定位臂，采用完整圆形门锁上壳、隐藏径向骨架、三枚外周 UWB 快拆卡匣、中央检修盖和 105×58×33 mm 数字钥匙壳。为规避 OrcaSlicer 2.4.2 对未注册自定义预设标识的载入崩溃，交付拆分为 GUI 稳定预览 3MF、已切片归档和 9 份独立 G-code；独立 G-code 是 CR-3040D 实际打印参数的事实源。",
+  "recordType": "event",
+  "schemaVersion": 1
+}

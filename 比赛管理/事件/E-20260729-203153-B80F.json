@@ -1,0 +1,11 @@
+{
+  "actor": "37chengshan",
+  "createdAt": "2026-07-29T20:31:53+08:00",
+  "entityId": "T-20260729-E7RP",
+  "entityType": "task",
+  "id": "E-20260729-203153-B80F",
+  "kind": "testResult",
+  "message": "v0.3 软件验证：7/7 Python 单元测试通过；10/10 STL 重载通过，退化三角形和开放边界均为 0；10 种 STL、13 个实例自动分为 3 盘；3/3 G-code 静态校验通过，首层/常规喷嘴 240/235 ℃、热床 80 ℃、最大速度 100 mm/s，估算 619.59 g、1d 20h 59m 9s。Repetier-Host 第 3 盘顶视摆盘检查居中，已启动试打并观察到 Layer 3/122、喷嘴 240.66/240 ℃、热床 80.01/80 ℃，当时无软件错误；未验证整盘完成、装配、卡扣 20 次循环或 UWB 性能。",
+  "recordType": "event",
+  "schemaVersion": 1
+}

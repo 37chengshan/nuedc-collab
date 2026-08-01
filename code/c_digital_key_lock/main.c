@@ -9,7 +9,7 @@ int main(void)
 
     SYSCFG_DL_init();
     lock_hw_init();
-    lock_app_init(&app, LOCK_ID_INPUT_TOGGLE_BUTTONS);
+    lock_app_init(&app, LOCK_ID_INPUT_DIRECT_BITS);
 
     while (1) {
         uint8_t channel;
@@ -21,6 +21,9 @@ int main(void)
             while (lock_hw_uart_channel_read_byte(channel, &byte)) {
                 lock_app_process_uart_byte(&app, channel, byte, now_ms);
                 had_uart_work = true;
+            }
+            if (lock_hw_uart_channel_take_overflow(channel)) {
+                lock_app_report_uart_overflow(&app, channel);
             }
         }
 

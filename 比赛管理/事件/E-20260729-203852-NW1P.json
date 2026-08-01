@@ -1,0 +1,12 @@
+{
+  "actor": "37chengshan",
+  "createdAt": "2026-07-29T20:38:52+08:00",
+  "entityId": "T-20260729-E7RP",
+  "entityType": "task",
+  "id": "E-20260729-203852-NW1P",
+  "kind": "testResult",
+  "message": "更正第 3 盘首次试打结论：虽然 Repetier-Host 曾显示 Layer 3/122、喷嘴 240.66/240 ℃、热床 80.01/80 ℃且软件无报错，但随后现场观察到打印物被喷嘴触碰并卷曲，打印已中止，喷嘴和热床加热目标均已关闭。该次结果判定为首层实物打印失败，不构成打印通过；需在清理平台后结合现场照片排查残留/清洁、调平与 Z 偏置、首层压实、PETG 粘附或局部翘边，确认前不得自动重启或启动大壳长时间打印。",
+  "recordType": "event",
+  "schemaVersion": 1,
+  "supersedesEventId": "E-20260729-203153-B80F"
+}

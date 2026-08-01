@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-29T11:07:56+08:00",
+  "generatedAt": "2026-07-30T16:00:48+08:00",
   "ideas": [
     {
       "author": "37chengshan",
@@ -17,24 +17,52 @@
   ],
   "issues": [
     {
-      "blocking": true,
+      "blocking": false,
       "createdAt": "2026-07-28T20:10:00+08:00",
       "id": "I-20260728-91BC",
       "linkedTaskIds": [],
       "owner": "37chengshan",
       "recordType": "issue",
       "relatedCommits": [],
-      "resolution": "",
+      "resolution": "111",
       "schemaVersion": 1,
       "severity": "high",
-      "status": "investigating",
+      "status": "resolved",
       "symptoms": [
         "串口偶发丢帧",
         "控制延迟抖动"
       ],
       "title": "K230 串口偶发丢帧",
-      "updatedAt": "2026-07-28T20:10:00+08:00",
+      "updatedAt": "2026-07-29T11:27:57+08:00",
       "workaround": "降低采样频率后暂稳"
+    },
+    {
+      "blocking": true,
+      "createdAt": "2026-07-29T15:21:31+08:00",
+      "description": "已确认尺寸：小车 PCB 100×55 mm；503040 钥匙电池 42.35×30.54×4.92 mm；门锁电池组 68×55×19 mm；UWB 24×14 mm、总高上限 30 mm；4 位拨码 12.5×11.72×9.5 mm；1.77 英寸 ST7735S PCB 56×34 mm、可视区名义值 38.5×32 mm、孔距 52×30 mm、孔径 2.5 mm。v0.4 已为这些名义外廓生成可替换结构，但关键高度、孔位、执行杆和线束空间仍需实测后才能冻结装配版。",
+      "id": "I-20260729-152X",
+      "linkedTaskIds": [
+        "T-20260729-E7RP"
+      ],
+      "owner": "37chengshan",
+      "recordType": "issue",
+      "relatedCommits": [],
+      "resolution": "",
+      "schemaVersion": 1,
+      "severity": "medium",
+      "status": "investigating",
+      "symptoms": [
+        "CR-3040D 与彩格 PETG 参数已确认并用于 v0.4：300×300×400 mm、0.4 mm 喷嘴、1.75 mm 耗材；材料范围喷嘴 235～270 ℃、热床 80～90 ℃、常规速度 40～100 mm/s",
+        "当前完整 G-code 使用等待/首层/常规喷嘴 220/255/250 ℃、首层/常规热床 90/85 ℃；保持原三盘布局",
+        "已为 13 种部件分别生成居中 G-code，共 22 个实例；13/13 文件通过温度、边界、对象数量和重叠校验，文件名标明 x1/x2/x3 数量",
+        "13 种 STL、16 个标准实例已生成；24/24 CAD 回归和 13/13 STL 重载闭合检查通过，钥匙 105×58×33 mm、门锁 Ø276×100 mm 均在官方包络内",
+        "0.25/0.35/0.45/0.55 mm 四档公差试片已由用户于 2026-07-30 实物打印，用户反馈打印效果非常完美；尚未记录四档中配合手感最佳的具体间隙",
+        "仍缺 UWB Type-C 方向/突出高度/天线禁布区、100×55 mm PCB 孔位/最高器件、ST7735S 总厚度/排针/连接器方向",
+        "仍缺钥匙 50×20 mm 候选控制板、启动按键、拨动开关执行杆、LED、蜂鸣器、电源板、线束和紧固件实测尺寸"
+      ],
+      "title": "C题3D结构仍缺关键接口与装配实测尺寸",
+      "updatedAt": "2026-07-30T15:45:10+08:00",
+      "workaround": "当前正式输出位于生成内容/3D打印/C题/v0.4/orcaslicer/。先使用 trial/ 中对应盘号的首层验证 G-code，确认床面清洁、调平、Z 偏置、首层连续且无喷嘴刮碰后，再运行 gcode/ 完整文件；建议先打印第 3 盘并试装钥匙控制面板、按键、拨动滑块、拨码和卡扣。不要使用旧聚合 3MF、旧 G-code，也不要在 Repetier-Host 中用旧 Slic3r 参数重切。最终冻结前必须记录公差最佳档位并补齐 UWB、PCB、显示器、钥匙控制板/开关、LED、蜂鸣器、线束和紧固件实测尺寸。"
     }
   ],
   "members": [
@@ -85,119 +113,523 @@
     {
       "authorEmail": "37chengshan@users.noreply.github.com",
       "authorName": "37chengshan",
-      "committedAt": "2026-07-29T10:59:18+08:00",
+      "committedAt": "2026-07-30T11:44:55+08:00",
       "parents": [
-        "4c96778690fe558b996082645121f3381f920c74"
+        "2ee553f0fece226d39aabd7eea4805008f3ced7b"
       ],
-      "sha": "e3e08d69ee96dfd9af2744446f22f32b45f0a8e5",
-      "shortSha": "e3e08d6",
-      "subject": "feat: 完成本地协作台与安全同步流程"
+      "sha": "dc73b8c45aed59373f7f1d33747f867d13c3bafb",
+      "shortSha": "dc73b8c",
+      "subject": "docs: 归档EWM550资料与UWB实验模板"
     },
     {
       "authorEmail": "37chengshan@users.noreply.github.com",
       "authorName": "37chengshan",
-      "committedAt": "2026-07-29T10:27:20+08:00",
+      "committedAt": "2026-07-30T11:39:27+08:00",
       "parents": [
-        "59790038a68ad8d65b53159582d926b539c2192c"
+        "7dfe2e75cc051119dae2884b10bc85993e03a0bf"
       ],
-      "sha": "4c96778690fe558b996082645121f3381f920c74",
-      "shortSha": "4c96778",
-      "subject": "docs: 完善AI协作手册并加入MSPM0技能"
+      "sha": "2ee553f0fece226d39aabd7eea4805008f3ced7b",
+      "shortSha": "2ee553f",
+      "subject": "docs: 固化C题方案与UWB资料"
     },
     {
       "authorEmail": "37chengshan@users.noreply.github.com",
       "authorName": "37chengshan",
-      "committedAt": "2026-07-29T10:19:20+08:00",
+      "committedAt": "2026-07-30T11:38:48+08:00",
       "parents": [
-        "77d4a454b79af3fe512216086563de477cde3198"
+        "9d5d9378ad20a42f8405aa13b84e355ee26a4b4c"
       ],
-      "sha": "59790038a68ad8d65b53159582d926b539c2192c",
-      "shortSha": "5979003",
-      "subject": "总体方案"
+      "sha": "7dfe2e75cc051119dae2884b10bc85993e03a0bf",
+      "shortSha": "7dfe2e7",
+      "subject": "feat: 搭建C题数字钥匙固件骨架"
     },
     {
       "authorEmail": "37chengshan@users.noreply.github.com",
       "authorName": "37chengshan",
-      "committedAt": "2026-07-29T10:18:37+08:00",
+      "committedAt": "2026-07-29T17:28:23+08:00",
       "parents": [
-        "df39ca049a3816045a4fd4c938920655aecd45b3"
+        "b1be212d052a6e0e025288467de1b345b52e0aeb"
       ],
-      "sha": "77d4a454b79af3fe512216086563de477cde3198",
-      "shortSha": "77d4a45",
-      "subject": "docs: 添加 B 题 MCU 总体方案与官方题目"
+      "sha": "9d5d9378ad20a42f8405aa13b84e355ee26a4b4c",
+      "shortSha": "9d5d937",
+      "subject": "feat: 接入HC-12无线串口链路"
     },
     {
       "authorEmail": "37chengshan@users.noreply.github.com",
       "authorName": "37chengshan",
-      "committedAt": "2026-07-29T09:58:45+08:00",
+      "committedAt": "2026-07-29T14:52:32+08:00",
       "parents": [
-        "443f6e828710900069599b0fc99383e45bf87350"
+        "5cb10c346c381f5d824870d4e01b080485348283"
       ],
-      "sha": "df39ca049a3816045a4fd4c938920655aecd45b3",
-      "shortSha": "df39ca0",
-      "subject": "feat: 建立电赛三人文件通讯与安全协作底座"
+      "sha": "b1be212d052a6e0e025288467de1b345b52e0aeb",
+      "shortSha": "b1be212",
+      "subject": "chore: 完成双地猛星通信任务"
     },
     {
       "authorEmail": "37chengshan@users.noreply.github.com",
       "authorName": "37chengshan",
-      "committedAt": "2026-07-29T00:23:56+08:00",
+      "committedAt": "2026-07-29T14:51:57+08:00",
       "parents": [
-        "524e7f14bdfd3a2c98fdf200d74cc32703629e8a"
+        "4ba7d8650de086c08838f9ed35a0cf84001d7afb"
       ],
-      "sha": "443f6e828710900069599b0fc99383e45bf87350",
-      "shortSha": "443f6e8",
-      "subject": "docs: 添加阶段二 Git 与本地 API 草案"
+      "sha": "5cb10c346c381f5d824870d4e01b080485348283",
+      "shortSha": "5cb10c3",
+      "subject": "fix: 同步双地猛星OLED显示帧"
     },
     {
       "authorEmail": "37chengshan@users.noreply.github.com",
       "authorName": "37chengshan",
-      "committedAt": "2026-07-28T23:47:39+08:00",
+      "committedAt": "2026-07-29T14:18:40+08:00",
       "parents": [
-        "994e02e0942d0ffa42669a6eddca100c3eb57d7a"
+        "10baf3f045314ed4f59593ad7352aeb17aa734cb"
       ],
-      "sha": "524e7f14bdfd3a2c98fdf200d74cc32703629e8a",
-      "shortSha": "524e7f1",
-      "subject": "docs: 添加阶段一仓库与协议实施计划"
+      "sha": "4ba7d8650de086c08838f9ed35a0cf84001d7afb",
+      "shortSha": "4ba7d86",
+      "subject": "feat: 新增地猛星双机UART显示工程"
     },
     {
       "authorEmail": "37chengshan@users.noreply.github.com",
       "authorName": "37chengshan",
-      "committedAt": "2026-07-28T23:43:01+08:00",
+      "committedAt": "2026-07-29T12:49:02+08:00",
       "parents": [
-        "b7cf667c1a2ba16f03f01c125d6ec9ef3ddf1171"
+        "c625074f42cb3791a3e693a87d17cc50bd5d6c91"
       ],
-      "sha": "994e02e0942d0ffa42669a6eddca100c3eb57d7a",
-      "shortSha": "994e02e",
-      "subject": "docs: 增加想法与 agent-native 动作协议"
+      "sha": "10baf3f045314ed4f59593ad7352aeb17aa734cb",
+      "shortSha": "10baf3f",
+      "subject": "fix: 加固前后端协作与Git安全边界"
     },
     {
       "authorEmail": "37chengshan@users.noreply.github.com",
       "authorName": "37chengshan",
-      "committedAt": "2026-07-28T23:01:12+08:00",
+      "committedAt": "2026-07-29T12:10:18+08:00",
       "parents": [
-        "7cc4c3644aadbdd74a2f22725382a89eea579345"
+        "6d74c69303ccd16f52efbe972cbb6411cb6c255b"
       ],
-      "sha": "b7cf667c1a2ba16f03f01c125d6ec9ef3ddf1171",
-      "shortSha": "b7cf667",
-      "subject": "docs: 确认 Claude 橙色协作台设计"
+      "sha": "c625074f42cb3791a3e693a87d17cc50bd5d6c91",
+      "shortSha": "c625074",
+      "subject": "fix: 修复网页提交状态过期流程"
     },
     {
       "authorEmail": "37chengshan@users.noreply.github.com",
       "authorName": "37chengshan",
-      "committedAt": "2026-07-28T22:12:50+08:00",
-      "parents": [],
-      "sha": "7cc4c3644aadbdd74a2f22725382a89eea579345",
-      "shortSha": "7cc4c36",
-      "subject": "docs: 定义赛前协作底座设计"
+      "committedAt": "2026-07-29T11:56:59+08:00",
+      "parents": [
+        "d850a34905e1a378f06d301a19758862e5d434cd"
+      ],
+      "sha": "6d74c69303ccd16f52efbe972cbb6411cb6c255b",
+      "shortSha": "6d74c69",
+      "subject": "chore: 清理开发过程文件"
     }
   ],
-  "recentEvents": [],
+  "recentEvents": [
+    {
+      "actor": "37chengshan",
+      "createdAt": "2026-07-30T15:57:51+08:00",
+      "entityId": "T-20260729-E7RP",
+      "entityType": "task",
+      "id": "E-20260730-155751-EKHG",
+      "kind": "testResult",
+      "message": "2026-07-30 C题 v0.4 打印验证：公差试片 C_problem_PETG_fit_test_arranged_v1.3mf 已完成实物打印，用户确认打印效果非常完美；但 0.25/0.35/0.45/0.55 mm 四档中最佳装配配合间隙尚未确定，暂不将其写成最终公差结论。独立部件 G-code 已生成 13 份、共 22 个实例，全部居中排布；13/13 文件通过温度、边界、对象数量与重叠校验。",
+      "recordType": "event",
+      "schemaVersion": 1,
+      "supersedesEventId": "E-20260730-115216-NEGJ"
+    },
+    {
+      "actor": "37chengshan",
+      "createdAt": "2026-07-30T11:52:16+08:00",
+      "entityId": "T-20260729-E7RP",
+      "entityType": "task",
+      "id": "E-20260730-115216-NEGJ",
+      "kind": "testResult",
+      "message": "2026-07-30 按用户指定更新 v0.4 PETG 温度并保持原三盘布局：喷嘴等待/首层/常规为 220/255/250 ℃，热床首层/常规为 90/85 ℃。OrcaSlicer 重新生成 3 个布局 3MF、3 份完整 G-code 和 3 份首层验证 G-code；实际指令检查确认完整文件包含 M104 S220、M109 S255、M104 S250、M140/M190 S90 与 M140 S85。23/23 CAD 回归通过；完整 G-code 3/3、首层验证 3/3 通过，温度目标均在彩格 PETG 标签范围内，对象数仍为 1/1/14，布局未变。估算 631.04 g、2d 1h 59m 34s。最终 ZIP、内部 SHA256、ZIP 侧车 SHA256 与压缩包完整性校验通过。",
+      "recordType": "event",
+      "schemaVersion": 1,
+      "supersedesEventId": "E-20260730-081720-68ZB"
+    },
+    {
+      "actor": "37chengshan",
+      "createdAt": "2026-07-30T10:31:28+08:00",
+      "entityId": "T-20260729-4GQN",
+      "entityType": "task",
+      "id": "E-20260730-103128-55ST",
+      "kind": "testResult",
+      "message": "已建立 C 题 MSPM0G3507 主机侧逻辑骨架和自动化回归。测试覆盖四按键 30 ms 消抖/按下翻转/长按不重复、最终拨码 16 个 ID、EWT 标签帧 P,1111,10cm 的完整地址与 cm→mm 解析、分包粘包噪声、同低4位不同完整地址拒绝融合、三/两/一路定位、0°/±45°和1/2/3m、合法/非法 ID、掉线保持锁定。2026-07-30 主线程复跑结果：231 assertions, 0 failures。SysConfig 静态检查 0 error；仍有未生成 ti_msp_dl_config/Debug 输出、未核对 XDS110、三路生产 UART/按键/ST7735S 引脚未实物确认等预期告警。未构建、未烧录、未上板。",
+      "recordType": "event",
+      "schemaVersion": 1
+    },
+    {
+      "actor": "37chengshan",
+      "createdAt": "2026-07-30T10:01:14+08:00",
+      "entityId": "T-20260729-4GQN",
+      "entityType": "task",
+      "id": "E-20260730-100114-W9K2",
+      "kind": "statusChange",
+      "message": "开始搭建 C 题独立 MSPM0G3507 固件骨架：先实现单 UART 烟雾入口、三逻辑通道解析/融合、定位、临时四按键 ID、未来拨码后端和锁状态机；不猜三路生产 UART 引脚。",
+      "recordType": "event",
+      "schemaVersion": 1
+    },
+    {
+      "actor": "37chengshan",
+      "createdAt": "2026-07-30T10:01:01+08:00",
+      "entityId": "T-20260729-6H2Q",
+      "entityType": "task",
+      "id": "E-20260730-100101-ZGZS",
+      "kind": "statusChange",
+      "message": "已归档用户提供的 EWT550 v2.1、商品参数截图和模组引脚图，并建立 UWB 接线、原始日志、测距数据和锚点坐标记录模板；实物链路仍待验证。",
+      "recordType": "event",
+      "schemaVersion": 1
+    },
+    {
+      "actor": "37chengshan",
+      "createdAt": "2026-07-30T08:17:20+08:00",
+      "entityId": "T-20260729-E7RP",
+      "entityType": "task",
+      "id": "E-20260730-081720-68ZB",
+      "kind": "testResult",
+      "message": "2026-07-30 v0.4 软件交付验证：新增可拆钥匙控制面板、真实贯通启动按键/LED/拨动槽、捕获式按键帽、拨动滑块、候选控制板导轨、钥匙内部至少 1 mm 占位净距、84×64 mm 背面板、bit3→bit0 与 ON 方向标记、M2.5 拨码固定笼、FRONT 标记和 8 根顶盖加强筋。22/22 Python CAD 回归通过；13/13 STL 重载无退化三角形和开放边界；13 种 STL、16 个实例按确定性三盘切片。3 份完整 G-code 与 3 份首层验证 G-code 均 3/3 通过，对象数 1/1/14，命名对象重叠、包含 7 mm brim 的实际足迹重叠及未归属首层挤出均为 0；三盘首层范围为 9.361～290.639 mm、10.361～289.639 mm、X 6.208～293.792/Y 40.858～259.142 mm。估算 631.04 g PETG、2d 1h 59m 24s。最终 ZIP、内部文件 SHA256 与压缩包完整性校验均通过；仓库 schemas、typecheck、test、validate 通过。该结果仅证明模型、网格、摆盘和 G-code 软件验证，不证明 v0.4 首层、整盘打印、公差、按键/拨动触发行程、身份 ID 操作、装配或 UWB 功能通过。",
+      "recordType": "event",
+      "schemaVersion": 1,
+      "supersedesEventId": "E-20260729-224201-BEM5"
+    },
+    {
+      "actor": "37chengshan",
+      "createdAt": "2026-07-29T22:42:01+08:00",
+      "entityId": "T-20260729-E7RP",
+      "entityType": "task",
+      "id": "E-20260729-224201-BEM5",
+      "kind": "testResult",
+      "message": "最终更正 2026-07-29 软件切片结果：根据彩格 PETG 实物标签，将喷嘴 235～270 ℃、热床 80～90 ℃、常规速度 40～100 mm/s 纳入硬校验；根据 Grok 独立审查，将 auto_brim 改为固定 outer_only 7 mm，并把对象标记外的 brim 挤出、5 mm 床边余量、未归属首层挤出和包含 brim 的实际足迹重叠加入校验。重生成后 10/10 STL 闭合通过；3 份完整 G-code 与 3 份首层验证 G-code 均 3/3 通过，对象数 1/1/11，命名对象及 brim 足迹重叠均为 0，未归属首层挤出均为 0。盘 1/2/3 首层全部挤出范围分别为 9.361～290.639、10.361～289.639、X 7.488～292.512/Y 37.708～262.292 mm；估算 615.71 g、1d 22h 57m 11s。该事件取代 E-20260729-214150-J56F 的旧 auto_brim 估算。",
+      "recordType": "event",
+      "schemaVersion": 1,
+      "supersedesEventId": "E-20260729-214150-J56F"
+    },
+    {
+      "actor": "37chengshan",
+      "createdAt": "2026-07-29T21:41:50+08:00",
+      "entityId": "T-20260729-E7RP",
+      "entityType": "task",
+      "id": "E-20260729-214150-J56F",
+      "kind": "testResult",
+      "message": "2026-07-29 重新生成 v0.3 几何与切片：10/10 STL 重载闭合检查通过且重生成前后 STL SHA-256 不变；OrcaSlicer 2.4.2 使用确定性逐盘标准 3MF、关闭自动排布后导出 3 份完整 G-code。完整 G-code 与三份首层验证 G-code 均 3/3 通过，首层识别对象数分别为 1、1、11，三盘对象包络重叠均为 0；打印温度目标 235/240 ℃位于材料 235～270 ℃范围内，常规速度 40～100 mm/s 约束已纳入配置。用户现场确认移除床面残留层后打印恢复正常；该反馈不等于整盘打印或装配通过。",
+      "recordType": "event",
+      "schemaVersion": 1
+    },
+    {
+      "actor": "37chengshan",
+      "createdAt": "2026-07-29T20:38:52+08:00",
+      "entityId": "T-20260729-E7RP",
+      "entityType": "task",
+      "id": "E-20260729-203852-NW1P",
+      "kind": "testResult",
+      "message": "更正第 3 盘首次试打结论：虽然 Repetier-Host 曾显示 Layer 3/122、喷嘴 240.66/240 ℃、热床 80.01/80 ℃且软件无报错，但随后现场观察到打印物被喷嘴触碰并卷曲，打印已中止，喷嘴和热床加热目标均已关闭。该次结果判定为首层实物打印失败，不构成打印通过；需在清理平台后结合现场照片排查残留/清洁、调平与 Z 偏置、首层压实、PETG 粘附或局部翘边，确认前不得自动重启或启动大壳长时间打印。",
+      "recordType": "event",
+      "schemaVersion": 1,
+      "supersedesEventId": "E-20260729-203153-B80F"
+    },
+    {
+      "actor": "37chengshan",
+      "createdAt": "2026-07-29T20:31:53+08:00",
+      "entityId": "T-20260729-E7RP",
+      "entityType": "task",
+      "id": "E-20260729-203153-B80F",
+      "kind": "testResult",
+      "message": "v0.3 软件验证：7/7 Python 单元测试通过；10/10 STL 重载通过，退化三角形和开放边界均为 0；10 种 STL、13 个实例自动分为 3 盘；3/3 G-code 静态校验通过，首层/常规喷嘴 240/235 ℃、热床 80 ℃、最大速度 100 mm/s，估算 619.59 g、1d 20h 59m 9s。Repetier-Host 第 3 盘顶视摆盘检查居中，已启动试打并观察到 Layer 3/122、喷嘴 240.66/240 ℃、热床 80.01/80 ℃，当时无软件错误；未验证整盘完成、装配、卡扣 20 次循环或 UWB 性能。",
+      "recordType": "event",
+      "schemaVersion": 1
+    },
+    {
+      "actor": "37chengshan",
+      "createdAt": "2026-07-29T20:31:50+08:00",
+      "entityId": "T-20260729-E7RP",
+      "entityType": "task",
+      "id": "E-20260729-203150-5E10",
+      "kind": "decision",
+      "message": "采用 v0.3 单热床免拼壳方案替代 v0.2 的 596 mm 扇区拼壳：门锁收敛为 Ø276×100 mm，一体底壳 268×268×76 mm、一体上盖 266×266×17.2 mm；显示器冻结为 1.77 英寸 ST7735S PCB 56×34 mm、孔距 52×30 mm、孔径 2.5 mm；主壳使用定位唇边和卡扣快拆，不使用扇区粘接。A1/A2/A3 坐标仍为 design_candidate，装配后必须实测替换。",
+      "recordType": "event",
+      "schemaVersion": 1
+    },
+    {
+      "actor": "37chengshan",
+      "createdAt": "2026-07-29T18:04:43+08:00",
+      "entityId": "T-20260729-E7RP",
+      "entityType": "task",
+      "id": "E-20260729-180443-RNC5",
+      "kind": "testResult",
+      "message": "v0.2 软件验证通过：22/22 STL 重载后无退化三角形和开放边界；钥匙 105×58×33 mm、门锁 Ø596×125 mm，均在题目包络内；9/9 G-code 的坐标、喷嘴 240/235 ℃、热床 80 ℃、最高速度 100 mm/s 和加速度边界通过静态检查；Orca 估算合计 1967.17 g PETG、5d 23h 37m 24s；GUI 稳定预览工程已在 OrcaSlicer 2.4.2 成功打开并显示 9 盘。尚未进行实机打印、装配和天线测试。",
+      "recordType": "event",
+      "schemaVersion": 1
+    },
+    {
+      "actor": "37chengshan",
+      "createdAt": "2026-07-29T18:04:40+08:00",
+      "entityId": "T-20260729-E7RP",
+      "entityType": "task",
+      "id": "E-20260729-180440-BF2D",
+      "kind": "decision",
+      "message": "结构方向冻结到 v0.2 产品化外观：废弃 v0.1 裸露定位臂，采用完整圆形门锁上壳、隐藏径向骨架、三枚外周 UWB 快拆卡匣、中央检修盖和 105×58×33 mm 数字钥匙壳。为规避 OrcaSlicer 2.4.2 对未注册自定义预设标识的载入崩溃，交付拆分为 GUI 稳定预览 3MF、已切片归档和 9 份独立 G-code；独立 G-code 是 CR-3040D 实际打印参数的事实源。",
+      "recordType": "event",
+      "schemaVersion": 1
+    },
+    {
+      "actor": "37chengshan",
+      "createdAt": "2026-07-29T16:35:16+08:00",
+      "entityId": "T-20260729-E7RP",
+      "entityType": "task",
+      "id": "E-20260729-163516-2040",
+      "kind": "testResult",
+      "message": "v0.1 试装版已生成并重新加载验证 21 个 STL：退化三角形和开放边均为 0；钥匙名义包络 92×55.1×38 mm，门锁名义包络 Ø596×84 mm，均通过官方包络；全部单件通过暂定 180×180 mm 热床检查。相接封闭实体存在切片器需自动合并的非流形重边，已在报告逐件列出，尚未进行真实切片和实物打印。",
+      "recordType": "event",
+      "schemaVersion": 1
+    },
+    {
+      "actor": "37chengshan",
+      "createdAt": "2026-07-29T16:35:12+08:00",
+      "entityId": "T-20260729-E7RP",
+      "entityType": "task",
+      "id": "E-20260729-163512-S22P",
+      "kind": "statusChange",
+      "message": "主要外廓尺寸已收到，已生成 v0.1 参数化源、21 个 STL、装配预览和几何报告；继续等待打印机与接口细节后冻结最终打印版。",
+      "recordType": "event",
+      "schemaVersion": 1
+    },
+    {
+      "actor": "37chengshan",
+      "createdAt": "2026-07-29T15:29:03+08:00",
+      "entityId": "T-20260729-KK97",
+      "entityType": "task",
+      "id": "E-20260729-152903-H9RZ",
+      "kind": "statusChange",
+      "message": "C 题官方题目、工程上下文与厂商资料已归档；需求矩阵、协议边界、坐标零点、3D 结构原则和五项正式任务已同步，仓库校验通过。",
+      "recordType": "event",
+      "schemaVersion": 1
+    },
+    {
+      "actor": "37chengshan",
+      "createdAt": "2026-07-29T15:28:57+08:00",
+      "entityId": "T-20260729-KK97",
+      "entityType": "task",
+      "id": "E-20260729-152857-NT51",
+      "kind": "decision",
+      "message": "总体方案基线采用“数字钥匙 1 个 EWM/EWT550 Initiator + 门锁 3 个固定 Responder + MSPM0G3507”的待实测首选拓扑。厂商 EWT550 规格书修订历史最新为 2.0，确认一主三从和标签端主机地址+距离输出，但实物板型、指令拼写和链路尚未上板；官方要求缺失第 2 项，不自行补造。",
+      "recordType": "event",
+      "schemaVersion": 1
+    },
+    {
+      "actor": "37chengshan",
+      "createdAt": "2026-07-29T15:21:43+08:00",
+      "entityId": "T-20260729-KK97",
+      "entityType": "task",
+      "id": "E-20260729-152143-7S5D",
+      "kind": "statusChange",
+      "message": "已开始归档官方题目、核对厂商资料并编写 C 题总体方案基线。",
+      "recordType": "event",
+      "schemaVersion": 1
+    },
+    {
+      "actor": "37chengshan",
+      "createdAt": "2026-07-29T15:21:39+08:00",
+      "entityId": "T-20260729-E7RP",
+      "entityType": "task",
+      "id": "E-20260729-152139-R5R4",
+      "kind": "statusChange",
+      "message": "等待实物尺寸、UWB 板型与打印工艺参数；当前仅允许参数化占位设计和测量模板，不冻结最终 STL。",
+      "recordType": "event",
+      "schemaVersion": 1
+    },
+    {
+      "actor": "37chengshan",
+      "createdAt": "2026-07-29T14:50:44+08:00",
+      "entityId": "T-20260729-TT02",
+      "entityType": "task",
+      "id": "E-20260729-145044-4RDY",
+      "kind": "statusChange",
+      "message": "发送端和接收端构建均为0错误；接收端已通过Type-C UART BSL完成实机烧录，用户确认双端显示正常。",
+      "recordType": "event",
+      "schemaVersion": 1
+    }
+  ],
   "schemaVersion": 1,
   "summary": {
     "blockedTasks": 0,
     "openIdeas": 1,
     "openIssues": 1,
-    "openTasks": 0
+    "openTasks": 4
   },
-  "tasks": []
+  "tasks": [
+    {
+      "acceptanceCriteria": [
+        "三路 UART 实例、引脚复用、电平、921600 8N1 可行性和调试接口冲突已按实际板卡核对，SysConfig 无未解释警告",
+        "三路解析器保存完整地址、低4位ID、距离与时间戳，只融合完整地址一致且时间窗内有效的数据，并保留可重放原始样本",
+        "定位算法输出 x、y、比赛径向距离和方位角，包含三路最小二乘、两路降级以及一路保持锁定策略",
+        "四位 ID 输入支持临时四按键翻转和最终拨码直读，ST7735S、迎宾声光和红绿锁态 LED 的状态机可复现验证",
+        "CCS Debug 全量构建为 0 错误；构建结果与目标板上串口、显示和状态机证据分别记录"
+      ],
+      "blockingIssueIds": [],
+      "completedAcceptanceCriteria": [],
+      "createdAt": "2026-07-29T15:19:40+08:00",
+      "dependencies": [
+        "T-20260729-KK97",
+        "T-20260729-6H2Q"
+      ],
+      "description": "以 .syscfg 为引脚、外设、时钟和中断配置源；先核对 MSPM0G3507 实际三路 UART 资源、电平和特殊引脚，再实现三路完整地址与时间戳解析、定位、4 bit ID 验证、区域状态机及 ST7735S 背面显示。2026-07-30 暂无拨码开关，先以四个低有效按键翻转 bit3~bit0，拨码到货后仅替换 ID 输入后端。",
+      "id": "T-20260729-4GQN",
+      "module": "C题MSPM0固件",
+      "owner": "37chengshan",
+      "participants": [],
+      "priority": "critical",
+      "recordType": "task",
+      "relatedCommits": [],
+      "schemaVersion": 1,
+      "status": "doing",
+      "title": "实现 MSPM0 三路 UWB 接收、定位与门锁状态机",
+      "updatedAt": "2026-07-30T10:31:13+08:00"
+    },
+    {
+      "acceptanceCriteria": [
+        "4 个设备的 EWM/EWT 板型、外廓、孔位、天线参考点、供电范围和 UART 电平均有实物记录",
+        "实机确认 ROLE、SRCADDR、DSTADDR、RESPONDER_NUM 的准确指令拼写、参数掉电保持和上电自动测距行为",
+        "一主一从、一主二从、一主三从均保存连续 UART 原始日志，且三个标签分别输出一致的主机地址与距离",
+        "完成 0.5 m、1 m、2 m、3 m 及 0°、±15°、±30°、±45° 的首轮测距记录并统计更新率和异常"
+      ],
+      "blockingIssueIds": [],
+      "completedAcceptanceCriteria": [],
+      "createdAt": "2026-07-29T15:19:37+08:00",
+      "dependencies": [
+        "T-20260729-KK97"
+      ],
+      "description": "以厂商资料支持的一主三从 TWR 为首选拓扑，先鉴定 4 个到货设备的实际板型、电气接口和固件行为，再逐级验证一主一从、一主二从和一主三从；未取得串口日志前不得写成上板通过。",
+      "id": "T-20260729-6H2Q",
+      "module": "C题UWB链路",
+      "owner": "37chengshan",
+      "participants": [],
+      "priority": "critical",
+      "recordType": "task",
+      "relatedCommits": [],
+      "schemaVersion": 1,
+      "status": "doing",
+      "title": "完成 EWM/EWT550 到货鉴定与一主三从测距验证",
+      "updatedAt": "2026-07-30T10:01:01+08:00"
+    },
+    {
+      "acceptanceCriteria": [
+        "UWB、电池、MSPM0 核心板与紫色底板、1.77 英寸 ST7735S 显示模块、拨码、接口和紧固件的长宽高、孔距与突出高度均有实测记录",
+        "参数化源文件可导出 STL 或 3MF，钥匙成品不超过 120×80×40 mm，门锁全部结构不超过直径 600 mm、高 300 mm 包络",
+        "三枚 UWB 卡匣可快拆、天线区域无遮挡、参考高度一致且装配后坐标可测；最终朝向由测试决定",
+        "背面显示、拨码和调试口可操作，FRONT、BACK、中心 O、圆柱边界零点与 KEY REF 标记明确",
+        "完成公差试片、首版打印、装配验证和修版记录，并使用装配后实测的 A1/A2/A3 天线坐标"
+      ],
+      "blockingIssueIds": [
+        "I-20260729-152X"
+      ],
+      "completedAcceptanceCriteria": [
+        "参数化源文件可导出 STL 或 3MF，钥匙成品不超过 120×80×40 mm，门锁全部结构不超过直径 600 mm、高 300 mm 包络"
+      ],
+      "createdAt": "2026-07-29T15:19:43+08:00",
+      "dependencies": [
+        "T-20260729-KK97",
+        "T-20260729-6H2Q"
+      ],
+      "description": "已完成 v0.4 可拆钥匙控制面板软件交付链：数字钥匙包含真实贯通的启动按键孔、状态 LED 孔和拨动槽，以及捕获式按键帽、拨动滑块、候选 50×20×1.6 mm 控制板导轨；门锁为 Ø276×100 mm 一体底壳/上盖、三 UWB 快拆卡匣、84×64 mm 背面板、拨码固定笼和顶盖加强筋。当前 13 种 STL、16 个标准实例，24/24 CAD 回归和 13/13 STL 重载检查通过。除原三盘方案外，已为 13 种部件分别生成居中 G-code，共 22 个实例：按钮帽/拨动滑块各 3 个，钥匙电池卡扣/拨码固定笼各 2 个，UWB 卡匣 3 个、门锁电池卡扣 2 个，其余各 1 个；13/13 G-code 温度、边界、对象数量和重叠校验通过。喷嘴等待/首层/常规为 220/255/250 ℃，热床首层/常规为 90/85 ℃。包含 0.25/0.35/0.45/0.55 mm 四档的公差试片已实物打印，用户确认打印效果非常完美；仍需确认四档中最佳配合间隙，并实测控制板/开关、UWB、PCB、显示器和线束接口，完成整机装配循环、身份 ID 操作和天线验证。",
+      "id": "T-20260729-E7RP",
+      "module": "C题3D结构",
+      "owner": "37chengshan",
+      "participants": [],
+      "priority": "high",
+      "recordType": "task",
+      "relatedCommits": [],
+      "schemaVersion": 1,
+      "status": "doing",
+      "title": "测量并打印 C 题数字钥匙与门锁定位结构首版",
+      "updatedAt": "2026-07-30T15:41:30+08:00"
+    },
+    {
+      "acceptanceCriteria": [
+        "1 m、2 m、3 m 与 -45°、-30°、-15°、0°、15°、30°、45° 共 21 点每点至少记录 20 组有效结果",
+        "径向距离绝对误差不大于 0.30 m、方位角绝对误差不大于 10°，并保留原始 d1/d2/d3、位置、残差和异常数据",
+        "在 -45°、0°、45° 对 1 m 与 2 m 边界完成由外向内和由内向外测试，判定误差绝对值不大于 0.20 m",
+        "通信距离不小于 3 m，合法与非法 4 bit ID、背面显示、迎宾声光和开闭锁 LED 状态均有可复现证据",
+        "空旷、靠墙、靠桌、人员位于门锁背面和不同钥匙姿态的抗多径结果已归档并进入设计报告"
+      ],
+      "blockingIssueIds": [],
+      "completedAcceptanceCriteria": [],
+      "createdAt": "2026-07-29T15:19:46+08:00",
+      "dependencies": [
+        "T-20260729-4GQN",
+        "T-20260729-E7RP"
+      ],
+      "description": "在最终结构与目标固件上按官方评分场景留证，覆盖通信距离、定位误差、1 m/2 m 双向边界、合法/非法 ID、背面显示、声光锁态和抗多径；测试数据与代码、结构版本互相可追溯。",
+      "id": "T-20260729-G5VX",
+      "module": "C题系统联调",
+      "owner": "37chengshan",
+      "participants": [],
+      "priority": "critical",
+      "recordType": "task",
+      "relatedCommits": [],
+      "schemaVersion": 1,
+      "status": "todo",
+      "title": "完成 C 题定位、边界、抗多径与评分回归",
+      "updatedAt": "2026-07-29T15:19:46+08:00"
+    },
+    {
+      "acceptanceCriteria": [
+        "官方 C 题 PDF 已归档，并逐项映射通信、定位、区域、ID、尺寸、显示位置和抗多径要求",
+        "总体方案明确 600 mm 圆柱边界为径向零点，并定义 FRONT、BACK、中心 O 与 KEY REF",
+        "官方要求编号缺失第 2 项作为待赛区确认事项记录，未自行补写要求",
+        "任务、设计和参考资料互相链接，且活动数据与总体设计通过仓库校验"
+      ],
+      "blockingIssueIds": [],
+      "completedAcceptanceCriteria": [
+        "官方 C 题 PDF 已归档，并逐项映射通信、定位、区域、ID、尺寸、显示位置和抗多径要求",
+        "总体方案明确 600 mm 圆柱边界为径向零点，并定义 FRONT、BACK、中心 O 与 KEY REF",
+        "官方要求编号缺失第 2 项作为待赛区确认事项记录，未自行补写要求",
+        "任务、设计和参考资料互相链接，且活动数据与总体设计通过仓库校验"
+      ],
+      "createdAt": "2026-07-29T15:18:47+08:00",
+      "dependencies": [],
+      "description": "归档官方 C 题和工程上下文，建立“官方题目/厂商资料/当前实物与实测”证据层级；将一主三从 UWB 定位作为待实测首选拓扑，并记录官方要求编号缺失第 2 项的原文异常。",
+      "id": "T-20260729-KK97",
+      "module": "C题总体设计",
+      "owner": "37chengshan",
+      "participants": [],
+      "priority": "critical",
+      "recordType": "task",
+      "relatedCommits": [],
+      "schemaVersion": 1,
+      "status": "done",
+      "title": "冻结 C 题官方需求、证据层级与总体方案基线",
+      "updatedAt": "2026-07-29T15:29:03+08:00"
+    },
+    {
+      "acceptanceCriteria": [
+        "发送端仅显示接收端ACK确认的ADC、毫伏值和序号",
+        "接收端通过UART中断和环形缓冲接收并刷新OLED且不丢帧",
+        "发送端和接收端CCS Debug全量构建均为0错误",
+        "接收端通过Type-C UART BSL烧录，双端OLED数据一致且刷新正常"
+      ],
+      "blockingIssueIds": [],
+      "completedAcceptanceCriteria": [
+        "发送端仅显示接收端ACK确认的ADC、毫伏值和序号",
+        "接收端通过UART中断和环形缓冲接收并刷新OLED且不丢帧",
+        "发送端和接收端CCS Debug全量构建均为0错误",
+        "接收端通过Type-C UART BSL烧录，双端OLED数据一致且刷新正常"
+      ],
+      "createdAt": "2026-07-29T14:50:09+08:00",
+      "dependencies": [],
+      "description": "地猛星①采集PA27 ADC与PB6-PB9地址，通过UART1向地猛星②发送带CRC和序号的数据帧；两端OLED显示同一已确认帧，并为后续透明无线串口模块保留接口。",
+      "id": "T-20260729-TT02",
+      "module": "地猛星双机通信",
+      "owner": "37chengshan",
+      "participants": [],
+      "priority": "high",
+      "recordType": "task",
+      "relatedCommits": [
+        "4ba7d8650de086c08838f9ed35a0cf84001d7afb",
+        "5cb10c346c381f5d824870d4e01b080485348283"
+      ],
+      "schemaVersion": 1,
+      "status": "done",
+      "title": "完成双地猛星UART同步采集显示",
+      "updatedAt": "2026-07-29T14:52:19+08:00"
+    }
+  ]
 }

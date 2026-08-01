@@ -1,0 +1,11 @@
+{
+  "actor": "37chengshan",
+  "createdAt": "2026-07-29T16:35:12+08:00",
+  "entityId": "T-20260729-E7RP",
+  "entityType": "task",
+  "id": "E-20260729-163512-S22P",
+  "kind": "statusChange",
+  "message": "主要外廓尺寸已收到，已生成 v0.1 参数化源、21 个 STL、装配预览和几何报告；继续等待打印机与接口细节后冻结最终打印版。",
+  "recordType": "event",
+  "schemaVersion": 1
+}

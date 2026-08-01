@@ -25,21 +25,36 @@ void lock_app_process_uart_byte(LockApp *app, uint8_t channel, uint8_t byte,
                                 uint32_t now_ms)
 {
     LockUwbMeasurement measurement;
+    bool was_overflowed;
 
     if (channel >= LOCK_UWB_CHANNEL_COUNT) {
         return;
     }
 
+    was_overflowed = app->parsers[channel].overflowed;
     if (uwb_text_parser_push(&app->parsers[channel], byte, now_ms,
                              &measurement)) {
         uwb_fusion_store_measurement(&app->fusion, channel, &measurement);
     }
+    if (!was_overflowed && app->parsers[channel].overflowed) {
+        lock_app_report_uart_overflow(app, channel);
+    }
+}
+
+void lock_app_report_uart_overflow(LockApp *app, uint8_t channel)
+{
+    if ((app == NULL) || (channel >= LOCK_UWB_CHANNEL_COUNT)) {
+        return;
+    }
+    uwb_fusion_report_failure(
+        &app->fusion, UWB_TWO_STATION_FAILURE_BUFFER_OVERFLOW);
 }
 
 void lock_app_update(LockApp *app, uint32_t now_ms,
                      uint8_t raw_id_low_active_bits)
 {
     uint8_t expected_id;
+    bool display_due;
 
     id_input_process(&app->id_input, raw_id_low_active_bits, now_ms);
     expected_id = id_input_get_value(&app->id_input);
@@ -48,9 +63,17 @@ void lock_app_update(LockApp *app, uint32_t now_ms,
     app->outputs = lock_fsm_update(&app->state_machine, &app->position,
                                    expected_id, &app->config, now_ms);
 
+    display_due =
+        !app->display_initialized ||
+        ((now_ms - app->last_display_update_ms) >=
+         app->config.display_period_ms);
+    if (!display_due) {
+        return;
+    }
+
     memset(&app->display, 0, sizeof(app->display));
     app->display.expected_id = expected_id;
-    app->display.observed_id_valid = app->position.valid;
+    app->display.observed_id_valid = app->position.key_id_valid;
     app->display.observed_id = app->position.key_id;
     app->display.channel_valid_mask = app->position.valid_mask;
     app->display.now_ms = now_ms;
@@ -58,6 +81,8 @@ void lock_app_update(LockApp *app, uint32_t now_ms,
     app->display.state = app->outputs.state;
     app->display.authorized = app->outputs.authorized;
     app->display.position = app->position;
+    app->last_display_update_ms = now_ms;
+    app->display_initialized = true;
 }
 
 const LockOutputSnapshot *lock_app_outputs(const LockApp *app)

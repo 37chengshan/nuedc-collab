@@ -1,0 +1,12 @@
+{
+  "actor": "37chengshan",
+  "createdAt": "2026-07-30T11:52:16+08:00",
+  "entityId": "T-20260729-E7RP",
+  "entityType": "task",
+  "id": "E-20260730-115216-NEGJ",
+  "kind": "testResult",
+  "message": "2026-07-30 按用户指定更新 v0.4 PETG 温度并保持原三盘布局：喷嘴等待/首层/常规为 220/255/250 ℃，热床首层/常规为 90/85 ℃。OrcaSlicer 重新生成 3 个布局 3MF、3 份完整 G-code 和 3 份首层验证 G-code；实际指令检查确认完整文件包含 M104 S220、M109 S255、M104 S250、M140/M190 S90 与 M140 S85。23/23 CAD 回归通过；完整 G-code 3/3、首层验证 3/3 通过，温度目标均在彩格 PETG 标签范围内，对象数仍为 1/1/14，布局未变。估算 631.04 g、2d 1h 59m 34s。最终 ZIP、内部 SHA256、ZIP 侧车 SHA256 与压缩包完整性校验通过。",
+  "recordType": "event",
+  "schemaVersion": 1,
+  "supersedesEventId": "E-20260730-081720-68ZB"
+}

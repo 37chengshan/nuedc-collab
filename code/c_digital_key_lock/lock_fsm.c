@@ -1,6 +1,5 @@
 #include "lock_fsm.h"
 
-#include <math.h>
 #include <string.h>
 
 void lock_fsm_init(LockStateMachine *state_machine)
@@ -14,10 +13,6 @@ LockZone lock_fsm_classify_zone(const LockPositionSolution *position,
 {
     if (!position->valid) {
         return LOCK_ZONE_INVALID;
-    }
-
-    if (fabsf(position->bearing_deg) > config->access_bearing_limit_deg) {
-        return LOCK_ZONE_BACKSIDE;
     }
 
     if (position->radial_mm <= config->unlock_radius_mm) {
@@ -41,9 +36,14 @@ LockOutputSnapshot lock_fsm_update(LockStateMachine *state_machine,
     LockZone zone = lock_fsm_classify_zone(position, config);
     bool trusted_position =
         position->valid &&
-        (position->mode == LOCK_LOCALIZATION_THREE_ANCHOR) &&
+        position->auth_distance_valid &&
+        (position->distance_quality == LOCK_DISTANCE_HIGH) &&
+        (position->mode ==
+         LOCK_LOCALIZATION_TWO_STATION_EMPIRICAL) &&
         (position->anchor_count == LOCK_UWB_CHANNEL_COUNT);
-    bool authorized = trusted_position && (position->key_id == expected_id);
+    bool identity_observed = position->key_id_valid;
+    bool authorized = trusted_position && identity_observed &&
+                      (position->key_id == expected_id);
 
     memset(&snapshot, 0, sizeof(snapshot));
     snapshot.zone = zone;
@@ -51,7 +51,7 @@ LockOutputSnapshot lock_fsm_update(LockStateMachine *state_machine,
 
     if (authorized && (zone == LOCK_ZONE_UNLOCK)) {
         state_machine->state = LOCK_STATE_UNLOCKED;
-    } else if (trusted_position && !authorized &&
+    } else if (trusted_position && identity_observed && !authorized &&
                (zone == LOCK_ZONE_UNLOCK)) {
         state_machine->state = LOCK_STATE_DENIED;
         state_machine->denied_hold_until_ms = now_ms + config->denied_hold_ms;
@@ -68,8 +68,7 @@ LockOutputSnapshot lock_fsm_update(LockStateMachine *state_machine,
     snapshot.welcome_output = (snapshot.state == LOCK_STATE_WELCOME) ||
                               snapshot.unlock_output;
     snapshot.green_led = snapshot.unlock_output;
-    snapshot.red_led = (snapshot.state == LOCK_STATE_LOCKED) ||
-                       (snapshot.state == LOCK_STATE_DENIED);
-    snapshot.buzzer_alarm = (snapshot.state == LOCK_STATE_DENIED);
+    snapshot.red_led = (snapshot.state == LOCK_STATE_DENIED);
+    snapshot.buzzer_alarm = false;
     return snapshot;
 }

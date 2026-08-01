@@ -1,0 +1,11 @@
+{
+  "id": "capture-2026-07-31T08-28-10-994Z",
+  "label": "angle_r100cm_ap10_rep1",
+  "durationSeconds": 45,
+  "startedAt": "2026-07-31T08:28:10.994Z",
+  "endsAt": "2026-07-31T08:28:55.994Z",
+  "endedAt": "2026-07-31T08:28:56.009Z",
+  "sessionId": "2026-07-31T07-36-44-491Z",
+  "frameCount": 895,
+  "status": "completed"
+}

@@ -1,0 +1,11 @@
+{
+  "actor": "37chengshan",
+  "createdAt": "2026-07-29T15:21:39+08:00",
+  "entityId": "T-20260729-E7RP",
+  "entityType": "task",
+  "id": "E-20260729-152139-R5R4",
+  "kind": "statusChange",
+  "message": "等待实物尺寸、UWB 板型与打印工艺参数；当前仅允许参数化占位设计和测量模板，不冻结最终 STL。",
+  "recordType": "event",
+  "schemaVersion": 1
+}
